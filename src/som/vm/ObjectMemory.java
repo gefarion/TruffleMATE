@@ -110,11 +110,11 @@ public class ObjectMemory {
     setGlobal("true",   trueObject);
     setGlobal("false",  falseObject);
     setGlobal("system", systemObject);
-    
+
     if (Globals.trueObject != trueObject) {
       Universe.errorExit("Initialization went wrong for class Globals");
     }
-    
+
     loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(contextClass)), contextClass);
 
     if (Universe.getCurrent().vmReflectionEnabled()) {

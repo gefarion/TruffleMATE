@@ -4,30 +4,26 @@ import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.arrays.ToHostArrayNode.ToArgumentsArrayNode;
+import som.primitives.arrays.ToHostArrayNodeFactory.ToArgumentsArrayNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SSymbol;
 import tools.dym.Tags.OpClosureApplication;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class BlockPrims {
-  
+
   public interface ValuePrimitiveNode {
     void adoptNewDispatchListHead(AbstractDispatchNode node);
   }
@@ -50,8 +46,10 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block", selector = "valueWithArguments:", 
-             receiverType = {SBlock.class})
+  @Primitive(klass = "Block", selector = "valueWithArguments:",
+             receiverType = {SBlock.class}, extraChild = ToArgumentsArrayNodeFactory.class)
+  @NodeChild(value = "argConversion", type = ToArgumentsArrayNode.class,
+      executeWith = {"argument", "receiver"})
   public abstract static class ValueWithArgumentsPrim extends BinaryExpressionNode
     implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
@@ -59,18 +57,17 @@ public abstract class BlockPrims {
     public ValueWithArgumentsPrim(final boolean eagWrap) {
       super(eagWrap, Universe.emptySource.createUnavailableSection());
     }
-    
+
     public ValueWithArgumentsPrim(final boolean eagerlyWrapped, SourceSection source) {
       super(eagerlyWrapped, source);
       dispatchNode = new UninitializedValuePrimDispatchNode(this.sourceSection);
     }
 
     @Specialization
-    public final Object doSBlock(final VirtualFrame frame, final SBlock receiver, final SArray arguments) {
-      arguments.convertAllToObject();
-      ArrayList<Object> dispatchNodeArguments = new ArrayList<Object>(Arrays.asList(arguments.toJavaArray()));
-      dispatchNodeArguments.add(0, receiver);
-      return dispatchNode.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), dispatchNodeArguments.toArray());
+    public final Object doSBlock(final VirtualFrame frame, final SBlock receiver, final SArray arguments,
+        Object[] convertedArgs) {
+      return dispatchNode.executeDispatch(frame, SArguments.getEnvironment(frame),
+          SArguments.getExecutionLevel(frame), convertedArgs);
     }
 
     @Override

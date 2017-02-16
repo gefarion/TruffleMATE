@@ -1,6 +1,5 @@
 package som.vmobjects;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import som.vm.Universe;
@@ -11,7 +10,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 /**
  * SArrays are implemented using a Strategy-like approach.
@@ -60,42 +58,42 @@ public final class SArray extends SAbstractObject {
 
   public int getEmptyStorage(final ValueProfile storageType) {
     assert type == ArrayType.EMPTY;
-    return (int) storage;
+    return (int) storageType.profile(storage);
   }
 
   public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
     assert type == ArrayType.PARTIAL_EMPTY;
-    return (PartiallyEmptyArray) storage;
+    return (PartiallyEmptyArray) storageType.profile(storage);
   }
 
   public Object[] getObjectStorage(final ValueProfile storageType) {
     assert type == ArrayType.OBJECT;
-    return (Object[]) storage;
+    return (Object[]) storageType.profile(storage);
   }
 
   public long[] getLongStorage(final ValueProfile storageType) {
     assert type == ArrayType.LONG;
-    return (long[]) storage;
+    return (long[]) storageType.profile(storage);
   }
 
   public double[] getDoubleStorage(final ValueProfile storageType) {
     assert type == ArrayType.DOUBLE;
-    return (double[]) storage;
+    return (double[]) storageType.profile(storage);
   }
 
   public boolean[] getBooleanStorage(final ValueProfile storageType) {
     assert type == ArrayType.BOOLEAN;
-    return (boolean[]) storage;
+    return (boolean[]) storageType.profile(storage);
   }
 
   public byte[] getByteStorage(final ValueProfile storageType) {
     assert type == ArrayType.BYTE;
-    return (byte[]) storage;
+    return (byte[]) storageType.profile(storage);
   }
 
   public char[] getCharStorage(final ValueProfile storageType) {
     assert type == ArrayType.CHAR;
-    return (char[]) storage;
+    return (char[]) storageType.profile(storage);
   }
 
   public Object getStoragePlain() {
@@ -103,6 +101,7 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
+  // TODO: Remove this method and use the node ToHostArgument node conversion
   public Object[] toJavaArray() {
     if (ArrayType.isEmptyType(this)) {
       this.transitionToObjectWithAll((int) this.storage, Nil.nilObject);
@@ -114,79 +113,6 @@ public final class SArray extends SAbstractObject {
     } else {
       return this.getObjectStorage(ValueProfile.createClassProfile());
     }
-  }
-  
-  public void convertAllToObject(){
-    if (ArrayType.isPartiallyEmptyType(this) || ArrayType.isObjectType(this)){
-      return;
-    }
-    
-    if (ArrayType.isEmptyType(this)){
-      transitionToObjectWithAll((int)storage, Nil.nilObject);
-      return;
-    } 
-    
-    if (ArrayType.isLongType(this)) {
-      castStorageContentToLongReferenceType();
-    } else if (ArrayType.isDoubleType(this)) {
-      castStorageContentToDoubleReferenceType();
-    } else if (ArrayType.isBooleanType(this)) {
-      castStorageContentToBooleanReferenceType();
-    } else if (ArrayType.isByteType(this)) {
-      castStorageContentToByteReferenceType();
-    } else if (ArrayType.isCharType(this)) {
-      castStorageContentToCharReferenceType();
-    }
-  }
-
-  private void castStorageContentToCharReferenceType() {
-    char[] arr = (char[]) storage;
-    Object[] objArr = new Object[arr.length];
-    for (int i = 0; i < arr.length; i++){
-      objArr[i] = (Character) arr[i];
-    }
-    type = ArrayType.OBJECT;
-    storage = objArr;
-  }
-
-  private void castStorageContentToByteReferenceType() {
-    byte[] arr = (byte[]) storage;
-    Object[] objArr = new Object[arr.length];
-    for (int i = 0; i < arr.length; i++){
-      objArr[i] = (Byte) arr[i];
-    }
-    type = ArrayType.OBJECT;
-    storage = objArr;
-  }
-
-  private void castStorageContentToBooleanReferenceType() {
-    boolean[] arr = (boolean[]) storage;
-    Object[] objArr = new Object[arr.length];
-    for (int i = 0; i < arr.length; i++){
-      objArr[i] = (Boolean) arr[i];
-    }
-    type = ArrayType.OBJECT;
-    storage = objArr;
-  }
-
-  private void castStorageContentToDoubleReferenceType() {
-    double[] arr = (double[]) storage;
-    Object[] objArr = new Object[arr.length];
-    for (int i = 0; i < arr.length; i++){
-      objArr[i] = (Double) arr[i];
-    }
-    type = ArrayType.OBJECT;
-    storage = objArr;
-  }
-
-  private void castStorageContentToLongReferenceType() {
-    long[] arr = (long[]) storage;
-    Object[] objArr = new Object[arr.length];
-    for (int i = 0; i < arr.length; i++){
-      objArr[i] = (Long) arr[i];
-    }
-    type = ArrayType.OBJECT;
-    storage = objArr;
   }
 
   /**
@@ -343,6 +269,10 @@ public final class SArray extends SAbstractObject {
 
     public static boolean isCharType(final SArray receiver) {
       return receiver.getType() == CHAR;
+    }
+
+    public static boolean isSomePrimitiveType(final SArray receiver) {
+      return isLongType(receiver) || isDoubleType(receiver) || isBooleanType(receiver);
     }
   }
 

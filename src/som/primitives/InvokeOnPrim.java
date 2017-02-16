@@ -4,8 +4,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.InvokeOnCache;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.primitives.arrays.ToHostArrayNode.ToArgumentsArrayNode;
+import som.primitives.arrays.ToHostArrayNodeFactory.ToArgumentsArrayNodeFactory;
 import som.vmobjects.SArray;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;

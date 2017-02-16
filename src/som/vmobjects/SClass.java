@@ -40,7 +40,6 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.dsl.Layout;
 
-@SuppressWarnings("unused")
 public final class SClass {
   @Layout
   // public interface SClassLayout extends SReflectiveObjectEnvInObjLayout {
@@ -80,7 +79,7 @@ public final class SClass {
         Nil.nilObject, name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
         // name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
     setInstancesFactory(resultClass, Universe.getCurrent().createObjectShapeFactoryForClass(resultClass));
-    for (Object invokable : instanceInvokables.getObjectStorage(null)) {
+    for (Object invokable : instanceInvokables.getObjectStorage(storageType)) {
       SInvokable.setHolder((DynamicObject) invokable, resultClass);
     }
     return resultClass;
