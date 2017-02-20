@@ -11,6 +11,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SShape;
+import som.vmobjects.SReflectiveObject.SReflectiveWithUnfixedEnvObjectType;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -98,7 +99,7 @@ public final class MatePrims {
 
     @Specialization
     public final SShape doSObject(DynamicObject receiver) {
-      return new SShape(receiver.getShape().getPropertyCount());
+      return new SShape(receiver.getShape());
     }
   }
 
@@ -115,6 +116,23 @@ public final class MatePrims {
       return new SShape(
           shape.getShape().changeType(
               ((SReflectiveObjectType) shape.getShape().getObjectType()).setEnvironment(environment)));
+    }
+  }
+  
+  @GenerateNodeFactory
+  @Primitive(klass = "Shape", selector = "installUnfixedEnvironment:",
+             eagerSpecializable = false, mate = true)
+  public abstract static class MateInstallUnfixedEnvironmentInShapePrim extends BinaryExpressionNode {
+    public MateInstallUnfixedEnvironmentInShapePrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+
+    @Specialization
+    public final SShape doSObject(SShape shape, DynamicObject environment) {
+      SReflectiveWithUnfixedEnvObjectType unfixed = new SReflectiveWithUnfixedEnvObjectType(
+          ((SReflectiveObjectType) shape.getShape().getObjectType()).getKlass(),    
+          environment);
+      return new SShape(shape.getShape().changeType(unfixed));
     }
   }
 

@@ -26,6 +26,7 @@ package som.vmobjects;
 
 import som.vm.Universe;
 import som.vm.constants.Nil;
+import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
@@ -81,8 +82,46 @@ public class SReflectiveObject extends SObject {
   public static boolean isSReflectiveObject(ObjectType type) {
     return SReflectiveObjectLayoutImpl.INSTANCE.isSReflectiveObject(type);
   }
+  
+  public static boolean isSReflectiveObjectWithUnfixedEnvironment(final DynamicObject object) {
+    return isSReflectiveObjectWithUnfixedEnvironment(object.getShape().getObjectType());
+  }
+  
+  public static boolean isSReflectiveObjectWithUnfixedEnvironment(ObjectType objectType) {
+      return objectType instanceof SReflectiveWithUnfixedEnvObjectType;
+  }
 
   public static DynamicObjectFactory createObjectShapeFactoryForClass(final DynamicObject clazz) {
     return SReflectiveObjectLayoutImpl.INSTANCE.createSReflectiveObjectShape(clazz, Nil.nilObject);
+  }
+  
+  public static class SReflectiveWithUnfixedEnvObjectType extends SObjectLayoutImpl.SObjectType {
+    
+    protected final com.oracle.truffle.api.object.DynamicObject environment;
+    
+    public SReflectiveWithUnfixedEnvObjectType(
+            com.oracle.truffle.api.object.DynamicObject klass,
+            com.oracle.truffle.api.object.DynamicObject environment) {
+        super(
+            klass);
+        this.environment = environment;
+    }
+    
+    @Override
+    public SReflectiveObjectType setKlass(com.oracle.truffle.api.object.DynamicObject klass) {
+        return new SReflectiveObjectType(
+            klass,
+            environment);
+    }
+    
+    public com.oracle.truffle.api.object.DynamicObject getEnvironment() {
+        return environment;
+    }
+    
+    public SReflectiveObjectType setEnvironment(com.oracle.truffle.api.object.DynamicObject environment) {
+        return new SReflectiveObjectType(
+            klass,
+            environment);
+    }
   }
 }

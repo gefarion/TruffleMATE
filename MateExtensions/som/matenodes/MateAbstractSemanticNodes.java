@@ -11,6 +11,7 @@ import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Nil;
 import som.vm.constants.ReflectiveOp;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SMateEnvironment;
 import som.vmobjects.SReflectiveObject;
 
@@ -19,6 +20,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
@@ -92,6 +94,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
     }
   }
 
+  @ImportStatic(SReflectiveObject.class)
   public abstract static class MateObjectSemanticCheckNode extends MateAbstractSemanticNodes {
 
     protected MateObjectSemanticCheckNode(ReflectiveOp operation) {
@@ -101,28 +104,39 @@ public abstract class MateAbstractSemanticNodes extends Node {
     public abstract DynamicObject executeGeneric(VirtualFrame frame,
         Object receiver);
 
-    @Specialization(guards = {"receiver.getShape() == cachedShape"}, limit = "1")
-    public DynamicObject doMonomorhic(
-        final VirtualFrame frame,
-        final DynamicObject receiver,
+    @Specialization(guards = { "receiver.getShape() == cachedShape" }, 
+        limit = "1")
+    public DynamicObject doMonomorhic(final VirtualFrame frame, final DynamicObject receiver,
         @Cached("receiver.getShape()") final Shape cachedShape,
         @Cached("environmentReflectiveMethod(getEnvironment(cachedShape), reflectiveOperation)") final DynamicObject method) {
       return method;
     }
 
-    @Specialization(guards = {"receiver.getShape().getObjectType() == cachedType"}, contains = {"doMonomorhic"}, limit = "6")
-    public DynamicObject doPolymorhic(
-        final VirtualFrame frame,
-        final DynamicObject receiver,
-        @Cached("receiver.getShape().getObjectType()") final ObjectType cachedType,
-        @Cached("environmentReflectiveMethod(getEnvironment(receiver.getShape()), reflectiveOperation)") final DynamicObject method) {
+    @Specialization(guards = { "isSReflectiveObject(receiver)", "receiver.getShape().getObjectType() == cachedType" },
+      //contains = { "doMonomorhic" }, 
+        limit = "6")
+    public DynamicObject doPolymorhicFixed(final VirtualFrame frame, final DynamicObject receiver,
+      @Cached("receiver.getShape().getObjectType()") final ObjectType cachedType,
+      @Cached("environmentReflectiveMethod(getEnvironment(receiver.getShape()), reflectiveOperation)") final DynamicObject method) {
+      return method;
+    }
+    
+    @Specialization( guards = { "isSReflectiveObjectWithUnfixedEnvironment(receiver)", 
+        "getEnvironment(receiver) == cachedEnvironmentLookup" },
+        //contains = { "doMonomorhic" }, 
+        limit = "6")
+    public DynamicObject doPolymorhicUnfixed(final VirtualFrame frame, final DynamicObject receiver,
+        @Cached("getEnvironment(receiver)") final DynamicObject cachedEnvironmentLookup,
+        @Cached("createDirectCallTo(cachedEnvironmentLookup)") final DirectCallNode environmentLookupCall,
+        @Cached("executeEnvironmentLookup(receiver, environmentLookupCall)") final DynamicObject cachedEnvironment,
+        @Cached("environmentReflectiveMethod(cachedEnvironment, reflectiveOperation)") final DynamicObject method) {
       return method;
     }
 
-    // @Specialization(contains={"doSReflectiveObject", "doSReflectiveObjectMega", "doStandardSOMForPrimitives"})
-    @Specialization(contains = {"doPolymorhic"})
-    public DynamicObject doMegamorphic(
-        final VirtualFrame frame,
+    // @Specialization(contains={"doSReflectiveObject",
+    // "doSReflectiveObjectMega", "doStandardSOMForPrimitives"})
+    @Specialization(replaces = { "doPolymorhicFixed", "doPolymorhicUnfixed" })
+    public DynamicObject doMegamorphic(final VirtualFrame frame,
         final DynamicObject receiver) {
       return environmentReflectiveMethod(SReflectiveObject.getEnvironment(receiver), this.reflectiveOperation);
     }
@@ -140,8 +154,16 @@ public abstract class MateAbstractSemanticNodes extends Node {
       return SMateEnvironment.methodImplementing(environment, operation);
     }
 
-    public static DynamicObject getEnvironment(Shape shape) {
-        return SReflectiveObject.getEnvironment(shape);
+    protected static DynamicObject getEnvironment(DynamicObject object) {
+      return SReflectiveObject.getEnvironment(object);
+    }
+    
+    protected static DirectCallNode createDirectCallTo(final DynamicObject cachedEnvironmentLookup) {
+      return DirectCallNode.create(SInvokable.getCallTarget(cachedEnvironmentLookup, ExecutionLevel.Meta));
+    }
+    
+    protected static DynamicObject executeEnvironmentLookup(final DynamicObject receiver, final DirectCallNode call) {
+      return (DynamicObject) call.call(new Object[]{receiver});
     }
   }
 
