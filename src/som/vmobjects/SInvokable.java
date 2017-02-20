@@ -43,7 +43,7 @@ import com.oracle.truffle.api.object.dsl.Layout;
 
 @SuppressWarnings("unused")
 public class SInvokable {
-  
+
   @Layout
   //public interface InvokableLayout extends SReflectiveObjectLayout {
   public interface InvokableLayout extends SReflectiveObjectEnvInObjLayout {
@@ -51,8 +51,8 @@ public class SInvokable {
     Invokable getInvokable(DynamicObject object);
     RootCallTarget getCallTarget(DynamicObject object);
     DynamicObject getHolder(DynamicObject object);
-    Invokable getInvokableMeta(final DynamicObject object);
-    RootCallTarget getCallTargetMeta(final DynamicObject object);
+    Invokable getInvokableMeta(DynamicObject object);
+    RootCallTarget getCallTargetMeta(DynamicObject object);
     void setHolderUnsafe(DynamicObject object, DynamicObject value);
     DynamicObject createInvokable(DynamicObjectFactory factory, DynamicObject environment, SSymbol signature, Invokable invokable, RootCallTarget callTarget, Invokable invokableMeta, RootCallTarget callTargetMeta, DynamicObject holder);
     //DynamicObject createInvokable(DynamicObjectFactory factory, SSymbol signature, Invokable invokable, RootCallTarget callTarget, Invokable invokableMeta, RootCallTarget callTargetMeta, DynamicObject holder);
@@ -71,18 +71,18 @@ public class SInvokable {
     return InvokableLayoutImpl.INSTANCE.createInvokable(INVOKABLES_FACTORY, Nil.nilObject, signature, invokable, invokable.createCallTarget(),
         invokableMeta, invokableMeta.createCallTarget(), Nil.nilObject);
   }
-  
+
   public static final RootCallTarget getCallTarget(final DynamicObject invokable, final ExecutionLevel level) {
-    if (level == ExecutionLevel.Meta){
+    if (level == ExecutionLevel.Meta) {
       return InvokableLayoutImpl.INSTANCE.getCallTargetMeta(invokable);
     }
-    return InvokableLayoutImpl.INSTANCE.getCallTarget(invokable); 
+    return InvokableLayoutImpl.INSTANCE.getCallTarget(invokable);
   }
-  
+
   public static final int getNumberOfArguments(final DynamicObject invokable) {
     return getSignature(invokable).getNumberOfSignatureArguments();
   }
-  
+
   public static final Invokable getInvokable(final DynamicObject invokable) {
     return InvokableLayoutImpl.INSTANCE.getInvokable(invokable);
   }
@@ -90,49 +90,49 @@ public class SInvokable {
   public static final SSymbol getSignature(final DynamicObject invokable) {
     return InvokableLayoutImpl.INSTANCE.getSignature(invokable);
   }
-  
+
   public static final DynamicObject getHolder(final DynamicObject invokable) {
     return InvokableLayoutImpl.INSTANCE.getHolder(invokable);
-  }  
-  
+  }
+
   public static void setHolder(final DynamicObject invokable, final DynamicObject value) {
-    if (SMethod.isSMethod(invokable)){
+    if (SMethod.isSMethod(invokable)) {
       SMethod.setHolder(invokable, value);
     } else {
       InvokableLayoutImpl.INSTANCE.setHolderUnsafe(invokable, value);
     }
   }
-  
+
   public static final Object invoke(final DynamicObject invokable, final VirtualFrame frame, final Object... arguments) {
     return getCallTarget(invokable, SArguments.getExecutionLevelFromArrayOfArgs(arguments)).call(arguments);
   }
 
   public static final Object invoke(final DynamicObject invokable, final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
-    return node.call(frame, getCallTarget(invokable, SArguments.getExecutionLevelFromArrayOfArgs(arguments)), arguments);
+    return node.call(getCallTarget(invokable, SArguments.getExecutionLevelFromArrayOfArgs(arguments)), arguments);
   }
-  
+
   public static final Object invoke(final DynamicObject invokable, final DynamicObject environment, final ExecutionLevel exLevel, final Object... arguments) {
-    return getCallTarget(invokable,exLevel).call(SArguments.createSArguments(environment, exLevel, arguments));
+    return getCallTarget(invokable, exLevel).call(SArguments.createSArguments(environment, exLevel, arguments));
   }
-  
+
   public static final String toString(final DynamicObject invokable) {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
     if (InvokableLayoutImpl.INSTANCE.getHolder(invokable) == null) {
       return "Method(nil>>" + InvokableLayoutImpl.INSTANCE.getSignature(invokable).toString() + ")";
     }
 
-    return "Method(" + SClass.getName(InvokableLayoutImpl.INSTANCE.getHolder(invokable)).getString() + ">>" + 
+    return "Method(" + SClass.getName(InvokableLayoutImpl.INSTANCE.getHolder(invokable)).getString() + ">>" +
       InvokableLayoutImpl.INSTANCE.getSignature(invokable).toString() + ")";
   }
-  
+
   public static DynamicObject getSOMClass(final DynamicObject obj) {
     return InvokableLayoutImpl.INSTANCE.getKlass(obj);
   }
-  
-  public static boolean isSInvokable (final DynamicObject obj) {
+
+  public static boolean isSInvokable(final DynamicObject obj) {
     return InvokableLayoutImpl.INSTANCE.isInvokable(obj);
   }
-  
+
   public static final class SMethod extends SInvokable {
     @Layout
     public interface MethodLayout extends InvokableLayout {
@@ -155,19 +155,19 @@ public class SInvokable {
       return MethodLayoutImpl.INSTANCE.createMethod(SMETHOD_FACTORY, Nil.nilObject, signature, invokable,
           invokable.createCallTarget(), invokableMeta, invokableMeta.createCallTarget(), Nil.nilObject, embeddedBlocks);
     }
-    
+
     public static void setHolder(final DynamicObject invokable, final DynamicObject value) {
       MethodLayoutImpl.INSTANCE.setHolderUnsafe(invokable, value);
       for (DynamicObject methods : MethodLayoutImpl.INSTANCE.getEmbeddedBlocks(invokable)) {
         MethodLayoutImpl.INSTANCE.setHolderUnsafe(methods, value);
       }
     }
-    
+
     public static boolean isSMethod(final DynamicObject obj) {
       return MethodLayoutImpl.INSTANCE.isMethod(obj);
     }
   }
-  
+
   public static final class SPrimitive extends SInvokable {
     public static boolean isSPrimitive(final DynamicObject obj) {
       return SInvokable.isSInvokable(obj) && !SMethod.isSMethod(obj);

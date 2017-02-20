@@ -325,6 +325,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
       environment = env;
       object = obj;
       global = globalCheck;
+      this.adoptChildren();
     }
 
     @Specialization(assumptions = "getGlobalSemanticsDeactivatedAssumption()")
