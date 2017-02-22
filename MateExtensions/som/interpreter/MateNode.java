@@ -8,7 +8,12 @@ public interface MateNode {
    * the wrapping node.
    * @return 
    */
-  void wrapIntoMateNode();
+  default void wrapIntoMateNode() {
+    Node replacement = this.asMateNode();
+    if (replacement != null) {
+      ((Node) this).replace(replacement);
+    }
+  }
 
   default Node asMateNode() {
     // do nothing!

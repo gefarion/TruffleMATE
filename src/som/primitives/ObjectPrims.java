@@ -140,7 +140,7 @@ public final class ObjectPrims {
   @Primitive(klass = "Object", selector = "installEnvironment:", mate = true)
   public abstract static class InstallEnvironmentPrim extends BinaryExpressionNode {
     public InstallEnvironmentPrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
+      super(eagWrap, source);
     }
 
     @Specialization(guards = "receiverIsSystemObject(receiver)")

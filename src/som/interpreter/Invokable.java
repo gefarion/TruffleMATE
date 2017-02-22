@@ -29,11 +29,7 @@ public abstract class Invokable extends RootNode implements MateNode{
       final ExpressionNode uninitialized,
       DynamicObject method) {
     super(SomLanguage.class, sourceSection, frameDescriptor);
-    if (Universe.getCurrent().vmReflectionEnabled()) {
-      this.uninitializedBody = this.mateifyUninitializedNode(uninitialized);
-    } else {
-      this.uninitializedBody = uninitialized;
-    }
+    this.uninitializedBody = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
     this.belongsToMethod = method;
   }
@@ -43,7 +39,7 @@ public abstract class Invokable extends RootNode implements MateNode{
     return expressionOrSequence.executeGeneric(frame);
   }
 
-  public abstract Invokable cloneWithNewLexicalContext(LexicalScope outerContext);
+  public abstract Invokable cloneWithNewLexicalContext(LexicalScope outerContext, boolean keepMateification);
   public ExpressionNode inline(final MethodGenerationContext mgenc,
       final Local[] locals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
@@ -69,22 +65,6 @@ public abstract class Invokable extends RootNode implements MateNode{
   }
 
   public abstract void propagateLoopCountThroughoutLexicalScope(long count);
-
-  public void wrapIntoMateNode() {
-    if (this.asMateNode() != null) { this.replace(this.asMateNode()); }
-    /*if (!(this.expressionOrSequence instanceof MateReturnNode)){
-      this.expressionOrSequence.replace(new MateReturnNode(this.expressionOrSequence));
-      uninitializedBody.accept(new MateifyVisitor());
-    }*/
-  }
-
-  private ExpressionNode mateifyUninitializedNode(ExpressionNode uninitialized) {
-    ExpressionNode node = (ExpressionNode) uninitialized.asMateNode();
-    if (node != null) {
-      return node;
-    }
-    return uninitialized;
-  }
 
   public void setMethod(DynamicObject method) {
     this.belongsToMethod = method;

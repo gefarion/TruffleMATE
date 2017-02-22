@@ -62,7 +62,7 @@ public class BlockNode extends LiteralNode {
   @Override
   public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
     Invokable clonedInvokable = InvokableLayoutImpl.INSTANCE.getInvokable(blockMethod).
-        cloneWithNewLexicalContext(inliner.getCurrentScope());
+        cloneWithNewLexicalContext(inliner.getCurrentScope(), true);
     replaceAdapted(clonedInvokable);
   }
 

@@ -22,5 +22,4 @@ public class MateifyVisitor implements NodeVisitor {
     }
     return true;
   }
-
 }

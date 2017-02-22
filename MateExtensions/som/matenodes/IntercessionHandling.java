@@ -1,6 +1,8 @@
 package som.matenodes;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ISuperReadNode;
+import som.interpreter.nodes.nary.EagerPrimitive;
 import som.matenodes.MateAbstractReflectiveDispatch.MateAbstractStandardDispatch;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchMessageLookupNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchSuperMessageLookupNodeGen;
@@ -11,6 +13,7 @@ import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimField
 import som.matenodes.MateAbstractSemanticNodes.MateAbstractSemanticsLevelNode;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticCheckNodeGen;
 import som.vm.Universe;
+import som.vm.constants.ExecutionLevel;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SSymbol;
 
@@ -97,6 +100,7 @@ public abstract class IntercessionHandling extends Node {
     @Override
     public Object doMateSemantics(final VirtualFrame frame,
         final Object[] arguments) {
+      assert SArguments.getExecutionLevel(frame) == ExecutionLevel.Base || this.getParent() instanceof EagerPrimitive;
       DynamicObject method = this.getMateNode().execute(frame, arguments);
       if (method != null) {
         semanticsRedefined.enter();

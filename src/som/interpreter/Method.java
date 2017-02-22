@@ -23,6 +23,7 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
+import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -56,14 +57,21 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope) {
+  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope, boolean keepMateification) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalScope    inlinedCurrentScope = new LexicalScope(
         inlinedFrameDescriptor, outerScope);
+    ExpressionNode body;
+    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()) {
+      body = NodeUtil.cloneNode(uninitializedBody);
+      Universe.getCurrent().mateifyNode(body);
+    } else {
+      body = uninitializedBody;
+    }
     ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
     Method clone = new Method(getSourceSection(), inlinedBody,
-        inlinedCurrentScope, uninitializedBody, this.belongsToMethod);
+        inlinedCurrentScope, body, this.belongsToMethod);
     return clone;
   }
 
@@ -113,7 +121,7 @@ public final class Method extends Invokable {
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull(), true);
   }
 
   public boolean isBlock() {

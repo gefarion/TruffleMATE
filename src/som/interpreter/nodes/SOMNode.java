@@ -93,13 +93,6 @@ public abstract class SOMNode extends Node implements MateNode {
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
 
-  public void wrapIntoMateNode() {
-    Node replacement = this.asMateNode();
-    if (replacement != null) {
-      this.replace(replacement);
-    }
-  }
-
   @SuppressWarnings("unchecked")
   public static <T extends Node> T unwrapIfNecessary(final T node) {
     if (node instanceof WrapperNode) {

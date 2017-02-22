@@ -37,6 +37,7 @@ import java.util.Map;
 import som.VMOptions;
 import som.VmSettings;
 import som.interpreter.Invokable;
+import som.interpreter.MateNode;
 import som.interpreter.MateifyVisitor;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -216,7 +217,15 @@ public class Universe extends ExecutionContext {
 
   public void mateifyNode(Node node) {
     MateifyVisitor visitor = new MateifyVisitor();
-    node.accept(visitor);
+    if (node.getParent() == null) {
+      Node actual = ((MateNode) node).asMateNode();
+      if (actual == null) { actual = node; }
+      for (Node child: actual.getChildren()) {
+        child.accept(visitor);
+      }
+    } else {
+      node.accept(visitor);
+    }
   }
 
   public TruffleRuntime getTruffleRuntime() {
