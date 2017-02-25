@@ -6,12 +6,10 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.IndexDispatch;
 import som.vm.Universe;
-import som.vm.constants.Globals;
 import som.vm.constants.Nil;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -133,30 +131,6 @@ public final class ObjectPrims {
     @Specialization
     public final DynamicObject doObject(final Object receiver) {
       return Types.getClassOf(receiver);
-    }
-  }
-
-  @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "installEnvironment:", mate = true)
-  public abstract static class InstallEnvironmentPrim extends BinaryExpressionNode {
-    public InstallEnvironmentPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
-    @Specialization(guards = "receiverIsSystemObject(receiver)")
-    public final DynamicObject doSystemObject(final DynamicObject receiver, final DynamicObject environment) {
-      Universe.getCurrent().setGlobalEnvironment(environment);
-      return environment;
-    }
-
-    @Specialization
-    public final Object doSObject(final DynamicObject receiver, final DynamicObject environment) {
-      SReflectiveObject.setEnvironment(receiver, environment);
-      return receiver;
-    }
-
-    public static final boolean receiverIsSystemObject(final DynamicObject receiver) {
-      return receiver == Globals.systemObject;
     }
   }
 

@@ -26,8 +26,6 @@ package som.vmobjects;
 
 import som.vm.Universe;
 import som.vm.constants.Nil;
-import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
-
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.ObjectType;
@@ -35,7 +33,7 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.object.dsl.Layout;
 
 public class SReflectiveObject extends SObject {
-  @Layout
+  @Layout(objectTypeSuperclass = MateObjectType.MateReflectiveObjectType.class)
   public interface SReflectiveObjectLayout extends SObjectLayout {
     // DynamicObject createSReflectiveObject(DynamicObjectFactory factory);
     // DynamicObject getEnvironment(DynamicObjectFactory factory);

@@ -2,7 +2,6 @@ package som.vmobjects;
 
 import som.interop.DynamicObjectInteropMessageResolutionForeign;
 import som.vm.constants.Nil;
-import som.vmobjects.SObjectLayoutImpl.SObjectType;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.interop.ForeignAccess;

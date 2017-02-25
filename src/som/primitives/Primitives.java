@@ -313,6 +313,7 @@ public class Primitives {
     allFactories.addAll(MatePrimsFactory.getFactories());
     allFactories.addAll(MethodPrimsFactory.getFactories());
     allFactories.addAll(ObjectPrimsFactory.getFactories());
+    allFactories.addAll(ShapePrimsFactory.getFactories());
     allFactories.addAll(StringPrimsFactory.getFactories());
     allFactories.addAll(SystemPrimsFactory.getFactories());
     allFactories.addAll(WhilePrimitiveNodeFactory.getFactories());

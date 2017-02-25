@@ -2,13 +2,18 @@ package som.primitives;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitives.Specializer;
 import som.vm.Universe;
+import som.vm.constants.Globals;
 import som.vm.constants.MateClasses;
+import som.vm.constants.Nil;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SShape;
 
@@ -162,6 +167,62 @@ public final class MatePrims {
     @Specialization
     public final SShape doSObject(DynamicObject clazz) {
       return new SShape(SClass.getFactory(clazz).getShape());
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "Object", selector = "installEnvironment:", mate = true)
+  public abstract static class InstallEnvironmentPrim extends BinaryExpressionNode {
+    public InstallEnvironmentPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    @Specialization(guards = "receiverIsSystemObject(receiver)")
+    public final DynamicObject doSystemObject(final DynamicObject receiver, final DynamicObject environment) {
+      Universe.getCurrent().setGlobalEnvironment(environment);
+      return environment;
+    }
+
+    @Specialization
+    public final Object doSObject(final DynamicObject receiver, final DynamicObject environment) {
+      SReflectiveObject.setEnvironment(receiver, environment);
+      return receiver;
+    }
+
+    public static final boolean receiverIsSystemObject(final DynamicObject receiver) {
+      return receiver == Globals.systemObject;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "Object", selector = "setHiddenField:value:",
+             eagerSpecializable = false, mate = true)
+  public abstract static class MateSetHiddenFieldPrim extends TernaryExpressionNode {
+    public MateSetHiddenFieldPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    @Specialization
+    public final DynamicObject doSObject(DynamicObject receiver, MockJavaObject key,
+        DynamicObject value) {
+      receiver.set(key.getMockedObject(), value);
+      return value;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "Object", selector = "getField:",
+             eagerSpecializable = false, mate = true)
+  public abstract static class MateGetFieldPrim extends BinaryExpressionNode {
+    public MateGetFieldPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    @Specialization
+    public final Object doSObject(DynamicObject receiver, MockJavaObject key) {
+      // TODO: We should create a property with Nil as defaultValue.
+      Object value = receiver.get(key.getMockedObject());
+      return value == null ? Nil.nilObject : value;
     }
   }
 }

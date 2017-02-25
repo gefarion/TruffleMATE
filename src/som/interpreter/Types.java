@@ -28,6 +28,7 @@ import som.primitives.LengthPrimFactory;
 import som.vm.constants.Classes;
 import som.vm.constants.MateClasses;
 import som.vm.constants.Nil;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -53,6 +54,7 @@ import com.oracle.truffle.api.object.DynamicObject;
                 SSymbol.class,
                  SArray.class,
                  SShape.class,
+         MockJavaObject.class,
         SAbstractObject.class,
           DynamicObject.class,
                Object[].class}) // Object[] is only for argument passing
