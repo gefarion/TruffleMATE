@@ -33,7 +33,7 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.object.dsl.Layout;
 
 public class SReflectiveObject extends SObject {
-  @Layout(objectTypeSuperclass = MateObjectType.MateReflectiveObjectType.class)
+  @Layout
   public interface SReflectiveObjectLayout extends SObjectLayout {
     // DynamicObject createSReflectiveObject(DynamicObjectFactory factory);
     // DynamicObject getEnvironment(DynamicObjectFactory factory);
