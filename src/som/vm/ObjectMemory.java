@@ -21,6 +21,7 @@ import static som.vm.constants.MateClasses.environmentMO;
 import static som.vm.constants.MateClasses.messageMO;
 import static som.vm.constants.MateClasses.operationalSemanticsMO;
 import static som.vm.constants.MateClasses.shapeClass;
+import static som.vm.constants.MateClasses.astNodeClass;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -140,6 +141,7 @@ public class ObjectMemory {
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(operationalSemanticsMO)), operationalSemanticsMO);
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(messageMO)), messageMO);
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(shapeClass)), shapeClass);
+      loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(astNodeClass)), astNodeClass);
 
       AbstractMessageSendNode.specializationFactory = new MateMessageSpecializationsFactory();
     }
@@ -170,6 +172,7 @@ public class ObjectMemory {
       initializeSystemClassName(messageMO, "MessageMO");
       initializeSystemClassName(shapeClass, "Shape");
       initializeSystemClassName(contextClass, "Context");
+      initializeSystemClassName(astNodeClass, "ASTNode");
     }
   }
 

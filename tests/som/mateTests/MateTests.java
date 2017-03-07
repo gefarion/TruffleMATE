@@ -41,7 +41,7 @@ public class MateTests extends SomTests {
     return Arrays.asList(new Object[][] {
         {"Immutability"},
         {"Layout"},
-        {"EnvironmentLocation"},
+        {"Compiler"},
       });
   }
 

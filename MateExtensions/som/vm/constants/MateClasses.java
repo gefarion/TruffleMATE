@@ -11,14 +11,16 @@ public final class MateClasses extends Classes {
   public static final DynamicObject shapeClass;
   public static final DynamicObject contextClass;
   public static final DynamicObject STANDARD_ENVIRONMENT;
+  public static final DynamicObject astNodeClass;
 
   static {
-    // Allocate the Metaclass classes
+    // Allocate the Metalevel classes
     environmentMO          = ObjectMemory.newSystemClass(objectClass);
     operationalSemanticsMO = ObjectMemory.newSystemClass(objectClass);
     messageMO              = ObjectMemory.newSystemClass(objectClass);
     shapeClass             = ObjectMemory.newSystemClass(objectClass);
     contextClass           = ObjectMemory.newSystemClass(objectClass);
+    astNodeClass           = ObjectMemory.newSystemClass(objectClass);
     STANDARD_ENVIRONMENT   = Nil.nilObject;
     // environment = Universe.newSystemClass();
   }

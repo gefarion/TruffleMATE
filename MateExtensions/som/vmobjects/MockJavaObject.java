@@ -1,20 +1,20 @@
 package som.vmobjects;
 
-import som.vm.constants.MateClasses;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.object.DynamicObject;
 
 public class MockJavaObject extends SAbstractObject {
   private final Object mockedObject;
-
+  private final DynamicObject somClass;
+  
   @Override
   public DynamicObject getSOMClass() {
-    // TODO: Create a proper ST class for mockedObjects
-    return MateClasses.shapeClass;
+    return somClass;
   }
 
-  public MockJavaObject(Object object) {
+  public MockJavaObject(Object object, DynamicObject klass) {
     mockedObject = object;
+    somClass = klass;
   }
 
   public Object getMockedObject() {

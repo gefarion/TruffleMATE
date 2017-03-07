@@ -1,6 +1,8 @@
 package som.primitives;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.constants.MateClasses;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInvokable;
 
@@ -37,6 +39,20 @@ public abstract class MethodPrims {
     @Specialization
     public final DynamicObject doSMethod(final DynamicObject receiver) {
       return SInvokable.getHolder(receiver);
+    }
+  }
+  
+  @GenerateNodeFactory
+  @Primitive(klass = "Method", selector = "compilation")
+  public abstract static class CompilationPrim extends UnaryExpressionNode {
+    public CompilationPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    @Specialization
+    public final MockJavaObject doSMethod(final DynamicObject receiver) {
+      // TODO: Analyze if it is also interesting to experiment with the MetaLevel
+      return new MockJavaObject(SInvokable.getInvokable(receiver), MateClasses.astNodeClass);
     }
   }
 }

@@ -22,7 +22,7 @@ import com.oracle.truffle.api.object.Property;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public class ShapePrims {
+public class ASTNodePrims {
   @GenerateNodeFactory
   @Primitive(klass = "Shape Class", selector = "newWithFieldsCount:",
              eagerSpecializable = false, mate = true)
