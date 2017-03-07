@@ -52,14 +52,22 @@ public final class MessageSendNode {
 
   public abstract static class AbstractMessageSendNode extends ExpressionWithTagsNode
       implements PreevaluatedExpression, ExpressionWithReceiver {
+    
+    protected final SSymbol selector;
 
     public static AbstractMessageSpecializationsFactory specializationFactory = new AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory();
     @Children protected final ExpressionNode[] argumentNodes;
 
-    protected AbstractMessageSendNode(final ExpressionNode[] arguments,
+    protected AbstractMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
         final SourceSection source) {
       super(source);
+      this.selector = selector;
       this.argumentNodes = arguments;
+    }
+
+
+    public SSymbol getSelector() {
+      return this.selector;
     }
 
     public boolean isSuperSend() {
@@ -111,16 +119,9 @@ public final class MessageSendNode {
   public abstract static class AbstractUninitializedMessageSendNode
       extends AbstractMessageSendNode {
 
-    protected final SSymbol selector;
-
-    public SSymbol getSelector() {
-      return this.selector;
-    }
-
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments, final SourceSection source) {
-      super(arguments, source);
-      this.selector = selector;
+      super(selector, arguments, source);
     }
 
     @Override
@@ -270,14 +271,12 @@ public final class MessageSendNode {
   public static class GenericMessageSendNode
       extends AbstractMessageSendNode {
 
-    protected final SSymbol selector;
     @Child private AbstractDispatchNode dispatchNode;
 
     protected GenericMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode, final SourceSection source) {
-      super(arguments, source);
-      this.selector = selector;
+      super(selector, arguments, source);
       this.dispatchNode = dispatchNode;
       this.adoptChildren();
     }
@@ -306,10 +305,6 @@ public final class MessageSendNode {
     @Override
     public NodeCost getCost() {
       return Cost.getCost(dispatchNode);
-    }
-
-    public SSymbol getSelector() {
-      return this.selector;
     }
 
     @Override
