@@ -1,5 +1,6 @@
 package som.interpreter.objectstorage;
 
+import som.interpreter.MateNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadFieldNode;
 import som.matenodes.IntercessionHandling;
 import som.vm.Universe;
@@ -9,7 +10,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 
 
-public final class MateLayoutFieldReadNode extends ReadFieldNode {
+public final class MateLayoutFieldReadNode extends ReadFieldNode 
+    implements MateNode {
   @Child private IntercessionHandling ih;
   @Child private ReadFieldNode read;
 

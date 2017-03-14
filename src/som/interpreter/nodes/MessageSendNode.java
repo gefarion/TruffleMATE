@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import java.util.ArrayList;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
@@ -11,11 +12,14 @@ import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExpressionWithReceiver;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
+import som.primitives.ASTNodePrims.MateFilterNodesByClassPrim;
 import som.primitives.Primitives;
 import som.primitives.Primitives.Specializer;
 import som.vm.NotYetImplementedException;
+import som.vm.ObjectMemory;
 import som.vm.Universe;
 import som.vm.constants.MateClasses;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
 
@@ -26,6 +30,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
 public final class MessageSendNode {
@@ -64,7 +69,6 @@ public final class MessageSendNode {
       this.selector = selector;
       this.argumentNodes = arguments;
     }
-
 
     public SSymbol getSelector() {
       return this.selector;
@@ -113,6 +117,10 @@ public final class MessageSendNode {
         return true;
       }
       return super.isTaggedWith(tag);
+    }
+    
+    public DynamicObject[] getSpecializations(){
+      return new DynamicObject[0];
     }
   }
 
@@ -314,6 +322,26 @@ public final class MessageSendNode {
       } else {
         return super.isTaggedWith(tag);
       }
+    }
+    
+    @Override
+    public DynamicObject[] getSpecializations(){
+      ArrayList<Node> specializations = 
+          MateFilterNodesByClassPrim.filterChildrenByClass(this, AbstractDispatchNode.class);
+      DynamicObject[] stSpecializations = new DynamicObject[specializations.size()];
+      
+      int i = 0;
+      ObjectMemory engine = Universe.getCurrent().getObjectMemory();
+      for (@SuppressWarnings("unused") Node specialization: specializations){
+        DynamicObject stSpecialization = engine.newObject(
+            engine.getGlobal(engine.symbolFor("Specialization")));
+        stSpecialization.define(0, ""); // name
+        stSpecialization.define(1, true); // isActive
+        stSpecializations[i] = stSpecialization; 
+        i++; 
+      }
+      
+      return stSpecializations;
     }
   }
 

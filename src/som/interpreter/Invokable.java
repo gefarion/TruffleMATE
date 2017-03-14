@@ -16,7 +16,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
-public abstract class Invokable extends RootNode implements MateNode{
+public abstract class Invokable extends RootNode implements ReflectiveNode{
 
   @Child protected ExpressionNode expressionOrSequence;
 

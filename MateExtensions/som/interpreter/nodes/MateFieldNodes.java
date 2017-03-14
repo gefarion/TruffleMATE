@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.MateNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.objectstorage.MateLayoutFieldReadNode;
@@ -13,7 +14,8 @@ import com.oracle.truffle.api.object.DynamicObject;
 
 
 public abstract class MateFieldNodes {
-  public abstract static class MateFieldReadNode extends FieldReadNode {
+  public abstract static class MateFieldReadNode extends FieldReadNode 
+    implements MateNode {
     @Child private IntercessionHandling ih;
 
     public MateFieldReadNode(FieldReadNode node) {
@@ -39,7 +41,8 @@ public abstract class MateFieldNodes {
     }
   }
 
-  public abstract static class MateFieldWriteNode extends FieldWriteNode {
+  public abstract static class MateFieldWriteNode extends FieldWriteNode
+  implements MateNode {
     @Child private IntercessionHandling ih;
 
     public MateFieldWriteNode(FieldWriteNode node) {

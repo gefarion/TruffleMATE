@@ -23,7 +23,7 @@ package som.interpreter.nodes;
 
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.MateNode;
+import som.interpreter.ReflectiveNode;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
@@ -33,7 +33,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
-public abstract class SOMNode extends Node implements MateNode {
+public abstract class SOMNode extends Node implements ReflectiveNode {
   protected final SourceSection sourceSection;
 
   public SOMNode(final SourceSection sourceSection) {

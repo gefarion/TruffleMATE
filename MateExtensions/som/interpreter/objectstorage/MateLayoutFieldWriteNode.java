@@ -1,5 +1,6 @@
 package som.interpreter.objectstorage;
 
+import som.interpreter.MateNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteFieldNode;
 import som.matenodes.IntercessionHandling;
 import som.vm.Universe;
@@ -9,7 +10,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 
 
-public final class MateLayoutFieldWriteNode extends WriteFieldNode {
+public final class MateLayoutFieldWriteNode extends WriteFieldNode
+    implements MateNode {
   @Child private IntercessionHandling ih;
   @Child private WriteFieldNode write;
 

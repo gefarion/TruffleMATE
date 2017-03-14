@@ -1,7 +1,7 @@
 package som.interpreter.objectstorage;
 
 
-import som.interpreter.MateNode;
+import som.interpreter.ReflectiveNode;
 import som.vm.constants.Nil;
 import som.interpreter.objectstorage.FieldAccessorNodeFactory.ReadFieldNodeGen;
 import som.interpreter.objectstorage.FieldAccessorNodeFactory.WriteFieldNodeGen;
@@ -10,6 +10,7 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Introspectable;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.FinalLocationException;
@@ -20,7 +21,7 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Property;
 
 
-public abstract class FieldAccessorNode extends Node implements MateNode {
+public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
   protected static final int LIMIT = 10;
   protected final int fieldIndex;
 
@@ -69,6 +70,7 @@ public abstract class FieldAccessorNode extends Node implements MateNode {
     }
   }
 
+  @Introspectable
   public abstract static class ReadFieldNode extends FieldAccessorNode {
     public ReadFieldNode(final int fieldIndex) {
       super(fieldIndex);
@@ -106,7 +108,8 @@ public abstract class FieldAccessorNode extends Node implements MateNode {
       return receiver.get(fieldIndex, Nil.nilObject);
     }
   }
-
+  
+  @Introspectable
   public abstract static class WriteFieldNode extends FieldAccessorNode {
     public WriteFieldNode(final int fieldIndex) {
       super(fieldIndex);
