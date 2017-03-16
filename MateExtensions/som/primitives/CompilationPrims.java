@@ -1,15 +1,20 @@
 package som.primitives;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadFieldNode;
 import som.vm.ObjectMemory;
 import som.vm.Universe;
+import som.vm.constants.MateGlobals;
+import som.vm.constants.Nil;
 import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
@@ -25,7 +30,48 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public class ASTNodePrims {
+public class CompilationPrims {
+  public static DynamicObject translateSpecializationInfo(SpecializationInfo specialization){
+    DynamicObject stSpecialization = Universe.getCurrent().createInstance("SpecializationInfo");
+    stSpecialization.define(MateGlobals.SPECIALZATIONINFO_METHOD_NAME_INDEX,
+        specialization.getMethodName());
+    stSpecialization.define(MateGlobals.SPECIALZATIONINFO_IS_ACTIVE_INDEX,
+        specialization.isActive());
+    stSpecialization.define(MateGlobals.SPECIALZATIONINFO_CACHED_DATA_INDEX,
+        Nil.nilObject); // Do we need the cached data? In which format?
+    stSpecialization.define(MateGlobals.SPECIALZATIONINFO_SPECIALIZATIONS_INDEX,
+        translateSpecializations(specialization.getSpecializations()));
+    return stSpecialization;
+  }
+  
+  protected static DynamicObject translateSpecializations(List<Object> specializations){
+    SArray arrayOfSpecializations;
+    long last;
+    if (specializations == null){
+      arrayOfSpecializations = SArray.create(new Object[]{});
+      last = 1;
+    } else {
+      MockJavaObject[] stSpecializations = new MockJavaObject[specializations.size()];
+      int i = 0;
+      ObjectMemory engine = Universe.getCurrent().getObjectMemory();
+      for (Object specialization: specializations){
+        stSpecializations[i] = new MockJavaObject(specialization, 
+            Universe.getCurrent().loadClass(engine.symbolFor("Specialization")));
+        i++;
+      }
+      arrayOfSpecializations = SArray.create(stSpecializations);
+      last = specializations.size() + 1;
+    }
+    DynamicObject vector = Universe.getCurrent().createInstance("Vector");
+    vector.define(MateGlobals.VECTOR_FIRST_INDEX,
+        (long) 1);
+    vector.define(MateGlobals.VECTOR_LAST_INDEX,
+        last);
+    vector.define(MateGlobals.VECTOR_STORAGE_INDEX,
+        arrayOfSpecializations);
+    return vector;
+  }
+  
   @GenerateNodeFactory
   @Primitive(klass = "MessageSendNode", selector = "selector",
              eagerSpecializable = false, mate = true)
@@ -56,6 +102,31 @@ public class ASTNodePrims {
     }
   }
   
+  @GenerateNodeFactory
+  @Primitive(klass = "DispatchChain", selector = "basicRemove:",
+             eagerSpecializable = false, mate = true)
+  public abstract static class RemoveSpecializationPrim extends BinaryExpressionNode {
+    public RemoveSpecializationPrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+
+    @Specialization
+    public final boolean doMock(final DynamicObject dispatchChain, final MockJavaObject node) {
+      Node baseNode = (Node) ((MockJavaObject) dispatchChain.get(1)).getMockedObject();
+      Object specialization = node.getMockedObject();
+      String removeMethodName = "remove" + specialization.getClass().getSimpleName().replace("Data", "") + "_";
+      Method method;
+      try {
+        method = baseNode.getClass().getDeclaredMethod(removeMethodName, Object.class);
+        method.invoke(baseNode, specialization);
+      } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+          | InvocationTargetException e) {
+        return false;
+      }
+      return true;
+    }
+  }
+
   @GenerateNodeFactory
   @Primitive(klass = "ASTNode", selector = "isMateNode",
              eagerSpecializable = false, mate = true)
@@ -90,7 +161,7 @@ public class ASTNodePrims {
         e.printStackTrace();
       }
       
-      ArrayList<Node> nodes = filterChildrenByClass(mockedNode, somNodeClass);
+      List<Node> nodes = filterChildrenByClass(mockedNode, somNodeClass);
       MockJavaObject[] stNodes = new MockJavaObject[nodes.size()]; 
       int i = 0;
       for (Node node: nodes){
@@ -100,7 +171,7 @@ public class ASTNodePrims {
       return SArray.create(stNodes);
     }
     
-    public static ArrayList<Node> filterChildrenByClass(Node node, Class<? extends Node> somClass){
+    public static List<Node> filterChildrenByClass(Node node, Class<? extends Node> somClass){
       NodeTypeFilter filter = new NodeTypeFilter(somClass);
       node.accept(filter);
       return filter.getResultingNodes();
@@ -143,32 +214,25 @@ public class ASTNodePrims {
       List<SpecializationInfo> specializations = Introspection.getSpecializations(mockedNode);
       DynamicObject[] stSpecializations = new DynamicObject[specializations.size()];
       int i = 0;
-      ObjectMemory engine = Universe.getCurrent().getObjectMemory();
-      
       for (SpecializationInfo specialization : specializations){
-        DynamicObject stSpecialization = engine.newObject(
-            engine.getGlobal(engine.symbolFor("Specialization")));
-        stSpecialization.define(0, specialization.getMethodName());
-        stSpecialization.define(1, specialization.isActive());
-        stSpecialization.define(2, (long) specialization.getInstances());
-        stSpecializations[i] = stSpecialization; 
+        stSpecializations[i] = translateSpecializationInfo(specialization); 
         i++;
       }
-      return this.createChain(stSpecializations);
+      return this.createChain(stSpecializations, receiver);
     }
     
     @Specialization(guards = "isMessageSendNode(receiver)")
     public final DynamicObject doMessage(final MockJavaObject receiver) {
       AbstractMessageSendNode mockedNode = (AbstractMessageSendNode) receiver.getMockedObject();
       DynamicObject[] specializations = mockedNode.getSpecializations();
-      return this.createChain(specializations);
+      return this.createChain(specializations, receiver);
     }
     
-    protected DynamicObject createChain(DynamicObject[] specializations){
-      ObjectMemory engine = Universe.getCurrent().getObjectMemory();
-      DynamicObject chain = engine.newObject(engine.getGlobal(
-          engine.symbolFor("DispatchChain")));
-      chain.define(0, SArray.create(specializations));
+    protected DynamicObject createChain(DynamicObject[] specializations, MockJavaObject node){
+      DynamicObject chain = Universe.getCurrent().createInstance("DispatchChain");
+      chain.define(MateGlobals.DISPATCHCHAIN_SPECIALIZATIONS_INFO_INDEX,
+          SArray.create(specializations));
+      chain.define(MateGlobals.DISPATCHCHAIN_PARENT_NODE_INDEX, node);
       return chain;
     }
     
@@ -180,6 +244,4 @@ public class ASTNodePrims {
       return object.getMockedObject() instanceof AbstractMessageSendNode;
     }
   }
-
-
 }

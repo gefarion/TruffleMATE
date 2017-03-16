@@ -276,6 +276,12 @@ public class Universe extends ExecutionContext {
     return new SBlock(method, blockClass, context);
   }
 
+  public DynamicObject createInstance(final String className) {
+    DynamicObject klass = this.loadClass(
+        this.symbolFor(className));
+    return objectMemory.newObject(klass);
+  }
+      
   @TruffleBoundary
   public static DynamicObject newMethod(final SSymbol signature,
       final Invokable truffleInvokable, final boolean isPrimitive,

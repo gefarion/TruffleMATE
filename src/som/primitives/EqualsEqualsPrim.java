@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -137,5 +138,10 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   @Specialization
   public final boolean doCharacter(final char receiver, final String argument) {
     return false;
+  }
+  
+  @Specialization
+  public final boolean doMock(final MockJavaObject receiver, final MockJavaObject argument) {
+    return receiver.getMockedObject().equals(argument.getMockedObject()) && receiver.getSOMClass().equals(argument.getSOMClass());
   }
 }
