@@ -60,7 +60,6 @@ import som.vmobjects.SReflectiveObjectLayoutImpl;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SSymbol;
 import tools.debugger.Tags;
-import tools.dym.DynamicMetrics;
 import tools.language.StructuralProbe;
 
 import com.oracle.truffle.api.Assumption;
@@ -167,13 +166,13 @@ public class Universe extends ExecutionContext {
       webDebugger.startServer(debugger);
     }*/
 
-    if (vmOptions.dynamicMetricsEnabled) {
+    /*if (vmOptions.dynamicMetricsEnabled) {
       assert VmSettings.DYNAMIC_METRICS;
       Instrument dynM = instruments.get(DynamicMetrics.ID);
       dynM.setEnabled(true);
       structuralProbe = dynM.lookup(StructuralProbe.class);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
-    }
+    }*/
 
     engine.eval(SomLanguage.START);
     engine.dispose();

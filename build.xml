@@ -88,13 +88,23 @@
           <formatter type="plain"/>
         </checkstyle>
     </target>
-
-    <target name="compile" depends="libs" description="Compile TruffleSOM">
+	
+	<fileset dir="${server.src}" casesensitive="yes">
+	  <include name="**/*.java"/>
+	  <exclude name="**/*Test*"/>
+	</fileset>
+    
+	<target name="compile" depends="libs" description="Compile TruffleSOM">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
         <javac includeantruntime="false" destdir="${classes.dir}" debug="true">
           <src path="${src.dir}"/>
+        	<exclude name="**/tools/debugger/**"/>
+        	<exclude name="**/tools/dym/DynamicMetrics.java"/>
+        	<exclude name="**/tools/dym/MetricsCsvWriter.java"/>
+        	<exclude name="**/tools/dym/profiles/**"/>
+        	<exclude name="**/tools/dym/nodes/**"/>
           <src path="${src.dirMate}"/>
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />

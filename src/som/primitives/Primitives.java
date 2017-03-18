@@ -303,10 +303,10 @@ public class Primitives {
 
   private static List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
-    allFactories.addAll(ASTNodePrimsFactory.getFactories());
     allFactories.addAll(BlockPrimsFactory.getFactories());
     allFactories.addAll(CharacterPrimsFactory.getFactories());
     allFactories.addAll(ClassPrimsFactory.getFactories());
+    allFactories.addAll(CompilationPrimsFactory.getFactories());
     allFactories.addAll(ContextPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(FilePluginPrimsFactory.getFactories());
