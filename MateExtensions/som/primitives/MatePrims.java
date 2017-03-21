@@ -17,6 +17,7 @@ import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SShape;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -73,6 +74,7 @@ public final class MatePrims {
       super(false, source);
     }
 
+    @TruffleBoundary
     @Specialization
     public final DynamicObject doSObject(final DynamicObject receiver, SShape newShape) {
       receiver.setShapeAndResize(receiver.getShape(), newShape.getShape());

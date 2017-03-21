@@ -19,6 +19,7 @@ import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Introspection;
 import com.oracle.truffle.api.dsl.Introspection.Provider;
@@ -80,6 +81,7 @@ public class CompilationPrims {
       super(false, source);
     }
 
+    @TruffleBoundary
     @Specialization
     public final SSymbol doMock(final MockJavaObject receiver) {
       AbstractMessageSendNode mockedNode = (AbstractMessageSendNode) receiver.getMockedObject();
@@ -110,6 +112,7 @@ public class CompilationPrims {
       super(false, source);
     }
 
+    @TruffleBoundary
     @Specialization
     public final boolean doMock(final DynamicObject dispatchChain, final MockJavaObject node) {
       Node baseNode = (Node) ((MockJavaObject) dispatchChain.get(1)).getMockedObject();
@@ -150,6 +153,7 @@ public class CompilationPrims {
     }
     
     @SuppressWarnings("unchecked")
+    @TruffleBoundary
     @Specialization
     public final SArray doMock(final MockJavaObject receiver, final String classname,
         DynamicObject klass) {
@@ -207,6 +211,7 @@ public class CompilationPrims {
       super(false, source);
     }
     
+    @TruffleBoundary
     @Specialization(guards = "isIntrospectable(receiver)")
     public final DynamicObject doInstrospectable(final MockJavaObject receiver) {
       Node mockedNode = (Node) receiver.getMockedObject();
