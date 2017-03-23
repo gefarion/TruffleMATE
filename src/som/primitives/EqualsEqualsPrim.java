@@ -10,10 +10,12 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 
 @GenerateNodeFactory
@@ -141,7 +143,18 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
   
   @Specialization
-  public final boolean doMock(final MockJavaObject receiver, final MockJavaObject argument) {
-    return receiver.getMockedObject().equals(argument.getMockedObject()) && receiver.getSOMClass().equals(argument.getSOMClass());
+  public final boolean doMock(final MockJavaObject receiver,
+      final MockJavaObject argument,
+      @Cached("createProfile()") final ValueProfile rcvrProfile,
+      @Cached("createProfile()") final ValueProfile argProfile) {
+    
+    Object rcvrMock = rcvrProfile.profile(receiver.getMockedObject());
+    Object argMock = argProfile.profile(argument.getMockedObject());
+    
+    return rcvrMock.equals(argMock) && receiver.getSOMClass().equals(argument.getSOMClass());
+  }
+  
+  protected static ValueProfile createProfile(){
+    return ValueProfile.createClassProfile();
   }
 }
