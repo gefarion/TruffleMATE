@@ -7,12 +7,14 @@ import java.util.List;
 
 import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadFieldNode;
 import som.vm.ObjectMemory;
 import som.vm.Universe;
+import som.vm.constants.MateClasses;
 import som.vm.constants.MateGlobals;
 import som.vm.constants.Nil;
 import som.vmobjects.MockJavaObject;
@@ -57,7 +59,7 @@ public class CompilationPrims {
       ObjectMemory engine = Universe.getCurrent().getObjectMemory();
       for (Object specialization: specializations){
         stSpecializations[i] = new MockJavaObject(specialization, 
-            Universe.getCurrent().loadClass(engine.symbolFor("Specialization")));
+            Universe.getCurrent().loadClass(engine.symbolFor(specialization.getClass().getSimpleName())));
         i++;
       }
       arrayOfSpecializations = SArray.create(stSpecializations);
@@ -247,6 +249,23 @@ public class CompilationPrims {
     
     protected static boolean isMessageSendNode(MockJavaObject object){
       return object.getMockedObject() instanceof AbstractMessageSendNode;
+    }
+  }
+  
+  @GenerateNodeFactory
+  @Primitive(klass = "CachedDispatchNode", selector = "targetNode",
+      eagerSpecializable = false, mate = true)
+  public abstract static class TargetNodePrim extends UnaryExpressionNode {
+    public TargetNodePrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+    
+    @TruffleBoundary
+    @Specialization
+    public final MockJavaObject doInstrospectable(final MockJavaObject receiver) {
+      AbstractCachedDispatchNode mockedNode = (AbstractCachedDispatchNode) receiver.getMockedObject();
+      return new MockJavaObject(mockedNode.getCallNode().getCurrentRootNode(),
+          MateClasses.astNodeClass);
     }
   }
 }

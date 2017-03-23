@@ -6,6 +6,8 @@ import som.vmobjects.MockJavaObject;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
@@ -49,6 +51,7 @@ public abstract class MethodPrims {
       super(eagWrap, source);
     }
 
+    @TruffleBoundary
     @Specialization
     public final MockJavaObject doSMethod(final DynamicObject receiver) {
       // TODO: Analyze if it is also interesting to experiment with the MetaLevel

@@ -58,5 +58,9 @@ public abstract class AbstractDispatchNode extends Node implements DispatchChain
     public final int lengthOfDispatchChain() {
       return 1 + nextInCache.lengthOfDispatchChain();
     }
+    
+    public DirectCallNode getCallNode(){
+      return cachedMethod;
+    }
   }
 }
