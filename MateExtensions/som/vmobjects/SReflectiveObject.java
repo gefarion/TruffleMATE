@@ -66,7 +66,7 @@ public class SReflectiveObject extends SObject {
   public static final void setEnvironment(final DynamicObject obj, final DynamicObject value) {
     ObjectType cachedType = Universe.getCurrent().getCachedObjectType(SObject.getSOMClass(obj), value);
     if (cachedType != null) {
-      obj.getShape().changeType(cachedType);
+      obj.setShapeAndGrow(obj.getShape(), obj.getShape().changeType(cachedType));
     } else {
       SReflectiveObjectLayoutImpl.INSTANCE.setEnvironment(obj, value);
       Universe.getCurrent().cacheNewObjectType(SObject.getSOMClass(obj), obj.getShape().getObjectType());
