@@ -1,20 +1,25 @@
 package som.matenodes;
 
+import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MateMethodActivationNode;
 import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Nil;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -84,6 +89,35 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     @Override
     protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], ((long) arguments[1]) - 1};
+    }
+  }
+  
+  public abstract static class MateDispatchLocalVarRead extends
+      MateDispatchFieldRead {
+    
+    @Override
+    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+      //Arguments at 1 contains the slot identifier.
+      TruffleRuntime runtime = ((Universe) this.getRootNode().getExecutionContext()).getTruffleRuntime();
+      FrameInstance currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());
+      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
+          arguments[1], new MockJavaObject(currentFrame, 
+              Universe.getCurrent().loadClass(Universe.getCurrent().symbolFor("Context")))};
+    }
+  }
+  
+  public abstract static class MateDispatchLocalVarWrite extends
+      MateDispatchLocalVarRead {
+  
+    @Override
+    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+      //Arguments at 1 contains the slot identifier.
+      TruffleRuntime runtime = ((Universe) this.getRootNode().getExecutionContext()).getTruffleRuntime();
+      FrameInstance currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());
+      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
+          arguments[1], new MockJavaObject(currentFrame, 
+              Universe.getCurrent().loadClass(Universe.getCurrent().symbolFor("Context"))),
+              ((ExpressionNode) arguments[2]).executeGeneric(frame)};
     }
   }
 

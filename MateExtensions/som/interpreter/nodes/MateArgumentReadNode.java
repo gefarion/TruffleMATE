@@ -28,7 +28,7 @@ public abstract class MateArgumentReadNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame)});
+      Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame), (long) argumentIndex});
       if (value == null) {
        value = super.executeGeneric(frame);
       }

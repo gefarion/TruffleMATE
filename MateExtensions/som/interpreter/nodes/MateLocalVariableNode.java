@@ -23,7 +23,7 @@ public abstract class MateLocalVariableNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-      Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame)});
+      Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame), local.slot.getIdentifier()});
       if (value == null) {
        value = local.executeGeneric(frame);
       }
@@ -45,7 +45,8 @@ public abstract class MateLocalVariableNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-      Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame)});
+      Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame),
+          local.slot.getIdentifier(), local.getExp()});
       if (value == null) {
        value = local.executeGeneric(frame);
       }

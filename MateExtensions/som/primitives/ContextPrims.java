@@ -5,8 +5,11 @@ import som.interpreter.Invokable;
 import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.MockJavaObject;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleRuntime;
@@ -14,6 +17,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.object.DynamicObject;
@@ -74,4 +78,60 @@ public class ContextPrims {
       return (DynamicObject) SArguments.rcvr(virtualFrame);
     }
   }
+  
+  @GenerateNodeFactory
+  @Primitive(klass = "Context", selector = "localAt:", receiverType = { MockJavaObject.class })
+  public abstract static class GetLocalVarAtPrim extends BinaryExpressionNode {
+    public GetLocalVarAtPrim(final boolean eagWrap, SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    //Todo: dispatch chain index->slot
+    @Specialization
+    public final Object doVirtualFrame(final MockJavaObject mockedFrame,
+        String identifier) {
+      FrameInstance frameInstance = (FrameInstance) mockedFrame.getMockedObject();
+      Frame frame = frameInstance.getFrame(FrameAccess.READ_ONLY);
+      FrameSlot slot = frame.getFrameDescriptor().findFrameSlot(identifier);
+      return frame.getValue(slot);
+    }
+  }
+  
+  @GenerateNodeFactory
+  @Primitive(klass = "Context", selector = "localAt:put:", receiverType = { MockJavaObject.class })
+  public abstract static class LocalVarAtPutPrim extends TernaryExpressionNode {
+    public LocalVarAtPutPrim(final boolean eagWrap, SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    //Todo: dispatch chain index->slot
+    @Specialization
+    public final Object doVirtualFrame(final MockJavaObject mockedFrame,
+        String identifier, Object value) {
+      FrameInstance frameInstance = (FrameInstance) mockedFrame.getMockedObject();
+      Frame frame = frameInstance.getFrame(FrameAccess.READ_WRITE);
+      FrameSlot slot = frame.getFrameDescriptor().findFrameSlot(identifier);
+      slot.setKind(FrameSlotKind.Object); //This probably needs a proper type specialization for performance
+      frame.setObject(slot, value);
+      return value;
+    }
+  }
+  
+  @GenerateNodeFactory
+  @Primitive(klass = "Context", selector = "argAt:", receiverType = { MockJavaObject.class })
+  public abstract static class GetArgAtPrim extends BinaryExpressionNode {
+    public GetArgAtPrim(final boolean eagWrap, SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    //Todo: dispatch chain index->slot
+    @Specialization
+    public final Object doVirtualFrame(final MockJavaObject mockedFrame,
+        long index) {
+      FrameInstance frameInstance = (FrameInstance) mockedFrame.getMockedObject();
+      Frame frame = frameInstance.getFrame(FrameAccess.READ_ONLY);
+      return SArguments.arg(frame, (int) index);
+    }
+  }
+
 }

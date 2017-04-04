@@ -7,7 +7,9 @@ import som.matenodes.MateAbstractReflectiveDispatch.MateAbstractStandardDispatch
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchMessageLookupNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchSuperMessageLookupNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchFieldReadNodeGen;
+import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarReadNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchFieldWriteNodeGen;
+import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarWriteNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimFieldReadNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimFieldWriteNodeGen;
 import som.matenodes.MateAbstractSemanticNodes.MateAbstractSemanticsLevelNode;
@@ -71,10 +73,13 @@ public abstract class IntercessionHandling extends Node {
           reflectiveDispatch = MateDispatchPrimFieldWriteNodeGen.create();
           break;
         case ExecutorLocalArg: case ExecutorNonLocalArg: case ExecutorLocalSuperArg: case ExecutorNonLocalSuperArg:
-          reflectiveDispatch = MateDispatchFieldReadNodeGen.create();
+          reflectiveDispatch = MateDispatchLocalVarReadNodeGen.create();
           break;
-        case ExecutorReadLocal: case ExecutorWriteLocal:
-          reflectiveDispatch = MateDispatchFieldReadNodeGen.create();
+        case ExecutorReadLocal: 
+          reflectiveDispatch = MateDispatchLocalVarReadNodeGen.create();
+          break;
+        case ExecutorWriteLocal:
+          reflectiveDispatch = MateDispatchLocalVarWriteNodeGen.create();
           break;
         case ExecutorReturn:
           reflectiveDispatch = MateDispatchFieldReadNodeGen.create();

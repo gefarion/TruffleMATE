@@ -33,6 +33,7 @@ public class MateBasicInterpreterTests extends BasicInterpreterTests{
       Object expectedResult, Class<?> resultType) {
     super(testClass, testSelector, expectedResult, resultType);
   }
+  
   @Override
   protected String[] getVMArguments() {
     return new String[] {

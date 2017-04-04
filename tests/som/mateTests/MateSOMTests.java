@@ -19,6 +19,7 @@ public class MateSOMTests extends SomTests {
     List<Object[]> mateTests = new ArrayList<Object[]>();
     mateTests.addAll(somTests);
     mateTests.add(new String[]{"Files"});
+    mateTests.add(new String[]{"BasicOperations"});
     return mateTests;
   }
 
@@ -28,7 +29,9 @@ public class MateSOMTests extends SomTests {
         "--mate",
         "-activateMate",
         "-cp",
-        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Streams:Smalltalk/FileSystem/Directories:Smalltalk/Collections/Streams::Smalltalk/Languages::TestSuite:TestSuite/FileSystem",
+        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:"
+        + "Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Streams:Smalltalk/FileSystem/Directories:Smalltalk/Collections/Streams:"
+        + "TestSuite:TestSuite/FileSystem::TestSuite/Mate",
         "TestHarness",
         testName};
     return args;

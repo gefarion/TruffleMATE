@@ -54,13 +54,13 @@ public class SMateEnvironment extends SObject {
         selector = Universe.getCurrent().symbolFor("return:");
         break;
       case ExecutorLocalArg:
-        selector = Universe.getCurrent().symbolFor("localArgument:inFrame:");
+        selector = Universe.getCurrent().symbolFor("readLocalArgument:inFrame:");
         break;
       case ExecutorReadLocal:
         selector = Universe.getCurrent().symbolFor("readLocal:inFrame:");
         break;
       case ExecutorWriteLocal:
-        selector = Universe.getCurrent().symbolFor("writeLocal:inFrame:");
+        selector = Universe.getCurrent().symbolFor("writeLocal:inFrame:value:");
         break;
       case LayoutReadField: case LayoutPrimReadField:
         selector = Universe.getCurrent().symbolFor("read:");
