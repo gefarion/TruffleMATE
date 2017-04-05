@@ -40,6 +40,6 @@ public class MateBasicInterpreterTests extends BasicInterpreterTests{
         "--mate",
         "-activateMate",
         "-cp",
-        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:TestSuite/BasicInterpreterTests"};
+        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:TestSuite/BasicInterpreterTests"};
   }
 }
