@@ -1,13 +1,15 @@
 package som.interpreter.nodes;
 
+import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.UninitializedMessageSendNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.matenodes.IntercessionHandling;
+
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class MateUninitializedMessageSendNode extends
-    UninitializedMessageSendNode {
+    UninitializedMessageSendNode implements MateNode {
   @Child private IntercessionHandling ih;
 
   public MateUninitializedMessageSendNode(UninitializedMessageSendNode somNode) {

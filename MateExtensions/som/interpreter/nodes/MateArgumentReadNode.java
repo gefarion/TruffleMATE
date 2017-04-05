@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.MateNode;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
@@ -13,7 +14,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class MateArgumentReadNode {
-  public static class MateLocalArgumentReadNode extends LocalArgumentReadNode{
+  public static class MateLocalArgumentReadNode extends LocalArgumentReadNode
+      implements MateNode {
     @Child private IntercessionHandling ih;
 
     public MateLocalArgumentReadNode(int argumentIndex, SourceSection source) {

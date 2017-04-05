@@ -42,7 +42,7 @@ public abstract class MateFieldNodes {
   }
 
   public abstract static class MateFieldWriteNode extends FieldWriteNode
-  implements MateNode {
+      implements MateNode {
     @Child private IntercessionHandling ih;
 
     public MateFieldWriteNode(FieldWriteNode node) {

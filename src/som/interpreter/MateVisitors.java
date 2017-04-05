@@ -9,6 +9,8 @@ import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeVisitor;
 
 
 public class MateVisitors {
@@ -56,6 +58,23 @@ public class MateVisitors {
         }
       }
       return null;
+    }
+  }
+  
+  public static class FindFirstMateNode implements NodeVisitor {
+    MateNode matenode;
+    
+    public MateNode mateNode(){
+      return matenode;
+    }
+    
+    @Override
+    public boolean visit(Node node) {
+      if (node instanceof MateNode) {
+        matenode = (MateNode) node;
+        return false;
+      }
+      return true;
     }
   }
 }

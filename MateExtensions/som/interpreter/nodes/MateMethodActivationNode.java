@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.MateNode;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractMethodDispatchNode;
 import som.interpreter.nodes.dispatch.GenericMethodDispatchNode;
@@ -19,7 +20,8 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 
 
-public class MateMethodActivationNode extends Node {
+public class MateMethodActivationNode extends Node
+    implements MateNode {
   @Child MateAbstractSemanticsLevelNode  semanticCheck;
   @Child MateActivationDispatch reflectiveDispatch;
   @Child AbstractMethodDispatchNode methodDispatch;

@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.matenodes.IntercessionHandling;
@@ -9,7 +10,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public class MateGenericMessageSendNode extends GenericMessageSendNode {
+public class MateGenericMessageSendNode extends GenericMessageSendNode
+    implements MateNode {
   @Child private IntercessionHandling ih;
 
   protected MateGenericMessageSendNode(final SSymbol selector,

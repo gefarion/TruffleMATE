@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.MateNode;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -9,7 +10,8 @@ import som.vm.constants.ReflectiveOp;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class MateLocalVariableNode {
-  public static class MateLocalVariableReadNode extends LocalVariableReadNode {
+  public static class MateLocalVariableReadNode extends LocalVariableReadNode
+      implements MateNode {
 
     public MateLocalVariableReadNode(LocalVariableReadNode node) {
       super(node);
@@ -31,7 +33,8 @@ public abstract class MateLocalVariableNode {
     }
   }
 
-  public static class MateLocalVariableWriteNode extends LocalVariableWriteNode {
+  public static class MateLocalVariableWriteNode extends LocalVariableWriteNode
+      implements MateNode {
 
     @Child private IntercessionHandling ih;
     @Child LocalVariableWriteNode local;

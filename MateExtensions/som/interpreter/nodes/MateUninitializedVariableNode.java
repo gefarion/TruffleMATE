@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.Variable.Local;
+import som.interpreter.MateNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
@@ -9,7 +10,8 @@ import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class MateUninitializedVariableNode extends UninitializedVariableNode {
+public abstract class MateUninitializedVariableNode extends UninitializedVariableNode
+    implements MateNode {
 
   public MateUninitializedVariableNode(Local variable, int contextLevel,
       SourceSection source) {

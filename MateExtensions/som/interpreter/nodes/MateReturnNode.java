@@ -1,12 +1,15 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+
+import som.interpreter.MateNode;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 import som.matenodes.IntercessionHandling;
 import som.vm.constants.ReflectiveOp;
 
-public class MateReturnNode extends ExpressionWithTagsNode {
+public class MateReturnNode extends ExpressionWithTagsNode
+    implements MateNode {
   @Child private IntercessionHandling ih;
   @Child ExpressionNode expression;
 
