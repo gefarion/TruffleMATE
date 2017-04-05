@@ -17,6 +17,7 @@ import som.vmobjects.SInvokable;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -28,9 +29,6 @@ public class BlockNode extends LiteralNode {
   public BlockNode(final DynamicObject blockMethod,
       final SourceSection source) {
     super(source);
-    if ((Universe.getCurrent().vmReflectionEnabled())) {
-      Universe.getCurrent().mateifyMethod(blockMethod);
-    }
     this.blockMethod = blockMethod;
   }
 
@@ -99,6 +97,12 @@ public class BlockNode extends LiteralNode {
     // self doesn't need to be passed
     assert SInvokable.getNumberOfArguments(blockMethod) - 1 == blockArguments.length;
     return InvokableLayoutImpl.INSTANCE.getInvokable(blockMethod).inline(mgenc, blockArguments);
+  }
+  
+  @Override
+  public Node asMateNode() {
+    Universe.getCurrent().mateifyMethod(blockMethod);
+    return super.asMateNode();
   }
 
   public static final class BlockNodeWithContext extends BlockNode {
