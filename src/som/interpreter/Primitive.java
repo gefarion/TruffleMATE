@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import som.interpreter.MateVisitors.FindFirstMateNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 
@@ -30,9 +31,15 @@ public final class Primitive extends Invokable {
     LexicalScope inlinedContext = new LexicalScope(inlinedFrameDescriptor,
         outerContext);
     ExpressionNode body;
-    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()) {
-      body = NodeUtil.cloneNode(uninitializedBody);
-      Universe.getCurrent().mateifyNode(uninitializedBody);
+    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()){
+      FindFirstMateNode visitor = new FindFirstMateNode();
+      expressionOrSequence.accept(visitor);
+      if (visitor.mateNode() != null){
+        body = NodeUtil.cloneNode(uninitializedBody);
+        Universe.getCurrent().mateifyNode(uninitializedBody);
+      } else {
+        body = uninitializedBody;
+      }
     } else {
       body = uninitializedBody;
     }

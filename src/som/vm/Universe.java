@@ -73,6 +73,7 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.ObjectType;
@@ -216,7 +217,7 @@ public class Universe extends ExecutionContext {
 
   public void mateifyNode(Node node) {
     MateifyVisitor visitor = new MateifyVisitor();
-    if (node.getParent() == null) {
+    if (!(node instanceof RootNode) & node.getParent() == null) {
       Node actual = ((ReflectiveNode) node).asMateNode();
       if (actual == null) { actual = node; }
       for (Node child: actual.getChildren()) {

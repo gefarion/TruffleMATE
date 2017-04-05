@@ -21,6 +21,7 @@
  */
 package som.interpreter;
 
+import som.interpreter.MateVisitors.FindFirstMateNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
 import som.vm.Universe;
@@ -62,9 +63,15 @@ public final class Method extends Invokable {
     LexicalScope    inlinedCurrentScope = new LexicalScope(
         inlinedFrameDescriptor, outerScope);
     ExpressionNode body;
-    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()) {
-      body = NodeUtil.cloneNode(uninitializedBody);
-      Universe.getCurrent().mateifyNode(body);
+    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()){
+      FindFirstMateNode visitor = new FindFirstMateNode();
+      expressionOrSequence.accept(visitor);
+      if (visitor.mateNode() != null){
+        body = NodeUtil.cloneNode(uninitializedBody);
+        Universe.getCurrent().mateifyNode(uninitializedBody);
+      } else {
+        body = uninitializedBody;
+      }
     } else {
       body = uninitializedBody;
     }
