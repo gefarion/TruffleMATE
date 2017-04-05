@@ -43,8 +43,8 @@ public abstract class TernaryExpressionNode extends EagerlySpecializableNode
 
   public EagerPrimitive wrapInEagerWrapper(
       final EagerlySpecializableNode prim, final SSymbol selector,
-      final ExpressionNode[] arguments) {
+      final ExpressionNode[] arguments, VirtualFrame frame) {
     return AbstractMessageSendNode.specializationFactory.ternaryPrimitiveFor(selector,
-        arguments[0], arguments[1], arguments[2], this);
+        arguments[0], arguments[1], arguments[2], this, frame);
   }
 }

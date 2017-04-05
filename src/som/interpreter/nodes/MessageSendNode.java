@@ -1,6 +1,5 @@
 package som.interpreter.nodes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import som.instrumentation.MessageSendNodeWrapper;
@@ -20,12 +19,9 @@ import som.primitives.CompilationPrims.MateFilterNodesByClassPrim;
 import som.primitives.Primitives;
 import som.primitives.Primitives.Specializer;
 import som.vm.NotYetImplementedException;
-import som.vm.ObjectMemory;
 import som.vm.Universe;
+import som.vm.constants.ExecutionLevel;
 import som.vm.constants.MateClasses;
-import som.vm.constants.MateGlobals;
-import som.vm.constants.Nil;
-import som.vmobjects.MockJavaObject;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
 
@@ -53,8 +49,9 @@ public final class MessageSendNode {
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
-      final ExpressionNode[] argumentNodes, final SourceSection source) {
-    if (Universe.getCurrent().vmReflectionEnabled()) {
+      final ExpressionNode[] argumentNodes,
+      final SourceSection source, final ExecutionLevel level) {
+    if (Universe.getCurrent().vmReflectionEnabled() && level == ExecutionLevel.Base) {
       return new MateGenericMessageSendNode(selector, argumentNodes,
           new UninitializedDispatchNode(source, selector), source);
     } else {
@@ -165,7 +162,7 @@ public final class MessageSendNode {
         if (specializer.noWrapper()) {
           return replace(newNode);
         } else {
-          return makeEagerPrim(newNode);
+          return makeEagerPrim(newNode, frame);
         }
       }
       return makeGenericSend();
@@ -182,9 +179,9 @@ public final class MessageSendNode {
           getSourceSection()));
     }
 
-    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim) {
+    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim, VirtualFrame frame) {
       Universe.insertInstrumentationWrapper(this);
-      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes));
+      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes, frame));
       Universe.insertInstrumentationWrapper((Node) result);
       for (ExpressionNode arg: argumentNodes) {
         unwrapIfNecessary(arg).markAsPrimitiveArgument();

@@ -1,9 +1,11 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -38,13 +40,13 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
       return primitive.executeEvaluated(frame, receiver);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend().doPreEvaluated(frame, new Object[] {receiver});
+      return makeGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame, new Object[] {receiver});
     }
   }
 
-  private GenericMessageSendNode makeGenericSend() {
+  private GenericMessageSendNode makeGenericSend(ExecutionLevel level) {
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver}, getSourceSection());
+        new ExpressionNode[] {receiver}, getSourceSection(), level);
     return replace(node);
   }
 

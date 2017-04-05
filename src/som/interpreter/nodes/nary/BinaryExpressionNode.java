@@ -39,8 +39,8 @@ public abstract class BinaryExpressionNode extends EagerlySpecializableNode
 
   public EagerPrimitive wrapInEagerWrapper(
       final EagerlySpecializableNode prim, final SSymbol selector,
-      final ExpressionNode[] arguments) {
+      final ExpressionNode[] arguments, VirtualFrame frame) {
     return AbstractMessageSendNode.specializationFactory.binaryPrimitiveFor(selector,
-        arguments[0], arguments[1], this);
+        arguments[0], arguments[1], this, frame);
   }
 }

@@ -48,9 +48,9 @@ public abstract class QuaternaryExpressionNode extends EagerlySpecializableNode
 
   public EagerPrimitive wrapInEagerWrapper(
       final EagerlySpecializableNode prim, final SSymbol selector,
-      final ExpressionNode[] arguments) {
+      final ExpressionNode[] arguments, VirtualFrame frame) {
     return AbstractMessageSendNode.specializationFactory.quaternaryPrimitiveFor(selector,
         arguments[0], arguments[1], arguments[2],
-        arguments[3], this);
+        arguments[3], this, frame);
   }
 }
