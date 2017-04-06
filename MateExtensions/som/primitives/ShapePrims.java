@@ -24,7 +24,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public class ShapePrims {
   @GenerateNodeFactory
-  @Primitive(klass = "Shape Class", selector = "newWithFieldsCount:",
+  @Primitive(klass = "Shape class", selector = "newWithFieldsCount:",
              eagerSpecializable = false, mate = true)
   public abstract static class MateNewShapePrim extends BinaryExpressionNode {
     public MateNewShapePrim(final boolean eagWrap, final SourceSection source) {
