@@ -63,13 +63,6 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
     return Truffle.getRuntime().createAssumption();
   }
 
-  public void wrapIntoMateNode() {
-    Node replacement = this.asMateNode();
-    if (replacement != null) {
-      this.replace(replacement);
-    }
-  }
-
   @Introspectable
   public abstract static class ReadFieldNode extends FieldAccessorNode {
     public ReadFieldNode(final int fieldIndex) {

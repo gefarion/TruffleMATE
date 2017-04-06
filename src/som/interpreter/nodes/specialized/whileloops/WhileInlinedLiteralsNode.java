@@ -86,13 +86,14 @@ public final class WhileInlinedLiteralsNode extends ExpressionWithTagsNode {
     }
   }
 
-  public void wrapIntoMateNode() {
-    super.wrapIntoMateNode();
+  @Override
+  public Node asMateNode() {
     MateifyVisitor visitor = new MateifyVisitor();
     conditionActualNode.accept(visitor);
     bodyActualNode.accept(visitor);
+    return super.asMateNode();
   }
-
+  
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LoopNode.class) {

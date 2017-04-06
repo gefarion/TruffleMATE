@@ -18,7 +18,10 @@ public class MateifyVisitor implements NodeVisitor {
       }
     }
     if (node instanceof ReflectiveNode) {
-      ((ReflectiveNode) node).wrapIntoMateNode();
+      Node replacement = ((ReflectiveNode) node).asMateNode();
+      if (replacement != null) {
+        node.replace(replacement);
+      }
     }
     return true;
   }
