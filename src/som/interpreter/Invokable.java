@@ -3,6 +3,7 @@ package som.interpreter;
 import som.compiler.MethodGenerationContext;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MateReturnNode;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -12,11 +13,12 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
-public abstract class Invokable extends RootNode implements ReflectiveNode{
+public abstract class Invokable extends RootNode implements ReflectiveNode {
 
   @Child protected ExpressionNode expressionOrSequence;
 
@@ -77,5 +79,12 @@ public abstract class Invokable extends RootNode implements ReflectiveNode{
     } else {
       return super.isTaggedWith(tag);
     }
+  }
+  
+  @Override
+  public Node asMateNode() {
+    expressionOrSequence = new MateReturnNode(expressionOrSequence);
+    this.adoptChildren();
+    return null;
   }
 }
