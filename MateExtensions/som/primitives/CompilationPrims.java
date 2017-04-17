@@ -65,7 +65,7 @@ public class CompilationPrims {
       arrayOfSpecializations = SArray.create(stSpecializations);
       last = specializations.size() + 1;
     }
-    DynamicObject vector = Universe.getCurrent().createInstance("Vector2");
+    DynamicObject vector = Universe.getCurrent().createInstance("Vector3");
     vector.define(MateGlobals.VECTOR_FIRST_INDEX,
         (long) 1);
     vector.define(MateGlobals.VECTOR_LAST_INDEX,
