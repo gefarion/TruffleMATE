@@ -11,7 +11,7 @@ Obtaining and Running TruffleMate
 
 To checkout the code:
 
-    git clone -b papers/ICOOOLPS17 https://github.com/charig/TruffleMate.git directoryName
+    git clone -b papers/ICOOOLPS17 https://github.com/charig/TruffleMate.git
     cd ICOOOLPS17
 
 Then, to build TruffleMate with Ant:
