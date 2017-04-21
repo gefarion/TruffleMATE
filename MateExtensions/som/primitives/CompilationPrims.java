@@ -66,7 +66,7 @@ public class CompilationPrims {
       arrayOfSpecializations = SArray.create(stSpecializations);
       last = specializations.size() + 1;
     }
-    DynamicObject vector = Universe.getCurrent().createInstance("Vector3");
+    DynamicObject vector = Universe.getCurrent().createInstance("Vector");
     vector.define(MateGlobals.VECTOR_FIRST_INDEX,
         (long) 1);
     vector.define(MateGlobals.VECTOR_LAST_INDEX,
@@ -275,6 +275,7 @@ public class CompilationPrims {
       super(false, source);
     }
     
+    @TruffleBoundary
     @Specialization
     public final boolean doCachedNode(final MockJavaObject receiver) {
       AbstractCachedDispatchNode mockedNode = (AbstractCachedDispatchNode) receiver.getMockedObject();
@@ -282,8 +283,6 @@ public class CompilationPrims {
       assert !(mockedNode.getCallNode().isCallTargetCloned());
       CompilerDirectives.transferToInterpreterAndInvalidate();
       mockedNode.getCallNode().cloneCallTarget();
-      assert (mockedNode.getCallNode().isCallTargetCloned());
-      //Universe.println(mockedNode.getCallNode().toString());
       return mockedNode.getCallNode().isCallTargetCloned();
     }
   }
