@@ -275,13 +275,12 @@ public class CompilationPrims {
       super(false, source);
     }
     
-    //@TruffleBoundary
     @Specialization
     public final boolean doCachedNode(final MockJavaObject receiver) {
       AbstractCachedDispatchNode mockedNode = (AbstractCachedDispatchNode) receiver.getMockedObject();
       assert mockedNode.getCallNode().isCallTargetCloningAllowed();
       assert !(mockedNode.getCallNode().isCallTargetCloned());
-      //CompilerDirectives.transferToInterpreterAndInvalidate();
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       mockedNode.getCallNode().cloneCallTarget();
       assert (mockedNode.getCallNode().isCallTargetCloned());
       //Universe.println(mockedNode.getCallNode().toString());
