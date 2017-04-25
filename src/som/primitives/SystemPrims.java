@@ -16,7 +16,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -175,16 +174,14 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(klass = "System", selector = "export:as:", eagerSpecializable = false)
   public abstract static class ExportAsPrim extends TernaryExpressionNode {
-    @Child protected FindContextNode<Universe> findContext;
 
     public ExportAsPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
-      findContext = SomLanguage.INSTANCE.createNewFindContextNode();
     }
 
     @Specialization(guards = "receiverIsSystemObject(obj)")
     public final boolean doString(final DynamicObject obj, final SBlock method, final String name) {
-      Universe vm = findContext.executeFindContext();
+      Universe vm = this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get();
       vm.registerExport(name, method);
       return true;
     }

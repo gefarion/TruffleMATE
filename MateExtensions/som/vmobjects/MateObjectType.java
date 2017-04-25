@@ -12,7 +12,7 @@ import com.oracle.truffle.api.object.ObjectType;
 public class MateObjectType extends ObjectType {
   @Override
   public ForeignAccess getForeignAccessFactory(DynamicObject object) {
-    return DynamicObjectInteropMessageResolutionForeign.createAccess();
+    return DynamicObjectInteropMessageResolutionForeign.ACCESS;
   }
   
   @Override

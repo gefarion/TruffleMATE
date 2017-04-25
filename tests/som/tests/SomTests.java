@@ -23,8 +23,15 @@ package som.tests;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,7 +82,8 @@ public class SomTests {
   }
 
   @Test
-  public void testSomeTest() throws IOException {
+  public void testSomeTest() throws IOException, URISyntaxException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    Universe.addURLs2CP(this.getCP());
     Universe vm = Universe.getInitializedVM(getArguments());
     vm.setAvoidExit(true);
     vm.execute();
@@ -84,10 +92,19 @@ public class SomTests {
 
   protected String[] getArguments() {
     String[] arg = {
-        "-cp",
-        "Smalltalk:TestSuite:Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:TestSuite/FileSystem",
         "TestHarness",
         testName};
     return arg;
+  }
+  
+  protected List<URL> getCP() throws MalformedURLException {
+    return new ArrayList<URL>(
+        Arrays.asList(
+            new File("Smalltalk").toURI().toURL(),
+            new File("TestSuite").toURI().toURL(),
+            new File("Smalltalk/FileSystem/Core").toURI().toURL(),
+            new File("Smalltalk/FileSystem/Disk").toURI().toURL(),
+            new File("TestSuite/FileSystem").toURI().toURL()));
+    
   }
 }

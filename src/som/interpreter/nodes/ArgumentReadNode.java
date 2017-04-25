@@ -6,6 +6,7 @@ import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
@@ -239,7 +240,7 @@ public abstract class ArgumentReadNode {
 
     @Override
     public FrameInstance executeGeneric(final VirtualFrame frame) {
-      TruffleRuntime runtime = ((Universe) ((ExpressionNode) this).getRootNode().getExecutionContext()).getTruffleRuntime();
+      TruffleRuntime runtime =  this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get().getTruffleRuntime();
       FrameInstance currentFrame;
       if (SArguments.getExecutionLevel(frame) == ExecutionLevel.Meta) {
         currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());

@@ -60,7 +60,7 @@ public final class SBlock extends SAbstractObject {
 
   @Override
   public ForeignAccess getForeignAccess() {
-    return SBlockInteropMessageResolutionForeign.createAccess();
+    return SBlockInteropMessageResolutionForeign.ACCESS;
   }
 
   private final DynamicObject     blockClass;

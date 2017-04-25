@@ -45,7 +45,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
@@ -79,9 +78,12 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   public static final String FILE_EXTENSION = "som";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
-  public static final SomLanguage INSTANCE = new SomLanguage();
+  public SomLanguage(){
+    super();
+  }
+  
   public static final Source START = getSyntheticSource("", "START");
-
+  
   public static Source getSyntheticSource(final String text, final String name) {
     return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE).build();
   }
@@ -89,8 +91,8 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   private static final class ParseResult extends RootNode {
     private final DynamicObject klass;
 
-    ParseResult(final DynamicObject klassArg) {
-      super(SomLanguage.class, null, null);
+    ParseResult(SomLanguage language, final DynamicObject klassArg) {
+      super(language);
       this.klass = klassArg;
     }
 
@@ -104,37 +106,33 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   protected Universe createContext(final Env env) {
     Universe vm;
     try {
-      vm = new Universe((String[]) env.getConfig().get(CMD_ARGS));
+      vm = new Universe(env);
     } catch (IOException e) {
       throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);
     }
     return vm;
   }
-
-  @SuppressWarnings("unchecked")
-  public FindContextNode<Universe> createNewFindContextNode() {
-    return (FindContextNode<Universe>) super.createFindContextNode();
+  
+  @Override
+  protected void initializeContext(Universe context) throws Exception {
+    context.initialize();
   }
+
 
   private static class StartInterpretation extends RootNode {
 
-    private final FindContextNode<Universe> contextNode;
-
-    @SuppressWarnings("unchecked")
-    protected StartInterpretation(final Node findContextNode) {
-      super(SomLanguage.class, null, null);
-      contextNode = (FindContextNode<Universe>) findContextNode;
+    protected StartInterpretation(SomLanguage language) {
+      super(language);
     }
 
     @Override
     public Object execute(final VirtualFrame frame) {
-      Universe vm = contextNode.executeFindContext();
-      return vm.execute();
+      return this.getLanguage(SomLanguage.class).getContextReference().get().execute();
     }
   }
 
   private CallTarget createStartCallTarget() {
-    return Truffle.getRuntime().createCallTarget(new StartInterpretation(createFindContextNode()));
+    return Truffle.getRuntime().createCallTarget(new StartInterpretation(this));
   }
 
   @Override
@@ -144,9 +142,9 @@ public class SomLanguage extends TruffleLanguage<Universe> {
       return createStartCallTarget();
     }
 
-    Universe vm = createNewFindContextNode().executeFindContext();
+    Universe vm = this.getContextReference().get();
     DynamicObject klass = vm.loadClass(code);
-    ParseResult result = new ParseResult(klass);
+    ParseResult result = new ParseResult(this, klass);
     return Truffle.getRuntime().createCallTarget(result);
   }
 

@@ -2,6 +2,7 @@ package som.matenodes;
 
 import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MateMethodActivationNode;
@@ -98,7 +99,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     @Override
     protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
       //Arguments at 1 contains the slot identifier.
-      TruffleRuntime runtime = ((Universe) this.getRootNode().getExecutionContext()).getTruffleRuntime();
+      TruffleRuntime runtime = this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get().getTruffleRuntime();
       FrameInstance currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
           arguments[1], new MockJavaObject(currentFrame, 
@@ -112,7 +113,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     @Override
     protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
       //Arguments at 1 contains the slot identifier.
-      TruffleRuntime runtime = ((Universe) this.getRootNode().getExecutionContext()).getTruffleRuntime();
+      TruffleRuntime runtime = this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get().getTruffleRuntime();
       FrameInstance currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
           arguments[1], new MockJavaObject(currentFrame, 

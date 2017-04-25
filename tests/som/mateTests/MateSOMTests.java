@@ -1,6 +1,10 @@
 package som.mateTests;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.runners.Parameterized.Parameters;
@@ -28,12 +32,27 @@ public class MateSOMTests extends SomTests {
     String[] args = {
         "--mate",
         "-activateMate",
-        "-cp",
-        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:"
-        + "Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Streams:Smalltalk/FileSystem/Directories:Smalltalk/Collections/Streams:"
-        + "TestSuite:TestSuite/FileSystem::TestSuite/Mate",
         "TestHarness",
         testName};
     return args;
+  }
+  
+  @Override
+  protected List<URL> getCP() throws MalformedURLException {
+    List<URL> urls = super.getCP();
+    urls.addAll(Arrays.asList(
+        new File("TestSuite").toURI().toURL(),
+        new File("Smalltalk/Mate").toURI().toURL(),
+        new File("Smalltalk/Mate/MOP").toURI().toURL(),
+        new File("Smalltalk/Mate/Compiler").toURI().toURL(),
+        new File("Smalltalk/Collections/Streams").toURI().toURL(),
+        new File("Smalltalk/FileSystem/Core").toURI().toURL(),
+        new File("Smalltalk/FileSystem/Disk").toURI().toURL(),
+        new File("Smalltalk/FileSystem/Directories").toURI().toURL(),
+        new File("Smalltalk/FileSystem/Streams").toURI().toURL(),
+        new File("TestSuite/FileSystem").toURI().toURL(),
+        new File("TestSuite/Mate").toURI().toURL()
+        ));
+    return urls;
   }
 }

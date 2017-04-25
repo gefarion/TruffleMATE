@@ -29,6 +29,10 @@ import static som.vm.constants.Classes.systemClass;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,8 +70,8 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.ExecutionContext;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage.Env;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -83,16 +87,23 @@ import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
 
-public class Universe extends ExecutionContext {
-  public Universe(final String[] args) throws IOException {
+public class Universe {
+  final Env env; 
+  
+  public Universe(Env environment) throws IOException {
+    env = environment;
+    truffleRuntime = Truffle.getRuntime();
+  }
+  
+  public void initialize(){
     if (current != null) {
       current.validUniverse.invalidate();
     }
     current = this;
-    truffleRuntime = Truffle.getRuntime();
+    
     avoidExit    = false;
     lastExitCode = 0;
-    options = new VMOptions(args);
+    options = new VMOptions((String[]) env.getConfig().get(SomLanguage.CMD_ARGS));
     mateDeactivated = this.getTruffleRuntime().createAssumption();
     mateActivated = null;
     globalSemanticsDeactivated = this.getTruffleRuntime().createAssumption();
@@ -105,7 +116,7 @@ public class Universe extends ExecutionContext {
     }
 
     if (ObjectMemory.last == null) {
-      objectMemory = new ObjectMemory(options.classPath, structuralProbe);
+      objectMemory = new ObjectMemory(structuralProbe);
       objectMemory.initializeSystem();
     } else {
       objectMemory = ObjectMemory.last;
@@ -113,14 +124,12 @@ public class Universe extends ExecutionContext {
     if (options.showUsage) {
       VMOptions.printUsageAndExit();
     }
-
   }
 
-  public static Universe getInitializedVM(String[] arguments) throws IOException {
+  public static Universe getInitializedVM(String[] arguments) {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, arguments);
     PolyglotEngine engine = builder.build();
-
     engine.getInstruments().values().forEach(i -> i.setEnabled(false));
 
     // Trigger initialization
@@ -203,7 +212,8 @@ public class Universe extends ExecutionContext {
 
     return SInvokable.invoke(initialize, MateClasses.STANDARD_ENVIRONMENT, ExecutionLevel.Base, objectMemory.getSystemObject(), SArray.create(arguments));
   }
-
+  
+  
   public void mateify(DynamicObject clazz) {
     int countOfInvokables = SClass.getNumberOfInstanceInvokables(clazz);
     for (int i = 0; i < countOfInvokables; i++) {
@@ -501,13 +511,9 @@ public class Universe extends ExecutionContext {
   }
 
   public String resolveClassFilePath(String className) throws IllegalStateException {
-    for (String cpEntry : options.classPath) {
-      // Load the class from a file and return the loaded class
-      String fname = cpEntry + File.separator + className + ".som";
-      File file = new File(fname);
-      if (file.exists() && !file.isDirectory()) {
-          return fname;
-      }
+    URL url = ClassLoader.getSystemResource(className + ".som");
+    if (url != null) {
+      return url.getPath();
     }
     throw new IllegalStateException(className
           + " class could not be loaded. "
@@ -564,6 +570,18 @@ public class Universe extends ExecutionContext {
   public Object getExport(final String name) {
     return exports.get(name);
   }
+  
+  public static void addURLs2CP(List<URL> urls) {
+    try {
+      Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+      method.setAccessible(true);
+      for(URL url : urls){
+        method.invoke(ClassLoader.getSystemClassLoader(), url);
+      }
+    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      Universe.errorExit("Classpath was not provided in proper format");
+    }
+  }
 
   private final TruffleRuntime                  truffleRuntime;
   // TODO: this is not how it is supposed to be... it is just a hack to cope
@@ -575,12 +593,12 @@ public class Universe extends ExecutionContext {
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
   @CompilationFinal private static PolyglotEngine engine;
-  private final ObjectMemory objectMemory;
+  @CompilationFinal ObjectMemory objectMemory;
   @CompilationFinal private static StructuralProbe structuralProbe;
   // @CompilationFinal private static WebDebugger webDebugger;
   @CompilationFinal private static Debugger    debugger;
 
-  private final VMOptions options;
+  @CompilationFinal VMOptions options;
   private final Map<String, Object> exports = new HashMap<>();
   public static final Source emptySource = Source.newBuilder("").name("Empty Source for primitives and mate wrappers").
       mimeType(SomLanguage.MIME_TYPE).build();

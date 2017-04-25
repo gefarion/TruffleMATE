@@ -4,7 +4,7 @@ import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Invokable;
 import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
-import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -48,7 +48,7 @@ public class ContextPrims {
 
     @Specialization
     public final FrameInstance doMaterializedFrame(final FrameInstance frame) {
-      TruffleRuntime runtime = ((Universe) ((ExpressionNode) this).getRootNode().getExecutionContext()).getTruffleRuntime();
+      TruffleRuntime runtime = this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get().getTruffleRuntime();
       FrameInstance sender;
       if (runtime.getCurrentFrame() == frame) {
         sender = runtime.getCallerFrame();

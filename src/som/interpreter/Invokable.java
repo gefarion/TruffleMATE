@@ -4,10 +4,7 @@ import som.compiler.MethodGenerationContext;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MateReturnNode;
-import som.vm.Universe;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.ExecutionContext;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -51,11 +48,6 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
   @Override
   public final boolean isCloningAllowed() {
     return true;
-  }
-
-  @Override
-  public ExecutionContext getExecutionContext() {
-    return Universe.getCurrent();
   }
 
   public DynamicObject getBelongsToMethod() {

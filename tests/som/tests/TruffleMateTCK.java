@@ -2,11 +2,13 @@ package som.tests;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import som.interpreter.SomLanguage;
+import som.vm.Universe;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.object.DynamicObject;
@@ -20,7 +22,11 @@ public class TruffleMateTCK extends TruffleTCK {
 
   @Override
   protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws Exception {
-    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String [] {"-cp", "Smalltalk:TestSuite/TruffleTCK:"});
+    Universe.addURLs2CP(Arrays.asList(
+        new File("Smalltalk").toURI().toURL(),
+        new File("TestSuite/TruffleTCK").toURI().toURL()
+    ));
+    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String [] {""});
     // preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     // preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, arguments);
     // String fname = vm.resolveClassFilePath("TruffleMateTCK");  

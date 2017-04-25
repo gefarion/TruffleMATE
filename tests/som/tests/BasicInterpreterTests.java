@@ -24,8 +24,12 @@ package som.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -158,7 +162,8 @@ public class BasicInterpreterTests {
   }
 
   @Test
-  public void testBasicInterpreterBehavior() throws IOException {
+  public void testBasicInterpreterBehavior() {
+    Universe.addURLs2CP(this.getCP());
     Universe vm = Universe.getInitializedVM(getVMArguments());
     vm.setAvoidExit(true);
     Object actualResult = vm.execute(testClass, testSelector);
@@ -166,8 +171,19 @@ public class BasicInterpreterTests {
   }
 
   protected String[] getVMArguments() {
-    return new String[] {
-        "-cp",
-        "Smalltalk:TestSuite/BasicInterpreterTests"};
+    return new String[] {""};
+  }
+  
+  protected List<URL> getCP() {
+    List<URL> urls = null;
+    try {
+      return new ArrayList<URL>(
+          urls = Arrays.asList(
+              new File("Smalltalk").toURI().toURL(),
+              new File("TestSuite/BasicInterpreterTests").toURI().toURL()));
+    } catch (MalformedURLException e) {
+      Universe.errorExit("Classpath was provided in incorrect format");
+    }
+    return urls;
   }
 }

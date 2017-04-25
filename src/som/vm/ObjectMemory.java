@@ -63,7 +63,7 @@ public class ObjectMemory {
 
   private final Primitives primitives;
 
-  protected ObjectMemory(final String[] path, final StructuralProbe probe) {
+  protected ObjectMemory(final StructuralProbe probe) {
     last = this;
     globals      = new HashMap<SSymbol, DynamicObject>();
     symbolTable  = new HashMap<>();
