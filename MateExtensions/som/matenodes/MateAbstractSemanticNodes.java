@@ -93,7 +93,8 @@ public abstract class MateAbstractSemanticNodes extends Node {
   }
 
   public abstract static class MateObjectSemanticCheckNode extends MateAbstractSemanticNodes {
-
+    final BranchProfile metaobjectObserved = BranchProfile.create();
+    
     protected MateObjectSemanticCheckNode(ReflectiveOp operation) {
       super(operation);
     }
@@ -102,6 +103,15 @@ public abstract class MateAbstractSemanticNodes extends Node {
         Object receiver);
 
     @Specialization(guards = {"receiver.getShape() == cachedShape"}, limit = "1")
+    public DynamicObject doWarmup(
+        final VirtualFrame frame,
+        final DynamicObject receiver,
+        @Cached("receiver.getShape()") final Shape cachedShape,
+        @Cached("environmentReflectiveMethod(getEnvironment(cachedShape), reflectiveOperation)") final DynamicObject method) {
+      return method;
+    }
+    
+    @Specialization(guards = {"receiver.getShape() == cachedShape"}, replaces = {"doWarmup"}, limit = "3")
     public DynamicObject doMonomorhic(
         final VirtualFrame frame,
         final DynamicObject receiver,
@@ -110,7 +120,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
       return method;
     }
 
-    @Specialization(guards = {"receiver.getShape().getObjectType() == cachedType"}, contains = {"doMonomorhic"}, limit = "6")
+    @Specialization(guards = {"receiver.getShape().getObjectType() == cachedType"}, replaces = {"doMonomorhic"}, limit = "3")
     public DynamicObject doPolymorhic(
         final VirtualFrame frame,
         final DynamicObject receiver,
@@ -119,8 +129,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
       return method;
     }
 
-    // @Specialization(contains={"doSReflectiveObject", "doSReflectiveObjectMega", "doStandardSOMForPrimitives"})
-    @Specialization(contains = {"doPolymorhic"})
+    @Specialization(replaces = {"doPolymorhic"})
     public DynamicObject doMegamorphic(
         final VirtualFrame frame,
         final DynamicObject receiver) {
@@ -132,12 +141,14 @@ public abstract class MateAbstractSemanticNodes extends Node {
           return null;
     }
 
-    protected static DynamicObject environmentReflectiveMethod(
+    protected DynamicObject environmentReflectiveMethod(
         DynamicObject environment, ReflectiveOp operation) {
       if (environment == Nil.nilObject) {
         return null;
+      } else {
+        metaobjectObserved.enter();
+        return SMateEnvironment.methodImplementing(environment, operation);
       }
-      return SMateEnvironment.methodImplementing(environment, operation);
     }
 
     public static DynamicObject getEnvironment(Shape shape) {
