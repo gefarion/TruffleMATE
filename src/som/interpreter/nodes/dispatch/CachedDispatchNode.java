@@ -20,7 +20,8 @@ public final class CachedDispatchNode extends AbstractCachedDispatchNode {
   private final DispatchGuard guard;
 
   public CachedDispatchNode(final DispatchGuard guard,
-      final CallTarget callTarget, final AbstractDispatchNode nextInCache) {
+      final CallTarget callTarget, final AbstractDispatchNode nextInCache,
+      final boolean shouldSplit) {
     super(callTarget, nextInCache);
     this.guard = guard;
     if (VmSettings.DYNAMIC_METRICS) {
@@ -28,6 +29,7 @@ public final class CachedDispatchNode extends AbstractCachedDispatchNode {
           nextInCache.getSourceSection()));
       Universe.insertInstrumentationWrapper(cachedMethod);
     }
+    if (shouldSplit) cachedMethod.cloneCallTarget();
   }
 
   @Override
