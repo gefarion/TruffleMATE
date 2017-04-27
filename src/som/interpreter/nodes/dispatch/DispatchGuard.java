@@ -1,6 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.vmobjects.SBlock;
+import som.vmobjects.SObject;
 import som.vmobjects.SObjectLayoutImpl.SObjectType;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -94,8 +95,8 @@ public abstract class DispatchGuard {
     }
     return obj instanceof DynamicObject &&
         (
-            (((DynamicObject) obj).getShape() == expected) ||
-            ((((SObjectType) ((DynamicObject) obj).getShape().getObjectType())).getKlass() == klass)
+            (((DynamicObject) obj).getShape() == expected)
+            || (SObject.getSOMClass((DynamicObject) obj) == klass)
         );
     }
   }

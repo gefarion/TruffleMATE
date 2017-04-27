@@ -58,42 +58,42 @@ public final class SArray extends SAbstractObject {
 
   public int getEmptyStorage(final ValueProfile storageType) {
     assert type == ArrayType.EMPTY;
-    return (int) storage;
+    return (int) storageType.profile(storage);
   }
 
   public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
     assert type == ArrayType.PARTIAL_EMPTY;
-    return (PartiallyEmptyArray) storage;
+    return (PartiallyEmptyArray) storageType.profile(storage);
   }
 
   public Object[] getObjectStorage(final ValueProfile storageType) {
     assert type == ArrayType.OBJECT;
-    return (Object[]) storage;
+    return (Object[]) storageType.profile(storage);
   }
 
   public long[] getLongStorage(final ValueProfile storageType) {
     assert type == ArrayType.LONG;
-    return (long[]) storage;
+    return (long[]) storageType.profile(storage);
   }
 
   public double[] getDoubleStorage(final ValueProfile storageType) {
     assert type == ArrayType.DOUBLE;
-    return (double[]) storage;
+    return (double[]) storageType.profile(storage);
   }
 
   public boolean[] getBooleanStorage(final ValueProfile storageType) {
     assert type == ArrayType.BOOLEAN;
-    return (boolean[]) storage;
+    return (boolean[]) storageType.profile(storage);
   }
 
   public byte[] getByteStorage(final ValueProfile storageType) {
     assert type == ArrayType.BYTE;
-    return (byte[]) storage;
+    return (byte[]) storageType.profile(storage);
   }
 
   public char[] getCharStorage(final ValueProfile storageType) {
     assert type == ArrayType.CHAR;
-    return (char[]) storage;
+    return (char[]) storageType.profile(storage);
   }
 
   public Object getStoragePlain() {
@@ -303,7 +303,7 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
-  private final ValueProfile partialStorageType = ValueProfile.createClassProfile();
+  public static final ValueProfile partialStorageType = ValueProfile.createClassProfile();
 
   public void ifFullTransitionPartiallyEmpty() {
     PartiallyEmptyArray arr = getPartiallyEmptyStorage(partialStorageType);
@@ -383,7 +383,7 @@ public final class SArray extends SAbstractObject {
     }
   }
 
-  private final ValueProfile objectStorageType = ValueProfile.createClassProfile();
+  private static final ValueProfile objectStorageType = ValueProfile.createClassProfile();
 
   /**
    * For internal use only, specifically, for SClass.

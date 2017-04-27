@@ -46,7 +46,7 @@ parser.add_argument('-l', '--low-level', help='enable low-level optimization out
 parser.add_argument('-ti', '--trace-invalidation', help='trace assumption invalidation and transfers to interpreter',
                     dest='trace_invalidation', action='store_true', default=False)
 parser.add_argument('-it', '--inline_threshold', help='Increase the inlining threshold',
-                    dest='inline_threshold', type=int, default=2500)
+                    dest='inline_threshold', type=int)
 
 def addBaseDir( path ):
     paths = path.split(":")
@@ -164,7 +164,7 @@ if args.interpreter:
             "som.vm.Universe"]
 else:
     SOM_ARGS = ['-Xbootclasspath/a:'
-             + BASE_DIR + '/build/classes:'
+             + BASE_DIR + '/build/classes:',
             "som.vm.Universe"]
     
 if args.dynamic_metrics:
