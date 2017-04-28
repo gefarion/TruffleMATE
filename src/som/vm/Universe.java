@@ -60,6 +60,8 @@ import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectLayoutImpl;
 import som.vmobjects.SReflectiveObject;
+import som.vmobjects.SReflectiveObjectEnvInObj;
+import som.vmobjects.SReflectiveObjectEnvInObjLayoutImpl;
 import som.vmobjects.SReflectiveObjectLayoutImpl;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SSymbol;

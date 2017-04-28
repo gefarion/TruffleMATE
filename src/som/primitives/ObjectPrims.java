@@ -20,6 +20,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+@SuppressWarnings("unused")
 public final class ObjectPrims {
 
   @GenerateNodeFactory

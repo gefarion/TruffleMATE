@@ -13,7 +13,7 @@ import som.vmobjects.MockJavaObject;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-import som.vmobjects.SReflectiveObject;
+import som.vmobjects.SReflectiveObjectEnvInObj;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SShape;
 
@@ -187,7 +187,7 @@ public final class MatePrims {
 
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final DynamicObject environment) {
-      SReflectiveObject.setEnvironment(receiver, environment);
+      SReflectiveObjectEnvInObj.setEnvironment(receiver, environment);
       return receiver;
     }
 

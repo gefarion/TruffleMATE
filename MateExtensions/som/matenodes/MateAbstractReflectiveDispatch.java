@@ -12,6 +12,7 @@ import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Nil;
 import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
+import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -251,9 +252,18 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
       return activationNode.doActivation(frame, lookupResult, arguments);
     }
-
-    @Specialization(guards = {"cachedMethod == method", "shapeOfReceiver(arguments) == cachedShape"},
-        insertBefore = "doMateNode", limit = "INLINE_CACHE_SIZE")
+    
+    @Specialization(guards = {"cachedMethod==method"}, insertBefore="doMateNode")
+    public Object doMateSArrayNodeCached(final VirtualFrame frame, final DynamicObject method,
+        final SBlock subject, final Object[] arguments,
+        @Cached("method") final DynamicObject cachedMethod,
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult){
+      // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
+      return activationNode.doActivation(frame, lookupResult, arguments);
+    }
+    
+    @Specialization(guards = {"cachedMethod==method", "shapeOfReceiver(arguments) == cachedShape"}, 
+        insertBefore="doMateNode", limit = "INLINE_CACHE_SIZE")
     public Object doMateNodeCached(final VirtualFrame frame, final DynamicObject method,
         final DynamicObject subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
