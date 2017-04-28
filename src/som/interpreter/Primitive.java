@@ -1,6 +1,9 @@
 package som.interpreter;
 
+import som.interpreter.MateVisitors.FindFirstMateNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.vm.Universe;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -8,6 +11,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.object.DynamicObject;
 
 
@@ -21,19 +25,32 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalScope outerContext) {
+  public Invokable cloneWithNewLexicalContext(final LexicalScope outerContext, boolean keepMateification) {
     assert outerContext == null;
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalScope inlinedContext = new LexicalScope(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
+    ExpressionNode body;
+    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()){
+      FindFirstMateNode visitor = new FindFirstMateNode();
+      expressionOrSequence.accept(visitor);
+      if (visitor.mateNode() != null){
+        body = NodeUtil.cloneNode(uninitializedBody);
+        Universe.getCurrent().mateifyNode(uninitializedBody);
+      } else {
+        body = uninitializedBody;
+      }
+    } else {
+      body = uninitializedBody;
+    }
+    ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(body,
         inlinedContext);
     return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody, this.belongsToMethod);
   }
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(null);
+    return cloneWithNewLexicalContext(null, true);
   }
 
   @Override
@@ -80,7 +97,7 @@ public final class Primitive extends Invokable {
       m.propagateLoopCountThroughoutLexicalScope(count);
     }
   }
-  
+
   /**
    * Primitive operations are not instrumentable. They are not user-level
    * behavior, and thus, are supposed to remain opaque.

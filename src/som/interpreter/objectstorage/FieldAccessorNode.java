@@ -1,7 +1,7 @@
 package som.interpreter.objectstorage;
 
 
-import som.interpreter.MateNode;
+import som.interpreter.ReflectiveNode;
 import som.vm.constants.Nil;
 import som.interpreter.objectstorage.FieldAccessorNodeFactory.ReadFieldNodeGen;
 import som.interpreter.objectstorage.FieldAccessorNodeFactory.WriteFieldNodeGen;
@@ -10,6 +10,7 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Introspectable;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.FinalLocationException;
@@ -20,8 +21,8 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Property;
 
 
-public abstract class FieldAccessorNode extends Node implements MateNode {
-  protected final int LIMIT = 10;
+public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
+  protected static final int LIMIT = 10;
   protected final int fieldIndex;
 
   public static ReadFieldNode createRead(final int fieldIndex) {
@@ -61,14 +62,8 @@ public abstract class FieldAccessorNode extends Node implements MateNode {
   protected static final Assumption createAssumption() {
     return Truffle.getRuntime().createAssumption();
   }
-  
-  public void wrapIntoMateNode(){
-    Node replacement = this.asMateNode();
-    if (replacement != null){
-      this.replace(replacement);
-    }
-  }
 
+  @Introspectable
   public abstract static class ReadFieldNode extends FieldAccessorNode {
     public ReadFieldNode(final int fieldIndex) {
       super(fieldIndex);
@@ -93,20 +88,21 @@ public abstract class FieldAccessorNode extends Node implements MateNode {
         @Cached("getLocation(self)") final Location location) {
       return Nil.nilObject;
     }
-    
+
     @Specialization(guards = "self.updateShape()")
     public final Object updateShapeAndRead(final DynamicObject self) {
       return executeRead(self); // restart execution of the whole node
     }
-      
+
     @TruffleBoundary
     @Specialization(contains = {"readSetField", "readUnsetField", "updateShapeAndRead"})
     public final Object readFieldUncached(final DynamicObject receiver) {
-      //CompilerAsserts.neverPartOfCompilation("readFieldUncached");
+      // CompilerAsserts.neverPartOfCompilation("readFieldUncached");
       return receiver.get(fieldIndex, Nil.nilObject);
     }
   }
-
+  
+  @Introspectable
   public abstract static class WriteFieldNode extends FieldAccessorNode {
     public WriteFieldNode(final int fieldIndex) {
       super(fieldIndex);
@@ -131,7 +127,7 @@ public abstract class FieldAccessorNode extends Node implements MateNode {
       }
       return value;
     }
-    
+
     @Specialization(guards = {"self.getShape() == oldShape", "oldLocation == null"},
         assumptions = {"locationAssignable", "oldShape.getValidAssumption()", "newShape.getValidAssumption()"},
         limit = "LIMIT")
@@ -151,7 +147,7 @@ public abstract class FieldAccessorNode extends Node implements MateNode {
       }
       return value;
     }
-    
+
     @Specialization(guards = "self.updateShape()")
     public final Object updateObjectShapeAndRespecialize(
         final DynamicObject self, final Object value) {

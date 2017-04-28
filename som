@@ -11,15 +11,23 @@ GRAAL_LOCATIONS = ['/home/smarr/Projects/SOM/graal/jvmci',
                    '/Users/smarr/Projects/SOM/graal/jvmci',
                    BASE_DIR + '/../graal-jvmci-8']
 
+
+JAVA_BIN  = '/bin/java'
+
 if sys.argv[0].endswith('oficial'):
-    GRAAL_LOCATIONS.insert(0, BASE_DIR + '/../graalvm-0.19-re')
-    JAVA_BIN  = '/bin/javao'
+    os.environ['JAVA_HOME'] = BASE_DIR + "/../labsjdk1.8.0_121-jvmci-0.25/"
+    #os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
+    GRAAL_LOCATIONS.insert(0, BASE_DIR + '/../graalvm-0.22')
+    if GRAAL_FLAGS:
+        flags = [GRAAL_FLAGS]
+    else:
+        flags = []
 else:
     JAVA_BIN  = '/bin/java'
     if GRAAL_FLAGS:
         flags = [GRAAL_FLAGS]
     else:
-        flags = ['-Djvmci.class.path.append=' + BASE_DIR + '/../graal-core/mxbuild/dists/graal.jar']
+        flags = ['-Djvmci.class.path.append=' + BASE_DIR + '/../graal/graal-core/mxbuild/dists/graal.jar']
 
     
 JDK_VERSIONS = ['jdk1.8.0_111', 'jdk1.8.0_65']
@@ -38,18 +46,19 @@ parser.add_argument('-l', '--low-level', help='enable low-level optimization out
 parser.add_argument('-ti', '--trace-invalidation', help='trace assumption invalidation and transfers to interpreter',
                     dest='trace_invalidation', action='store_true', default=False)
 parser.add_argument('-it', '--inline_threshold', help='Increase the inlining threshold',
-                    dest='inline_threshold', type=int, default=2500)
+                    dest='inline_threshold', type=int)
 
 def addBaseDir( path ):
     paths = path.split(":")
     return ':'.join([BASE_DIR + '/' + s for s in paths])
 
+                   
 defaultClassPath = ['Smalltalk:Smalltalk/Mate/:Smalltalk/Mate/MOP:' + 
                    'Smalltalk/Collections/Streams:' +
                    'Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Streams:' + 
                    'Examples/Benchmarks:Examples/Benchmarks/LanguageFeatures:Examples/Benchmarks/DeltaBlueInstrumented:Examples/Benchmarks/DeltaBlue:Examples/Benchmarks/NBody:Examples/Benchmarks/Mate:Examples/Benchmarks/Mate/DelegationProxies:Examples/Benchmarks/Mate/Tracing:Examples/Benchmarks/Json:Examples/Benchmarks/Mate/IndividualOperations:Examples/Benchmarks/Mate/Profiling:Examples/Benchmarks/Mate/Columnar']
 
-defaultClassPath = map(addBaseDir, defaultClassPath)
+defaultClassPath = ''.join(map(addBaseDir, defaultClassPath))
 
 parser.add_argument('-cp', '--classpath', help='classpath, default: all benchs and core-lib',
                     dest='som_cp', default=defaultClassPath)
@@ -139,7 +148,7 @@ else:
     else:
         java_bin = graal_home
         for v in JDK_VERSIONS:
-            p = graal_home + '/' + v + '/product'
+	    p = graal_home + '/' + v + '/product'
             if os.path.isdir(p):
                 java_bin = p + JAVA_BIN
                 break
@@ -148,11 +157,16 @@ else:
       	print "No compatible JDK build found, is this script outdated?"
       	sys.exit(1)
 
-SOM_ARGS = ['-Xbootclasspath/a:'
+if args.interpreter:
+    SOM_ARGS = ['-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar',
             "som.vm.Universe"]
-
+else:
+    SOM_ARGS = ['-Xbootclasspath/a:'
+             + BASE_DIR + '/build/classes:',
+            "som.vm.Universe"]
+    
 if args.dynamic_metrics:
     SOM_ARGS += ['--dynamic-metrics']
     flags += ['-Dsom.dynamicMetrics=true']
@@ -229,10 +243,19 @@ if args.threads:
     flags += ['-Dsom.threads=%s' % args.threads ]
 if args.java_interpreter:
     flags += ['-Xint']
+
+
+if args.truffle_debugger:
+    SOM_ARGS += ['--debug']    
+if args.web_debugger:
+    SOM_ARGS += ['--web-debug']
     
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
     args.dynamic_metrics or args.highlight_file):
     flags += ['-Dsom.instrumentation=true']    
+    
+if (args.truffle_debugger or args.web_debugger):
+    flags += ['-Dsom.truffleDebugger=true']
 
 mate_args = []
 if args.mate:

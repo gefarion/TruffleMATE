@@ -1,9 +1,11 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -28,10 +30,10 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
     this.adoptChildren();
   }
 
-  public ExpressionNode getReceiver(){
+  public ExpressionNode getReceiver() {
     return receiver;
   }
-  protected BinaryExpressionNode getPrimitive(){return primitive;}
+  protected BinaryExpressionNode getPrimitive() { return primitive; }
 
   @Override
   public Object executeGenericWithReceiver(final VirtualFrame frame, Object receiver) {
@@ -45,35 +47,35 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
       return primitive.executeEvaluated(frame, receiver, argument);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend().doPreEvaluated(frame,
+      return makeGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame,
           new Object[] {receiver, argument});
     }
   }
 
-  private GenericMessageSendNode makeGenericSend() {
+  private GenericMessageSendNode makeGenericSend(ExecutionLevel level) {
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver, argument}, getSourceSection());
+        new ExpressionNode[] {receiver, argument}, getSourceSection(), level);
     return replace(node);
   }
 
   public ExpressionNode getArgument() {
     return argument;
   }
-  
+
   @Override
   public Object doPreEvaluated(VirtualFrame frame, Object[] args) {
     return executeEvaluated(frame, args[0], args[1]);
   }
-  
+
   @Override
   protected void setTags(final byte tagMark) {
     primitive.tagMark = tagMark;
   }
-  
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     assert !(primitive instanceof WrapperNode);
-    boolean result = super.isTaggedWith(tag)? super.isTaggedWith(tag) : primitive.isTaggedWith(tag); 
+    boolean result = super.isTaggedWith(tag) ? super.isTaggedWith(tag) : primitive.isTaggedWith(tag);
     return result;
   }
 }

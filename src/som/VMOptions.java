@@ -1,7 +1,11 @@
 package som;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import som.vm.Universe;
@@ -18,15 +22,13 @@ public class VMOptions {
   @CompilationFinal public boolean profilingEnabled;
   @CompilationFinal public boolean dynamicMetricsEnabled;
   @CompilationFinal public boolean highlightingEnabled;
-  @CompilationFinal public String [] classPath;
   @CompilationFinal public boolean printAST;
   @CompilationFinal public boolean vmReflectionEnabled;
   @CompilationFinal public boolean vmReflectionActivated;
-  
+
   public VMOptions(final String[] args) {
     vmReflectionEnabled = false;
     printAST = false;
-    classPath = setupDefaultClassPath(0);
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
@@ -37,7 +39,7 @@ public class VMOptions {
           "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
     }
   }
-  
+
   private String[] processVmArguments(final String[] arguments) {
     int currentArg = 0;
     boolean parsedArgument = true;
@@ -80,7 +82,7 @@ public class VMOptions {
         }
       }
     }
-      
+
     // store remaining arguments
     if (currentArg < arguments.length) {
       return Arrays.copyOfRange(arguments, currentArg, arguments.length);
@@ -122,34 +124,16 @@ public class VMOptions {
     StringTokenizer tokenizer = new StringTokenizer(cp, File.pathSeparator);
 
     // Get the default class path of the appropriate size
-    classPath = setupDefaultClassPath(tokenizer.countTokens());
-
+    List<URL> classPath = new ArrayList<URL>(tokenizer.countTokens());
+    
     // Get the directories and put them into the class path array
     for (int i = 0; tokenizer.hasMoreTokens(); i++) {
-      classPath[i] = tokenizer.nextToken();
+      try {
+        classPath.add(i, new File(tokenizer.nextToken()).toURI().toURL());
+      } catch (MalformedURLException e) {
+        Universe.errorExit("Classpath was not provided in proper format");
+      }
     }
-  }
-  
-  @TruffleBoundary
-  private String[] setupDefaultClassPath(final int directories) {
-    // Get the default system class path
-    String systemClassPath = System.getProperty("system.class.path");
-
-    // Compute the number of defaults
-    int defaults = (systemClassPath != null) ? 2 : 1;
-
-    // Allocate an array with room for the directories and the defaults
-    String[] result = new String[directories + defaults];
-
-    // Insert the system class path into the defaults section
-    if (systemClassPath != null) {
-      result[directories] = systemClassPath;
-    }
-
-    // Insert the current directory into the defaults section
-    result[directories + defaults - 1] = ".";
-
-    // Return the class path
-    return result;
+    Universe.addURLs2CP(classPath);
   }
 }

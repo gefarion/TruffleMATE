@@ -12,14 +12,16 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.ConditionProfile;
 
 
 public final class CachedDispatchNode extends AbstractCachedDispatchNode {
-
+  final ConditionProfile morphicness = ConditionProfile.createBinaryProfile();
   private final DispatchGuard guard;
 
   public CachedDispatchNode(final DispatchGuard guard,
-      final CallTarget callTarget, final AbstractDispatchNode nextInCache) {
+      final CallTarget callTarget, final AbstractDispatchNode nextInCache,
+      final boolean shouldSplit) {
     super(callTarget, nextInCache);
     this.guard = guard;
     if (VmSettings.DYNAMIC_METRICS) {
@@ -27,15 +29,16 @@ public final class CachedDispatchNode extends AbstractCachedDispatchNode {
           nextInCache.getSourceSection()));
       Universe.insertInstrumentationWrapper(cachedMethod);
     }
+    if (shouldSplit) cachedMethod.cloneCallTarget();
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, 
+  public Object executeDispatch(final VirtualFrame frame,
       final DynamicObject environment, final ExecutionLevel exLevel, final Object[] arguments) {
     Object rcvr = arguments[0];
     try {
-      if (guard.entryMatches(rcvr)) {
-        return cachedMethod.call(frame, SArguments.createSArguments(environment, exLevel, arguments));
+      if (morphicness.profile(guard.entryMatches(rcvr))) {
+        return cachedMethod.call(SArguments.createSArguments(environment, exLevel, arguments));
       } else {
         return nextInCache.executeDispatch(frame, environment, exLevel, arguments);
       }

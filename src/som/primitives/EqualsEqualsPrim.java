@@ -4,25 +4,28 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
+import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 
 @GenerateNodeFactory
 @Primitive(klass = "Object", selector = "==")
 public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
-  
-  public EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) { 
+
+  public EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
   }
-  
+
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;
@@ -48,7 +51,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   public final boolean doString(final String left, final String right) {
     return left == right;
   }
-  
+
   @Specialization
   public final boolean doString(final String receiver, final char argument) {
     return false;
@@ -123,19 +126,35 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   public final boolean doString(final String receiver, final DynamicObject argument) {
     return false;
   }
-  
+
   @Specialization
   public final boolean doCharacter(final char receiver, final char argument) {
-    return Character.compare(receiver , argument) == 0;
+    return Character.compare(receiver, argument) == 0;
   }
-  
+
   @Specialization
   public final boolean doCharacter(final char receiver, final DynamicObject argument) {
     return false;
   }
-  
+
   @Specialization
   public final boolean doCharacter(final char receiver, final String argument) {
     return false;
+  }
+  
+  @Specialization
+  public final boolean doMock(final MockJavaObject receiver,
+      final MockJavaObject argument,
+      @Cached("createProfile()") final ValueProfile rcvrProfile,
+      @Cached("createProfile()") final ValueProfile argProfile) {
+    
+    Object rcvrMock = rcvrProfile.profile(receiver.getMockedObject());
+    Object argMock = argProfile.profile(argument.getMockedObject());
+    
+    return rcvrMock.equals(argMock) && receiver.getSOMClass().equals(argument.getSOMClass());
+  }
+  
+  protected static ValueProfile createProfile(){
+    return ValueProfile.createClassProfile();
   }
 }

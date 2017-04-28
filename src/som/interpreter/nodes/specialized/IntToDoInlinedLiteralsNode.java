@@ -7,7 +7,6 @@ import som.interpreter.MateifyVisitor;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -127,10 +126,11 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionWithTagsNode 
     // NOOP: This node has a FrameSlot, but it is local, so does not need to be updated.
   }
   
-  public void wrapIntoMateNode() {
-    super.wrapIntoMateNode();
+  @Override
+  public Node asMateNode() {
     MateifyVisitor visitor = new MateifyVisitor();
     bodyActualNode.accept(visitor);
+    return super.asMateNode();
   }
   
   @Override

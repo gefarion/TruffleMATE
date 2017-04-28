@@ -7,7 +7,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.MateNode;
+import som.interpreter.ReflectiveNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
 import tools.dym.Tags.ControlFlowCondition;
@@ -49,7 +49,7 @@ public abstract class ExpressionWithTagsNode extends ExpressionNode {
   public ExpressionWithTagsNode(final SourceSection sourceSection) {
     super(sourceSection);
   }
-  
+
   public ExpressionWithTagsNode(final ExpressionNode wrappedNode) {
     super(wrappedNode);
   }
@@ -131,7 +131,7 @@ public abstract class ExpressionWithTagsNode extends ExpressionNode {
 
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode || newNode instanceof MateNode) { return; }
+    if (newNode instanceof WrapperNode || newNode instanceof ReflectiveNode) { return; }
 
     if (newNode instanceof ExpressionWithTagsNode) {
       ExpressionWithTagsNode n = (ExpressionWithTagsNode) newNode;

@@ -21,7 +21,11 @@
  */
 package som.interpreter;
 
+import som.interpreter.MateVisitors.FindFirstMateNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
+import som.vm.Universe;
+
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
@@ -48,19 +52,33 @@ public final class Method extends Invokable {
   @Override
   public String toString() {
     SourceSection ss = getSourceSection();
-    final String id = ss.getShortDescription();
+    final String id = String.format("%s:%d", ss.getSource().getName(),
+        ss.getStartLine());
     return "Method " + id + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope) {
+  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope, boolean keepMateification) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalScope    inlinedCurrentScope = new LexicalScope(
         inlinedFrameDescriptor, outerScope);
+    ExpressionNode body;
+    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()){
+      FindFirstMateNode visitor = new FindFirstMateNode();
+      expressionOrSequence.accept(visitor);
+      if (visitor.mateNode() != null){
+        body = NodeUtil.cloneNode(uninitializedBody);
+        Universe.getCurrent().mateifyNode(uninitializedBody);
+      } else {
+        body = uninitializedBody;
+      }
+    } else {
+      body = uninitializedBody;
+    }
     ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
     Method clone = new Method(getSourceSection(), inlinedBody,
-        inlinedCurrentScope, uninitializedBody, this.belongsToMethod);
+        inlinedCurrentScope, body, this.belongsToMethod);
     return clone;
   }
 
@@ -97,8 +115,28 @@ public final class Method extends Invokable {
     LoopNode.reportLoopCount(this, (count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);
   }
 
+  public SourceSection[] getDefinition() {
+    // Should we include an special array of sourceSections for the method definition as in SOMns?
+    return new SourceSection[]{this.getSourceSection()};
+  }
+
+  public SourceSection getRootNodeSource() {
+    ExpressionNode root = SOMNode.unwrapIfNecessary(expressionOrSequence);
+    assert root.isMarkedAsRootExpression();
+    return root.getSourceSection();
+  }
+
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull(), true);
+  }
+
+  public boolean isBlock() {
+    // TODO: analyze the best way to implement this method properly
+    return false;
+  }
+
+  public LexicalScope getLexicalScope() {
+    return currentLexicalScope;
   }
 }

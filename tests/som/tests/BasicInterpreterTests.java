@@ -24,8 +24,12 @@ package som.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +57,7 @@ public class BasicInterpreterTests {
         {"NonLocalReturn", "test3",  3, Long.class },
         {"NonLocalReturn", "test4", 42, Long.class },
         {"NonLocalReturn", "test5", 22, Long.class },
-        
+
         {"NonLocalVars", "writeDifferentTypes", 3.75, Double.class },
 
         {"Blocks", "arg1",  42, Long.class },
@@ -103,9 +107,9 @@ public class BasicInterpreterTests {
         {"BlockInlining", "testDeepDeepNestedFalse",                 43, Long.class },
 
         {"BlockInlining", "testToDoNestDoNestIfTrue",                 2, Long.class },
-        
+
         {"ObjectFieldAccess", "test",                                 4, Long.class },
-        
+
         {"LocalVarAccess", "test",                                    1, Long.class }
 
     });
@@ -133,7 +137,7 @@ public class BasicInterpreterTests {
       assertEquals(expected, actual);
       return;
     }
-    
+
     if (resultType == Double.class) {
       double expected = (double) expectedResult;
       double actual   = (double) actualResult;
@@ -158,16 +162,28 @@ public class BasicInterpreterTests {
   }
 
   @Test
-  public void testBasicInterpreterBehavior() throws IOException {
+  public void testBasicInterpreterBehavior() {
+    Universe.addURLs2CP(this.getCP());
     Universe vm = Universe.getInitializedVM(getVMArguments());
     vm.setAvoidExit(true);
     Object actualResult = vm.execute(testClass, testSelector);
     assertEqualsSOMValue(expectedResult, actualResult);
   }
-  
+
   protected String[] getVMArguments() {
-    return new String[] {
-        "-cp",
-        "Smalltalk:TestSuite/BasicInterpreterTests"};
+    return new String[] {""};
+  }
+  
+  protected List<URL> getCP() {
+    List<URL> urls = null;
+    try {
+      return new ArrayList<URL>(
+          urls = Arrays.asList(
+              new File("Smalltalk").toURI().toURL(),
+              new File("TestSuite/BasicInterpreterTests").toURI().toURL()));
+    } catch (MalformedURLException e) {
+      Universe.errorExit("Classpath was provided in incorrect format");
+    }
+    return urls;
   }
 }

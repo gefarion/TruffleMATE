@@ -75,7 +75,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionWithTagsNode {
     return Nil.nilObject;
   }
 
-  protected final void reportLoopCount(final long count) {
+  protected void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
@@ -86,11 +86,12 @@ public final class WhileInlinedLiteralsNode extends ExpressionWithTagsNode {
     }
   }
 
-  public void wrapIntoMateNode() {
-    super.wrapIntoMateNode();
+  @Override
+  public Node asMateNode() {
     MateifyVisitor visitor = new MateifyVisitor();
     conditionActualNode.accept(visitor);
     bodyActualNode.accept(visitor);
+    return super.asMateNode();
   }
   
   @Override

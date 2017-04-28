@@ -33,12 +33,13 @@ public class MateBasicInterpreterTests extends BasicInterpreterTests{
       Object expectedResult, Class<?> resultType) {
     super(testClass, testSelector, expectedResult, resultType);
   }
+  
   @Override
   protected String[] getVMArguments() {
     return new String[] {
         "--mate",
         "-activateMate",
         "-cp",
-        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:TestSuite/BasicInterpreterTests"};
+        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:TestSuite/BasicInterpreterTests"};
   }
 }

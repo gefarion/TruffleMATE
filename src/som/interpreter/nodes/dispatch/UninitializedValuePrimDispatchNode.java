@@ -38,7 +38,8 @@ public final class UninitializedValuePrimDispatchNode
       assert method != null;
       UninitializedValuePrimDispatchNode uninitialized = new UninitializedValuePrimDispatchNode(this.sourceSection);
       CachedDispatchNode node = new CachedDispatchNode(
-          DispatchGuard.createForBlock(rcvr), SInvokable.getCallTarget(method, SArguments.getExecutionLevel(frame)), uninitialized);
+          DispatchGuard.createForBlock(rcvr), SInvokable.getCallTarget(method, SArguments.getExecutionLevel(frame)), 
+          uninitialized, false);
       return replace(node);
     } else {
       GenericBlockDispatchNode generic = new GenericBlockDispatchNode(this.sourceSection);

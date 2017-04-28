@@ -28,7 +28,7 @@ public class MessageSendNodeWrapper implements InstrumentableFactory<AbstractMes
 
     private MessageSendWrapper(final AbstractMessageSendNode delegate,
         final ProbeNode probe) {
-      super(null, null);
+      super(null, null, null);
       this.delegate = delegate;
       this.probe    = probe;
     }

@@ -1,6 +1,7 @@
 package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -56,7 +57,6 @@ public abstract class EagerlySpecializableNode extends ExpressionWithTagsNode
   /**
    * Create an eager primitive wrapper, which wraps this node.
    */
-  public abstract EagerPrimitive wrapInEagerWrapper(
-      final EagerlySpecializableNode prim, final SSymbol selector,
-      final ExpressionNode[] arguments);
+  public abstract EagerPrimitive wrapInEagerWrapper(EagerlySpecializableNode prim,
+      SSymbol selector, ExpressionNode[] arguments, VirtualFrame frame);
 }

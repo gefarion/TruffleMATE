@@ -46,12 +46,13 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
       } else {
         callTarget = null;
       }
-      
+
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(this.sourceSection, selector);
       DispatchGuard guard = DispatchGuard.create(rcvr);
       AbstractCachedDispatchNode node;
       if (method != null) {
-        node = new CachedDispatchNode(guard, callTarget, newChainEnd);
+        boolean shouldSplit = selector.getString().equals("new")? true : false;  
+        node = new CachedDispatchNode(guard, callTarget, newChainEnd, shouldSplit);
       } else {
         node = new CachedDnuNode(rcvrClass, guard, selector, newChainEnd, SArguments.getExecutionLevel(frame));
       }
@@ -71,7 +72,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, 
+  public Object executeDispatch(final VirtualFrame frame,
       final DynamicObject environment, final ExecutionLevel exLevel, final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     return specialize(frame, arguments).

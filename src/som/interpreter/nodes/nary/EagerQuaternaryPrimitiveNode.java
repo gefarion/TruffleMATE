@@ -1,10 +1,12 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -34,11 +36,11 @@ public class EagerQuaternaryPrimitiveNode extends EagerPrimitive {
     this.primitive = primitive;
   }
 
-  public ExpressionNode getReceiver(){return receiver;}
-  protected ExpressionNode getFirstArg(){return argument1;}
-  protected ExpressionNode getSecondArg(){return argument2;}
-  protected ExpressionNode getPrimitive(){return primitive;}
-  
+  public ExpressionNode getReceiver() { return receiver; }
+  protected ExpressionNode getFirstArg() { return argument1; }
+  protected ExpressionNode getSecondArg() { return argument2; }
+  protected ExpressionNode getPrimitive() { return primitive; }
+
   @Override
   public Object executeGenericWithReceiver(final VirtualFrame frame, Object receiver) {
     Object arg1 = argument1.executeGeneric(frame);
@@ -54,26 +56,26 @@ public class EagerQuaternaryPrimitiveNode extends EagerPrimitive {
       return primitive.executeEvaluated(frame, receiver, argument1, argument2, argument3);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend().doPreEvaluated(frame,
+      return makeGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2, argument3});
     }
   }
 
-  private AbstractMessageSendNode makeGenericSend() {
+  private AbstractMessageSendNode makeGenericSend(ExecutionLevel level) {
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver, argument1, argument2, argument3},
-        getSourceSection());
+        getSourceSection(), level);
     return replace(node);
   }
-  
+
   public ExpressionNode getThirdArg() {
     return argument3;
   }
-  
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     assert !(primitive instanceof WrapperNode);
-    boolean result = super.isTaggedWith(tag)? super.isTaggedWith(tag) : primitive.isTaggedWith(tag); 
+    boolean result = super.isTaggedWith(tag) ? super.isTaggedWith(tag) : primitive.isTaggedWith(tag);
     return result;
   }
 
@@ -81,7 +83,7 @@ public class EagerQuaternaryPrimitiveNode extends EagerPrimitive {
   public Object doPreEvaluated(VirtualFrame frame, Object[] args) {
     return executeEvaluated(frame, args[0], args[1], args[2], args[3]);
   }
-  
+
   @Override
   protected void setTags(final byte tagMark) {
     primitive.tagMark = tagMark;

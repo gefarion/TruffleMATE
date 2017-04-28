@@ -1,6 +1,9 @@
 package som.interpreter.nodes.dispatch;
 
 import som.vmobjects.SBlock;
+import som.vmobjects.SObject;
+import som.vmobjects.SObjectLayoutImpl.SObjectType;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.object.DynamicObject;
@@ -22,7 +25,7 @@ public abstract class DispatchGuard {
     if (obj instanceof DynamicObject) {
       return new CheckSObject(((DynamicObject) obj).getShape());
     }
-    
+
     if (obj instanceof SBlock) {
       return new CheckSBlock(((SBlock) obj).getSOMClass());
     }
@@ -51,7 +54,7 @@ public abstract class DispatchGuard {
 
     private final Class<?> expected;
 
-    public CheckClass(final Class<?> expectedClass) {
+    CheckClass(final Class<?> expectedClass) {
       this.expected = expectedClass;
     }
 
@@ -77,9 +80,11 @@ public abstract class DispatchGuard {
 
   private static final class CheckSObject extends DispatchGuard {
     private final Shape expected;
+    private final DynamicObject klass;
 
-    public CheckSObject(final Shape expected) {
+    CheckSObject(final Shape expected) {
       this.expected = expected;
+      this.klass = ((SObjectType) (expected.getObjectType())).getKlass();
     }
 
   @Override
@@ -89,20 +94,23 @@ public abstract class DispatchGuard {
       throw new InvalidAssumptionException();
     }
     return obj instanceof DynamicObject &&
-        ((DynamicObject) obj).getShape() == expected;
+        (
+            (((DynamicObject) obj).getShape() == expected)
+            || (SObject.getSOMClass((DynamicObject) obj) == klass)
+        );
     }
   }
-  
+
   private static final class CheckSBlock extends DispatchGuard {
     private final DynamicObject expected;
 
-    public CheckSBlock(final DynamicObject blockClass) {
+    CheckSBlock(final DynamicObject blockClass) {
       this.expected = blockClass;
     }
 
   @Override
   public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
-    
+
     return obj instanceof SBlock &&
         ((SBlock) obj).getSOMClass() == expected;
     }

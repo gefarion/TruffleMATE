@@ -3,23 +3,22 @@ package som.interpreter;
 import som.compiler.MethodGenerationContext;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
-import som.vm.Universe;
-
+import som.interpreter.nodes.MateReturnNode;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.ExecutionContext;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
-public abstract class Invokable extends RootNode implements MateNode{
+public abstract class Invokable extends RootNode implements ReflectiveNode {
 
   @Child protected ExpressionNode expressionOrSequence;
-  
+
   protected final ExpressionNode uninitializedBody;
   @CompilationFinal protected DynamicObject belongsToMethod;
 
@@ -29,11 +28,7 @@ public abstract class Invokable extends RootNode implements MateNode{
       final ExpressionNode uninitialized,
       DynamicObject method) {
     super(SomLanguage.class, sourceSection, frameDescriptor);
-    if (Universe.getCurrent().vmReflectionEnabled()){
-      this.uninitializedBody = this.mateifyUninitializedNode(uninitialized);
-    } else {
-      this.uninitializedBody = uninitialized;
-    }
+    this.uninitializedBody = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
     this.belongsToMethod = method;
   }
@@ -43,7 +38,7 @@ public abstract class Invokable extends RootNode implements MateNode{
     return expressionOrSequence.executeGeneric(frame);
   }
 
-  public abstract Invokable cloneWithNewLexicalContext(final LexicalScope outerContext);
+  public abstract Invokable cloneWithNewLexicalContext(LexicalScope outerContext, boolean keepMateification);
   public ExpressionNode inline(final MethodGenerationContext mgenc,
       final Local[] locals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
@@ -54,42 +49,21 @@ public abstract class Invokable extends RootNode implements MateNode{
   public final boolean isCloningAllowed() {
     return true;
   }
-  
-  @Override
-  public ExecutionContext getExecutionContext() {
-    return Universe.getCurrent();
-  }
-  
+
   public DynamicObject getBelongsToMethod() {
-    return this.belongsToMethod; 
+    return this.belongsToMethod;
   }
-  
+
   public final RootCallTarget createCallTarget() {
     return Truffle.getRuntime().createCallTarget(this);
   }
 
-  public abstract void propagateLoopCountThroughoutLexicalScope(final long count);
-  
-  public void wrapIntoMateNode() {
-    if (this.asMateNode() != null) this.replace(this.asMateNode());
-    /*if (!(this.expressionOrSequence instanceof MateReturnNode)){
-      this.expressionOrSequence.replace(new MateReturnNode(this.expressionOrSequence));
-      uninitializedBody.accept(new MateifyVisitor());
-    }*/
-  }
-  
-  private ExpressionNode mateifyUninitializedNode(ExpressionNode uninitialized){
-    ExpressionNode node = (ExpressionNode) uninitialized.asMateNode();
-    if (node != null){
-      return node;
-    }
-    return uninitialized;
-  }
-  
+  public abstract void propagateLoopCountThroughoutLexicalScope(long count);
+
   public void setMethod(DynamicObject method) {
     this.belongsToMethod = method;
   }
-  
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == RootTag.class) {
@@ -97,5 +71,12 @@ public abstract class Invokable extends RootNode implements MateNode{
     } else {
       return super.isTaggedWith(tag);
     }
+  }
+  
+  @Override
+  public Node asMateNode() {
+    expressionOrSequence = new MateReturnNode(expressionOrSequence);
+    this.adoptChildren();
+    return null;
   }
 }

@@ -57,9 +57,9 @@ public final class IfInlinedLiteralNode extends ExpressionWithTagsNode {
   }
 
   @Override
-  public void wrapIntoMateNode() {
-    super.wrapIntoMateNode();
+  public Node asMateNode() {
     MateifyVisitor visitor = new MateifyVisitor();
     bodyActualNode.accept(visitor);
+    return super.asMateNode();
   }
 }

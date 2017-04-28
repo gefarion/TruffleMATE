@@ -24,8 +24,11 @@
 
 package som.vmobjects;
 
+import som.interop.SBlockInteropMessageResolutionForeign;
 import som.interpreter.SArguments;
+
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.object.DynamicObject;
 
 public final class SBlock extends SAbstractObject {
@@ -37,11 +40,11 @@ public final class SBlock extends SAbstractObject {
     this.blockClass = blockClass;
   }
 
-  public final DynamicObject getMethod() {
+  public DynamicObject getMethod() {
     return method;
   }
 
-  public final MaterializedFrame getContext() {
+  public MaterializedFrame getContext() {
     assert context != null;
     return context;
   }
@@ -51,8 +54,13 @@ public final class SBlock extends SAbstractObject {
     return blockClass;
   }
 
-  public final Object getOuterSelf() {
+  public Object getOuterSelf() {
     return SArguments.rcvr(getContext());
+  }
+
+  @Override
+  public ForeignAccess getForeignAccess() {
+    return SBlockInteropMessageResolutionForeign.ACCESS;
   }
 
   private final DynamicObject     blockClass;
