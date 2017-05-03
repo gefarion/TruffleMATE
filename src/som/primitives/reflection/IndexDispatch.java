@@ -6,9 +6,6 @@ import som.interpreter.objectstorage.FieldAccessorNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteFieldNode;
 import som.vm.constants.Nil;
-import som.vmobjects.SClass;
-import som.vmobjects.SObject;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
@@ -36,16 +33,16 @@ public abstract class IndexDispatch extends Node implements DispatchChain {
       super(depth);
     }
 
-    private IndexDispatch specialize(final DynamicObject clazz, final int index, final boolean read) {
+    private IndexDispatch specialize(final int index, final boolean read) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
       if (depth < INLINE_CACHE_SIZE) {
         IndexDispatch specialized;
         if (read) {
-          specialized = new CachedReadDispatchNode(clazz, index,
+          specialized = new CachedReadDispatchNode(index,
             new UninitializedDispatchNode(depth + 1), depth);
         } else {
-          specialized = new CachedWriteDispatchNode(clazz, index,
+          specialized = new CachedWriteDispatchNode(index,
               new UninitializedDispatchNode(depth + 1), depth);
         }
         return replace(specialized);
@@ -57,13 +54,13 @@ public abstract class IndexDispatch extends Node implements DispatchChain {
 
     @Override
     public Object executeDispatch(final DynamicObject obj, final int index) {
-      return specialize(SObject.getSOMClass(obj), index, true).
+      return specialize(index, true).
           executeDispatch(obj, index);
     }
 
     @Override
     public Object executeDispatch(final DynamicObject obj, final int index, final Object value) {
-      return specialize(SObject.getSOMClass(obj), index, false).
+      return specialize(index, false).
           executeDispatch(obj, index, value);
     }
 
@@ -84,24 +81,20 @@ public abstract class IndexDispatch extends Node implements DispatchChain {
 
   private static final class CachedReadDispatchNode extends IndexDispatch {
     private final int index;
-    private final DynamicObject clazz;
     @Child private ReadFieldNode access;
-    // TODO: have a second cached class for the writing...
     @Child private IndexDispatch next;
 
-    CachedReadDispatchNode(final DynamicObject clazz, final int index,
+    CachedReadDispatchNode(final int index,
         final IndexDispatch next, final int depth) {
       super(depth);
-      assert SClass.isSClass(clazz);
       this.index = index;
-      this.clazz = clazz;
       this.next = next;
       access = FieldAccessorNode.createRead(index);
     }
 
     @Override
     public Object executeDispatch(final DynamicObject obj, final int index) {
-      if (this.index == index && this.clazz == SObject.getSOMClass(obj)) {
+      if (this.index == index) {
         return access.executeRead(obj);
       } else {
         return next.executeDispatch(obj, index);
@@ -122,16 +115,13 @@ public abstract class IndexDispatch extends Node implements DispatchChain {
 
   private static final class CachedWriteDispatchNode extends IndexDispatch {
     private final int index;
-    private final DynamicObject clazz;
     @Child private WriteFieldNode access;
     @Child private IndexDispatch next;
 
-    CachedWriteDispatchNode(final DynamicObject clazz, final int index,
+    CachedWriteDispatchNode(final int index,
         final IndexDispatch next, final int depth) {
       super(depth);
-      assert SClass.isSClass(clazz);
       this.index = index;
-      this.clazz = clazz;
       this.next = next;
       access = FieldAccessorNode.createWrite(index);
     }
@@ -144,7 +134,7 @@ public abstract class IndexDispatch extends Node implements DispatchChain {
 
     @Override
     public Object executeDispatch(final DynamicObject obj, final int index, final Object value) {
-      if (this.index == index && this.clazz == SObject.getSOMClass(obj)) {
+      if (this.index == index) {
         return access.executeWrite(obj, value);
       } else {
         return next.executeDispatch(obj, index, value);
