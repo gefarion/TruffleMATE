@@ -72,7 +72,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       return reflectiveMethod.call(this.computeArgumentsForMetaDispatch(frame, arguments));
     }
 
-    @Specialization(contains = {"doMateNode"})
+    @Specialization(replaces = {"doMateNode"})
     public Object doMegaMorphic(final VirtualFrame frame, final DynamicObject method,
         final Object subject, final Object[] arguments,
         @Cached("createIndirectCall()") final IndirectCallNode callNode) {

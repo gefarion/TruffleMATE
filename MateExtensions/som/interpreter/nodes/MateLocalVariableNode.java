@@ -8,10 +8,14 @@ import som.matenodes.IntercessionHandling;
 import som.vm.constants.ReflectiveOp;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 
 public abstract class MateLocalVariableNode {
   public static class MateLocalVariableReadNode extends LocalVariableReadNode
       implements MateNode {
+    
+    @Child private IntercessionHandling ih;
+    @Child LocalVariableNode local;
 
     public MateLocalVariableReadNode(LocalVariableReadNode node) {
       super(node);
@@ -20,9 +24,6 @@ public abstract class MateLocalVariableNode {
       this.adoptChildren();
     }
 
-    @Child private IntercessionHandling ih;
-    @Child LocalVariableNode local;
-
     @Override
     public Object executeGeneric(VirtualFrame frame) {
       Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame), local.slot.getIdentifier()});
@@ -30,6 +31,11 @@ public abstract class MateLocalVariableNode {
        value = local.executeGeneric(frame);
       }
       return value;
+    }
+    
+    @Override
+    public Node asMateNode() {
+      return null;
     }
   }
 
@@ -59,6 +65,11 @@ public abstract class MateLocalVariableNode {
     @Override
     public ExpressionNode getExp() {
       return local.getExp();
+    }
+    
+    @Override
+    public Node asMateNode() {
+      return null;
     }
   }
 }
