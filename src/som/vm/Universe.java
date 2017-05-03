@@ -41,10 +41,12 @@ import java.util.Map;
 import som.VMOptions;
 import som.VmSettings;
 import som.interpreter.Invokable;
+import som.interpreter.NodeVisitorUtil;
 import som.interpreter.ReflectiveNode;
 import som.interpreter.MateifyVisitor;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.ExpressionNode;
 import som.primitives.Primitives;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.MateClasses;
@@ -225,19 +227,16 @@ public class Universe {
 
   public void mateifyMethod(DynamicObject method) {
     this.mateifyNode(InvokableLayoutImpl.INSTANCE.getInvokable(method));
+    
   }
 
-  public void mateifyNode(Node node) {
+  public Node mateifyNode(Node node) {
     MateifyVisitor visitor = new MateifyVisitor();
     if (!(node instanceof RootNode) & node.getParent() == null) {
-      Node actual = ((ReflectiveNode) node).asMateNode();
-      if (actual == null) { actual = node; }
-      for (Node child: actual.getChildren()) {
-        child.accept(visitor);
-      }
-    } else {
-      node.accept(visitor);
+      return NodeVisitorUtil.applyVisitor((ExpressionNode)node, visitor);
     }
+    node.accept(visitor);
+    return node;
   }
 
   public TruffleRuntime getTruffleRuntime() {
