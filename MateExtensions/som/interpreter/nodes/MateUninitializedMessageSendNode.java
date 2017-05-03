@@ -5,7 +5,6 @@ import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.UninitializedMessageSendNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.matenodes.IntercessionHandling;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class MateUninitializedMessageSendNode extends
@@ -27,7 +26,7 @@ public class MateUninitializedMessageSendNode extends
     Object[] arguments = evaluateArguments(frame);
     Object value = ih.doMateSemantics(frame, arguments);
     if (value == null) {
-     value = doPreEvaluated(frame, arguments);
+      value = doPreEvaluated(frame, arguments);
     }
     return value;
   }

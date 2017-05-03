@@ -31,7 +31,7 @@ public class MateGenericMessageSendNode extends GenericMessageSendNode
     Object[] arguments = evaluateArguments(frame);
     Object value = ih.doMateSemantics(frame, arguments);
     if (value == null) {
-     value = doPreEvaluated(frame, arguments);
+      value = doPreEvaluated(frame, arguments);
     }
     return value;
   }

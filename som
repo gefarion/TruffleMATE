@@ -15,8 +15,7 @@ GRAAL_LOCATIONS = ['/home/smarr/Projects/SOM/graal/jvmci',
 JAVA_BIN  = '/bin/java'
 
 if sys.argv[0].endswith('oficial'):
-    os.environ['JAVA_HOME'] = BASE_DIR + "/../labsjdk1.8.0_121-jvmci-0.25/"
-    #os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
+    os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
     GRAAL_LOCATIONS.insert(0, BASE_DIR + '/../graalvm-0.22')
     if GRAAL_FLAGS:
         flags = [GRAAL_FLAGS]
