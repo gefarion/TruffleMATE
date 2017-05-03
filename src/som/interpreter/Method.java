@@ -21,11 +21,8 @@
  */
 package som.interpreter;
 
-import som.interpreter.MateVisitors.FindFirstMateNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
-import som.vm.Universe;
-
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
@@ -58,28 +55,14 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope, boolean keepMateification) {
+  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalScope    inlinedCurrentScope = new LexicalScope(
         inlinedFrameDescriptor, outerScope);
-    ExpressionNode body;
-    if (keepMateification && Universe.getCurrent().vmReflectionEnabled()){
-      FindFirstMateNode visitor = new FindFirstMateNode();
-      expressionOrSequence.accept(visitor);
-      if (visitor.mateNode() != null){
-        body = NodeUtil.cloneNode(uninitializedBody);
-        Universe.getCurrent().mateifyNode(uninitializedBody);
-      } else {
-        body = uninitializedBody;
-      }
-    } else {
-      body = uninitializedBody;
-    }
     ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
-    Method clone = new Method(getSourceSection(), inlinedBody,
-        inlinedCurrentScope, body, this.belongsToMethod);
-    return clone;
+    return new Method(getSourceSection(), inlinedBody,
+        inlinedCurrentScope, uninitializedBody, this.belongsToMethod);
   }
 
   public Invokable cloneAndAdaptToEmbeddedOuterContext(
@@ -128,7 +111,7 @@ public final class Method extends Invokable {
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull(), true);
+    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
   }
 
   public boolean isBlock() {

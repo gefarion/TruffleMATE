@@ -19,7 +19,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
 
   @Child protected ExpressionNode expressionOrSequence;
 
-  protected final ExpressionNode uninitializedBody;
+  @CompilationFinal protected ExpressionNode uninitializedBody;
   @CompilationFinal protected DynamicObject belongsToMethod;
 
   public Invokable(final SourceSection sourceSection,
@@ -38,7 +38,8 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
     return expressionOrSequence.executeGeneric(frame);
   }
 
-  public abstract Invokable cloneWithNewLexicalContext(LexicalScope outerContext, boolean keepMateification);
+  public abstract Invokable cloneWithNewLexicalContext(LexicalScope outerContext);
+  
   public ExpressionNode inline(final MethodGenerationContext mgenc,
       final Local[] locals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
@@ -77,6 +78,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
   public Node asMateNode() {
     expressionOrSequence = new MateReturnNode(expressionOrSequence);
     this.adoptChildren();
+    uninitializedBody = NodeVisitorUtil.applyVisitor(uninitializedBody, new MateifyVisitor());
     return null;
   }
 }
