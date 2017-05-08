@@ -309,7 +309,8 @@ public class Universe {
     if (result != null) { return result; }
     return this.loadClass(getSourceForClassName(name));
   }
-
+  
+  @TruffleBoundary
   public Source getSourceForClassName(final SSymbol name) {
     File file = new File(resolveClassFilePath(name.getString()));
     try {
@@ -325,6 +326,7 @@ public class Universe {
     return null;
   }
 
+  @TruffleBoundary
   public DynamicObject loadClass(final Source source) {
     return objectMemory.loadClass(source, null);
   }

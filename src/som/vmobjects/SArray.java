@@ -101,16 +101,16 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
-  public Object[] toJavaArray() {
+  public Object[] toJavaArray(ValueProfile profile) {
     if (ArrayType.isEmptyType(this)) {
       this.transitionToObjectWithAll((int) this.storage, Nil.nilObject);
     }
     if (this.getType() == ArrayType.PARTIAL_EMPTY) {
       return this.
-          getPartiallyEmptyStorage(ValueProfile.createClassProfile()).
+          getPartiallyEmptyStorage(profile).
           getStorage();
     } else {
-      return this.getObjectStorage(ValueProfile.createClassProfile());
+      return this.getObjectStorage(profile);
     }
   }
 
