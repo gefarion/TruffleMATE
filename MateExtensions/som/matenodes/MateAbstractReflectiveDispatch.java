@@ -1,8 +1,6 @@
 package som.matenodes;
 
-import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MateMethodActivationNode;
@@ -17,11 +15,9 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -29,6 +25,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 public abstract class MateAbstractReflectiveDispatch extends Node {
 
@@ -97,14 +94,17 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   public abstract static class MateDispatchLocalVarRead extends
       MateDispatchFieldRead {
     
+    final DynamicObject context;
+    
+    public MateDispatchLocalVarRead(){
+      context = Universe.getCurrent().getObjectMemory().getGlobal(Universe.getCurrent().symbolFor("Context"));
+    }
+    
     @Override
     protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
       //Arguments at 1 contains the slot identifier.
-      TruffleRuntime runtime = this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get().getTruffleRuntime();
-      FrameInstance currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
-          arguments[1], new MockJavaObject(currentFrame, 
-              Universe.getCurrent().loadClass(Universe.getCurrent().symbolFor("Context")))};
+          arguments[1], new MockJavaObject(frame.materialize(), context)};
     }
   }
   
@@ -113,13 +113,9 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   
     @Override
     protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
-      //Arguments at 1 contains the slot identifier.
-      TruffleRuntime runtime = this.getRootNode().getLanguage(SomLanguage.class).getContextReference().get().getTruffleRuntime();
-      FrameInstance currentFrame = runtime.iterateFrames(new MateVisitors.FindFirstBaseLevelFrame());
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
-          arguments[1], new MockJavaObject(currentFrame, 
-              Universe.getCurrent().loadClass(Universe.getCurrent().symbolFor("Context"))),
-              ((ExpressionNode) arguments[2]).executeGeneric(frame)};
+          arguments[1], new MockJavaObject(frame.materialize(), context), 
+          ((ExpressionNode) arguments[2]).executeGeneric(frame)};
     }
   }
 
@@ -323,25 +319,27 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
         @Cached("method") final DynamicObject cachedMethod,
         @Cached("methodToActivate") final DynamicObject cachedMethodToActivate,
         @Cached("createDirectCall(methodToActivate)") final DirectCallNode callNode,
-        @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod) {
+        @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod,
+        @Cached("classProfile()") final ValueProfile profile) {
       // The MOP receives the standard ST message Send stack (rcvr, method, arguments) and returns its own
       Object[] args = {Nil.nilObject, ExecutionLevel.Meta, arguments[0], methodToActivate,
           SArray.create(SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments))};
       SArray realArguments = (SArray) reflectiveMethod.call(args);
-      return callNode.call(realArguments.toJavaArray());
+      return callNode.call(realArguments.toJavaArray(profile));
     }
 
-    @Specialization(guards = {"cachedMethod==method"}, contains = "doMetaLevel")
+    @Specialization(guards = {"cachedMethod==method"}, replaces = "doMetaLevel")
     public Object doMegamorphicMetaLevel(final VirtualFrame frame,
         final DynamicObject method, final DynamicObject methodToActivate,
         final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
         @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod,
-        @Cached("createIndirectCall()") final IndirectCallNode callNode) {
+        @Cached("createIndirectCall()") final IndirectCallNode callNode,
+        @Cached("classProfile()") final ValueProfile profile) {
       Object[] args = {Nil.nilObject, ExecutionLevel.Meta, arguments[0], methodToActivate,
           SArray.create(SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments))};
       SArray realArguments = (SArray) reflectiveMethod.call(args);
-      return callNode.call(SInvokable.getCallTarget(methodToActivate, ExecutionLevel.Base), realArguments.toJavaArray());
+      return callNode.call(SInvokable.getCallTarget(methodToActivate, ExecutionLevel.Base), realArguments.toJavaArray(profile));
     }
   }
 
@@ -353,5 +351,9 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
   public static IndirectCallNode createIndirectCall() {
     return IndirectCallNode.create();
+  }
+  
+  protected ValueProfile classProfile(){
+    return ValueProfile.createClassProfile();
   }
 }

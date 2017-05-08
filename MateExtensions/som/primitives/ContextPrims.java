@@ -5,21 +5,28 @@ import som.interpreter.Invokable;
 import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.MockJavaObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -86,14 +93,31 @@ public class ContextPrims {
       super(eagWrap, source);
     }
 
-    //Todo: dispatch chain index->slot
-    @Specialization
+    @Specialization(guards = {"identifier==cachedIdentifier"})
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
-        String identifier) {
-      FrameInstance frameInstance = (FrameInstance) mockedFrame.getMockedObject();
-      Frame frame = frameInstance.getFrame(FrameAccess.READ_ONLY);
-      FrameSlot slot = frame.getFrameDescriptor().findFrameSlot(identifier);
-      return frame.getValue(slot);
+        String identifier,
+        @Cached(value = "identifier") final String cachedIdentifier,
+        @Cached(value = "variableNodeForIdentifier(identifier, 1)") final LocalVariableReadNode readnode) {
+      VirtualFrame frame = (VirtualFrame) mockedFrame.getMockedObject();
+      return readnode.executeGeneric(frame);
+    }
+    
+    protected static FrameSlot findSlotForIdInLevel(final String identifier, int level){
+      int[] currentLevel = new int[1];
+      FrameInstance f = Universe.getCurrent().getTruffleRuntime().iterateFrames(fi -> {
+        if (currentLevel[0] == level) {
+          return fi;
+        }
+        currentLevel[0]++;
+        return null;
+      });
+      f.getFrame(FrameAccess.READ_WRITE);
+      return ((RootNode)f.getCallNode().getRootNode()).getFrameDescriptor().findFrameSlot(identifier);
+    }
+    
+    protected static LocalVariableReadNode variableNodeForIdentifier(String identifier, int level){
+      FrameSlot slot = findSlotForIdInLevel(identifier, level);  
+      return LocalVariableReadNodeGen.create(slot, null);
     }
   }
   
@@ -104,16 +128,36 @@ public class ContextPrims {
       super(eagWrap, source);
     }
 
-    //Todo: dispatch chain index->slot
-    @Specialization
+    @Specialization(guards = {"identifier==cachedIdentifier"})
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
-        String identifier, Object value) {
-      FrameInstance frameInstance = (FrameInstance) mockedFrame.getMockedObject();
-      Frame frame = frameInstance.getFrame(FrameAccess.READ_WRITE);
-      FrameSlot slot = frame.getFrameDescriptor().findFrameSlot(identifier);
-      slot.setKind(FrameSlotKind.Object); //This probably needs a proper type specialization for performance
+        String identifier, Object value, 
+        @Cached(value = "identifier") final String cachedIdentifier,
+        @Cached(value = "findSlotForId(identifier)") final FrameSlot slot) {
+      MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
+      if (slot.getKind() != FrameSlotKind.Object){
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        slot.setKind(FrameSlotKind.Object);
+      }
       frame.setObject(slot, value);
       return value;
+    }
+    
+    @Specialization(guards = {"identifier==cachedIdentifier"})
+    public final Object doVirtualFrame(final MockJavaObject mockedFrame,
+        String identifier, long value, 
+        @Cached(value = "identifier") final String cachedIdentifier,
+        @Cached(value = "findSlotForId(identifier)") final FrameSlot slot) {
+      MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
+      if (slot.getKind() != FrameSlotKind.Long){
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        slot.setKind(FrameSlotKind.Long);
+      }
+      frame.setObject(slot, value);
+      return value;
+    }
+    
+    protected FrameSlot findSlotForId(final String identifier){
+      return GetLocalVarAtPrim.findSlotForIdInLevel(identifier, 1);
     }
   }
   
@@ -128,10 +172,8 @@ public class ContextPrims {
     @Specialization
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
         long index) {
-      FrameInstance frameInstance = (FrameInstance) mockedFrame.getMockedObject();
-      Frame frame = frameInstance.getFrame(FrameAccess.READ_ONLY);
+      MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
       return SArguments.arg(frame, (int) index);
     }
   }
-
 }
