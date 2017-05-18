@@ -6,8 +6,7 @@ General Instructions
 
 The command for running all the experiments always includes the -G option. 
 This runs TruffleMate in interpreted mode. We strongly recommend to run the experiments with just in time compilation enabled. 
-To do so, TruffleMate requires the installation of the [Graal compiler](http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html). We suggest to download the latest binaries from the official oracle site and then configure TruffleMate's [executable script](https://github.com/charig/TruffleMATE/blob/papers/TSE2017/som) so that it points to the right binary. Note that the experiments of the paper were run with Graal version 0.19 and thus this version is required for a proper reproduction.
-Then just remove the -G option from every command.
+To do so, TruffleMate requires the installation of the [Graal compiler](http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html). We suggest to download the latest binaries from the official oracle site and then configure TruffleMate's [executable script](https://github.com/charig/TruffleMATE/blob/papers/TSE2017/som) so that it points to the right binary. Then just remove the -G option from every command. **Note that the experiments of the paper were run with Graal version 0.19 and thus this version is required for a proper reproduction**.
 
 Benchmarks are run by a harness. The harness takes three parameters: benchmark name, number of iterations, and problem size. 
 The benchmark name corresponds to a class or file of a benchmark. The number of iterations defines how often a benchmark should be executed. 
