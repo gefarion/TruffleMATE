@@ -4,14 +4,14 @@ Fully Reflective Execution Environments: Towards a New Generation of Virtual Mac
 Introduction
 ------------
 
-This branch contains the version of TruffleMate used for executing the experiments in the paper submitted to the [12th Workshop on Implementation, Compilation, Optimization of Object-Oriented Languages, Programs and Systems (ICOOOLPS 2017)][ICOOOLPS]. 
+This branch contains the version of TruffleMate used for executing the experiments in the paper presented at the [12th Workshop on Implementation, Compilation, Optimization of Object-Oriented Languages, Programs and Systems (ICOOOLPS 2017)][ICOOOLPS]. 
 
 Obtaining and Running TruffleMate
 --------------------------------
 
 To checkout the code:
 
-    git clone -b papers/ICOOOLPS17 https://github.com/charig/TruffleMate.git
+    git clone --depth=1 -b papers/ICOOOLPS17 https://github.com/charig/TruffleMate.git
     cd ICOOOLPS17
 
 Then, to build TruffleMate with Ant:
