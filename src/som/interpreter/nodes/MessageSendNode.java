@@ -2,6 +2,18 @@ package som.interpreter.nodes;
 
 import java.util.List;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.Introspection;
+import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
@@ -24,18 +36,6 @@ import som.vm.constants.ExecutionLevel;
 import som.vm.constants.MateClasses;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.dsl.Introspection;
-import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public final class MessageSendNode {
 
@@ -62,7 +62,7 @@ public final class MessageSendNode {
 
   public abstract static class AbstractMessageSendNode extends ExpressionWithTagsNode
       implements PreevaluatedExpression, ExpressionWithReceiver {
-    
+
     protected final SSymbol selector;
 
     public static AbstractMessageSpecializationsFactory specializationFactory = new AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory();
@@ -123,8 +123,8 @@ public final class MessageSendNode {
       }
       return super.isTaggedWith(tag);
     }
-    
-    public DynamicObject[] getSpecializations(){
+
+    public DynamicObject[] getSpecializations() {
       return new DynamicObject[0];
     }
   }
@@ -179,7 +179,7 @@ public final class MessageSendNode {
           getSourceSection()));
     }
 
-    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim, VirtualFrame frame) {
+    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim, final VirtualFrame frame) {
       Universe.insertInstrumentationWrapper(this);
       PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes, frame));
       Universe.insertInstrumentationWrapper((Node) result);
@@ -243,7 +243,7 @@ public final class MessageSendNode {
 
     /*
      * There is a problem with the specialization of reflective nodes.
-     * TODO: fix! 
+     * TODO: fix!
      */
     @Override
     protected PreevaluatedExpression specialize(final Object[] arguments, final VirtualFrame frame) {
@@ -328,16 +328,16 @@ public final class MessageSendNode {
         return super.isTaggedWith(tag);
       }
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
-    public DynamicObject[] getSpecializations(){
-      java.util.List<Node> specializations = 
+    public DynamicObject[] getSpecializations() {
+      java.util.List<Node> specializations =
           MateFilterNodesByClassPrim.filterChildrenByClass(this, AbstractCachedDispatchNode.class);
-      SpecializationInfo specialization = new Introspection.SpecializationInfo("CachedDispatch", (byte)0b01 /* active */, null, 
-          (List<Object>)(List<?>) specializations); 
+      SpecializationInfo specialization = new Introspection.SpecializationInfo("CachedDispatch", (byte) 0b01 /* active */, null,
+          (List<Object>) (List<?>) specializations);
       DynamicObject[] stSpecializations = new DynamicObject[1];
-      stSpecializations[0] = CompilationPrims.translateSpecializationInfo(specialization); 
+      stSpecializations[0] = CompilationPrims.translateSpecializationInfo(specialization);
       return stSpecializations;
     }
   }

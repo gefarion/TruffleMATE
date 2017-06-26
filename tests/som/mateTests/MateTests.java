@@ -36,7 +36,7 @@ import som.tests.SomTests;
 @RunWith(Parameterized.class)
 public class MateTests extends SomTests {
 
-  public MateTests(String testName) {
+  public MateTests(final String testName) {
     super(testName);
   }
 
@@ -49,6 +49,7 @@ public class MateTests extends SomTests {
       });
   }
 
+  @Override
   protected String[] getArguments() {
     String[] arg = {
         "--mate",
@@ -57,7 +58,7 @@ public class MateTests extends SomTests {
         testName};
     return arg;
   }
-  
+
   @Override
   protected List<URL> getCP() throws MalformedURLException {
     List<URL> urls = super.getCP();

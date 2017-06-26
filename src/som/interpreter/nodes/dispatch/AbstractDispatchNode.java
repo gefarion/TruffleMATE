@@ -1,8 +1,5 @@
 package som.interpreter.nodes.dispatch;
 
-import som.instrumentation.DispatchNodeWrapper;
-import som.vm.constants.ExecutionLevel;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -11,6 +8,9 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.instrumentation.DispatchNodeWrapper;
+import som.vm.constants.ExecutionLevel;
 
 
 @Instrumentable(factory = DispatchNodeWrapper.class)
@@ -58,8 +58,8 @@ public abstract class AbstractDispatchNode extends Node implements DispatchChain
     public final int lengthOfDispatchChain() {
       return 1 + nextInCache.lengthOfDispatchChain();
     }
-    
-    public DirectCallNode getCallNode(){
+
+    public DirectCallNode getCallNode() {
       return cachedMethod;
     }
   }

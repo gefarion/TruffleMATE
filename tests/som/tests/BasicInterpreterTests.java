@@ -36,11 +36,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.oracle.truffle.api.object.DynamicObject;
+
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.object.DynamicObject;
 
 @RunWith(Parameterized.class)
 public class BasicInterpreterTests {
@@ -173,7 +173,7 @@ public class BasicInterpreterTests {
   protected String[] getVMArguments() {
     return new String[] {""};
   }
-  
+
   protected List<URL> getCP() {
     List<URL> urls = null;
     try {

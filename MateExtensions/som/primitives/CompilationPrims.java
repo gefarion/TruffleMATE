@@ -5,6 +5,18 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Introspection;
+import com.oracle.truffle.api.dsl.Introspection.Provider;
+import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeVisitor;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
@@ -21,21 +33,9 @@ import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Introspection;
-import com.oracle.truffle.api.dsl.Introspection.Provider;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeVisitor;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public class CompilationPrims {
-  public static DynamicObject translateSpecializationInfo(SpecializationInfo specialization){
+  public static DynamicObject translateSpecializationInfo(final SpecializationInfo specialization) {
     DynamicObject stSpecialization = Universe.getCurrent().createInstance("SpecializationInfo");
     stSpecialization.define(MateGlobals.SPECIALZATIONINFO_METHOD_NAME_INDEX,
         specialization.getMethodName());
@@ -47,19 +47,19 @@ public class CompilationPrims {
         translateSpecializations(specialization.getSpecializations()));
     return stSpecialization;
   }
-  
-  protected static DynamicObject translateSpecializations(List<Object> specializations){
+
+  protected static DynamicObject translateSpecializations(final List<Object> specializations) {
     SArray arrayOfSpecializations;
     long last;
-    if (specializations == null){
+    if (specializations == null) {
       arrayOfSpecializations = SArray.create(new Object[]{});
       last = 1;
     } else {
       MockJavaObject[] stSpecializations = new MockJavaObject[specializations.size()];
       int i = 0;
       ObjectMemory engine = Universe.getCurrent().getObjectMemory();
-      for (Object specialization: specializations){
-        stSpecializations[i] = new MockJavaObject(specialization, 
+      for (Object specialization: specializations) {
+        stSpecializations[i] = new MockJavaObject(specialization,
             Universe.getCurrent().loadClass(engine.symbolFor(specialization.getClass().getSimpleName())));
         i++;
       }
@@ -75,7 +75,7 @@ public class CompilationPrims {
         arrayOfSpecializations);
     return vector;
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "MessageSendNode", selector = "selector",
              eagerSpecializable = false, mate = true)
@@ -90,7 +90,7 @@ public class CompilationPrims {
       return mockedNode.getSelector();
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "FieldReadNode", selector = "fieldIndex",
              eagerSpecializable = false, mate = true)
@@ -105,7 +105,7 @@ public class CompilationPrims {
       return mockedNode.getFieldIndex();
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "DispatchChain", selector = "basicRemove:",
              eagerSpecializable = false, mate = true)
@@ -153,12 +153,12 @@ public class CompilationPrims {
     public MateFilterNodesByClassPrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
     }
-    
+
     @SuppressWarnings("unchecked")
     @TruffleBoundary
     @Specialization
     public final SArray doMock(final MockJavaObject receiver, final String classname,
-        DynamicObject klass) {
+        final DynamicObject klass) {
       Node mockedNode = (Node) receiver.getMockedObject();
       Class<? extends Node> somNodeClass = null;
       try {
@@ -166,18 +166,18 @@ public class CompilationPrims {
       } catch (ClassNotFoundException e) {
         e.printStackTrace();
       }
-      
+
       List<Node> nodes = filterChildrenByClass(mockedNode, somNodeClass);
-      MockJavaObject[] stNodes = new MockJavaObject[nodes.size()]; 
+      MockJavaObject[] stNodes = new MockJavaObject[nodes.size()];
       int i = 0;
-      for (Node node: nodes){
+      for (Node node: nodes) {
         stNodes[i] = new MockJavaObject(node, klass);
         i++;
       }
       return SArray.create(stNodes);
     }
-    
-    public static List<Node> filterChildrenByClass(Node node, Class<? extends Node> somClass){
+
+    public static List<Node> filterChildrenByClass(final Node node, final Class<? extends Node> somClass) {
       NodeTypeFilter filter = new NodeTypeFilter(somClass);
       node.accept(filter);
       return filter.getResultingNodes();
@@ -185,26 +185,27 @@ public class CompilationPrims {
   }
 
   private static final class NodeTypeFilter implements NodeVisitor {
-    
+
     Class<? extends Node> filter;
     private final ArrayList<Node> selectedNodes = new ArrayList<Node>();
 
-    NodeTypeFilter(Class<? extends Node> filter) {
+    NodeTypeFilter(final Class<? extends Node> filter) {
         this.filter = filter;
     }
 
-    public boolean visit(Node node) {
+    @Override
+    public boolean visit(final Node node) {
       if (filter.isInstance(node)) {
         selectedNodes.add(node);
       }
       return true;
     }
-    
+
     public ArrayList<Node> getResultingNodes() {
       return selectedNodes;
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "ASTNode", selector = "dispatchChain",
       eagerSpecializable = false, mate = true)
@@ -212,7 +213,7 @@ public class CompilationPrims {
     public GetDispatchChainPrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
     }
-    
+
     @Specialization(guards = "isIntrospectable(receiver)")
     public final DynamicObject doInstrospectable(final MockJavaObject receiver) {
       Node mockedNode = (Node) receiver.getMockedObject();
@@ -220,37 +221,37 @@ public class CompilationPrims {
       List<SpecializationInfo> specializations = Introspection.getSpecializations(mockedNode);
       DynamicObject[] stSpecializations = new DynamicObject[specializations.size()];
       int i = 0;
-      for (SpecializationInfo specialization : specializations){
-        stSpecializations[i] = translateSpecializationInfo(specialization); 
+      for (SpecializationInfo specialization : specializations) {
+        stSpecializations[i] = translateSpecializationInfo(specialization);
         i++;
       }
       return this.createChain(stSpecializations, receiver);
     }
-    
+
     @Specialization(guards = "isMessageSendNode(receiver)")
     public final DynamicObject doMessage(final MockJavaObject receiver) {
       AbstractMessageSendNode mockedNode = (AbstractMessageSendNode) receiver.getMockedObject();
       DynamicObject[] specializations = mockedNode.getSpecializations();
       return this.createChain(specializations, receiver);
     }
-    
-    protected DynamicObject createChain(DynamicObject[] specializations, MockJavaObject node){
+
+    protected DynamicObject createChain(final DynamicObject[] specializations, final MockJavaObject node) {
       DynamicObject chain = Universe.getCurrent().createInstance("DispatchChain");
       chain.define(MateGlobals.DISPATCHCHAIN_SPECIALIZATIONS_INFO_INDEX,
           SArray.create(specializations));
       chain.define(MateGlobals.DISPATCHCHAIN_PARENT_NODE_INDEX, node);
       return chain;
     }
-    
-    protected static boolean isIntrospectable(MockJavaObject object){
+
+    protected static boolean isIntrospectable(final MockJavaObject object) {
       return object.getMockedObject() instanceof Provider;
     }
-    
-    protected static boolean isMessageSendNode(MockJavaObject object){
+
+    protected static boolean isMessageSendNode(final MockJavaObject object) {
       return object.getMockedObject() instanceof AbstractMessageSendNode;
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "CachedDispatchNode", selector = "targetNode",
       eagerSpecializable = false, mate = true)
@@ -258,7 +259,7 @@ public class CompilationPrims {
     public TargetNodePrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
     }
-    
+
     @Specialization
     public final MockJavaObject doInstrospectable(final MockJavaObject receiver) {
       AbstractCachedDispatchNode mockedNode = (AbstractCachedDispatchNode) receiver.getMockedObject();
@@ -266,7 +267,7 @@ public class CompilationPrims {
           MateClasses.astNodeClass);
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "CachedDispatchNode", selector = "split",
       eagerSpecializable = false, mate = true)
@@ -274,7 +275,7 @@ public class CompilationPrims {
     public SplitNodePrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
     }
-    
+
     @TruffleBoundary
     @Specialization
     public final boolean doCachedNode(final MockJavaObject receiver) {

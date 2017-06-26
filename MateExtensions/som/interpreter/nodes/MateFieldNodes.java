@@ -1,5 +1,9 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+
 import som.interpreter.MateNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -8,17 +12,13 @@ import som.interpreter.objectstorage.MateLayoutFieldWriteNode;
 import som.matenodes.IntercessionHandling;
 import som.vm.constants.ReflectiveOp;
 
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
-
 
 public abstract class MateFieldNodes {
-  public abstract static class MateFieldReadNode extends FieldReadNode 
+  public abstract static class MateFieldReadNode extends FieldReadNode
     implements MateNode {
     @Child private IntercessionHandling ih;
 
-    public MateFieldReadNode(FieldReadNode node) {
+    public MateFieldReadNode(final FieldReadNode node) {
       super(node.read.getFieldIndex(), node.getSourceSection());
       ih = IntercessionHandling.createForOperation(ReflectiveOp.ExecutorReadField);
       read = new MateLayoutFieldReadNode(read);
@@ -45,7 +45,7 @@ public abstract class MateFieldNodes {
       implements MateNode {
     @Child private IntercessionHandling ih;
 
-    public MateFieldWriteNode(FieldWriteNode node) {
+    public MateFieldWriteNode(final FieldWriteNode node) {
       super(node.write.getFieldIndex(), node.getSourceSection());
       ih = IntercessionHandling.createForOperation(ReflectiveOp.ExecutorWriteField);
       write = new MateLayoutFieldWriteNode(write);

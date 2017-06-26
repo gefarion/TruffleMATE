@@ -1,12 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.Invokable;
-import som.interpreter.MateifyVisitor;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -19,6 +12,14 @@ import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.interpreter.Invokable;
+import som.interpreter.MateifyVisitor;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 
 @NodeChildren({
   @NodeChild(value = "from",  type = ExpressionNode.class),
@@ -125,14 +126,14 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionWithTagsNode 
       final InlinerAdaptToEmbeddedOuterContext inliner) {
     // NOOP: This node has a FrameSlot, but it is local, so does not need to be updated.
   }
-  
+
   @Override
   public Node asMateNode() {
     MateifyVisitor visitor = new MateifyVisitor();
     bodyActualNode.accept(visitor);
     return super.asMateNode();
   }
-  
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LoopNode.class) {

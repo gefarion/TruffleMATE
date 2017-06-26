@@ -1,16 +1,16 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.constants.MateClasses;
-import som.vmobjects.MockJavaObject;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.constants.MateClasses;
+import som.vmobjects.MockJavaObject;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SInvokable;
 
 
 public abstract class MethodPrims {
@@ -42,7 +42,7 @@ public abstract class MethodPrims {
       return SInvokable.getHolder(receiver);
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "Method", selector = "compilation")
   public abstract static class CompilationPrim extends UnaryExpressionNode {

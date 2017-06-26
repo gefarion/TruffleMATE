@@ -6,13 +6,13 @@ import com.oracle.truffle.api.object.DynamicObject;
 public class MockJavaObject extends SAbstractObject {
   private final Object mockedObject;
   private final DynamicObject somClass;
-  
+
   @Override
   public DynamicObject getSOMClass() {
     return somClass;
   }
 
-  public MockJavaObject(Object object, DynamicObject klass) {
+  public MockJavaObject(final Object object, final DynamicObject klass) {
     mockedObject = object;
     somClass = klass;
   }

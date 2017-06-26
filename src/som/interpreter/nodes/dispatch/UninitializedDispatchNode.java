@@ -1,6 +1,13 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
@@ -9,12 +16,6 @@ import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class UninitializedDispatchNode extends AbstractDispatchNode {
@@ -51,7 +52,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
       DispatchGuard guard = DispatchGuard.create(rcvr);
       AbstractCachedDispatchNode node;
       if (method != null) {
-        boolean shouldSplit = selector.getString().equals("new")? true : false;  
+        boolean shouldSplit = selector.getString().equals("new") ? true : false;
         node = new CachedDispatchNode(guard, callTarget, newChainEnd, shouldSplit);
       } else {
         node = new CachedDnuNode(rcvrClass, guard, selector, newChainEnd, SArguments.getExecutionLevel(frame));

@@ -1,5 +1,12 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -16,13 +23,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SShape;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public final class MatePrims {
   @GenerateNodeFactory
@@ -76,7 +76,7 @@ public final class MatePrims {
 
     @TruffleBoundary
     @Specialization
-    public final DynamicObject doSObject(final DynamicObject receiver, SShape newShape) {
+    public final DynamicObject doSObject(final DynamicObject receiver, final SShape newShape) {
       receiver.setShapeAndResize(receiver.getShape(), newShape.getShape());
       return receiver;
     }
@@ -91,7 +91,7 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final long doSShape(SShape shape) {
+    public final long doSShape(final SShape shape) {
       return shape.getShape().getPropertyCount();
     }
   }
@@ -104,7 +104,7 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final SShape doSObject(DynamicObject receiver) {
+    public final SShape doSObject(final DynamicObject receiver) {
       return new SShape(receiver.getShape());
     }
   }
@@ -118,13 +118,13 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final SShape doSObject(SShape shape, DynamicObject environment) {
+    public final SShape doSObject(final SShape shape, final DynamicObject environment) {
       return new SShape(
           shape.getShape().changeType(
               ((SReflectiveObjectType) shape.getShape().getObjectType()).setEnvironment(environment)));
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "Shape", selector = "installClass:",
              eagerSpecializable = false, mate = true)
@@ -134,7 +134,7 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final SShape doSObject(SShape shape, DynamicObject klass) {
+    public final SShape doSObject(final SShape shape, final DynamicObject klass) {
       return new SShape(
           shape.getShape().changeType(
               ((SReflectiveObjectType) shape.getShape().getObjectType()).setKlass(klass)));
@@ -151,7 +151,7 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final DynamicObject doSObject(DynamicObject clazz, SShape shape) {
+    public final DynamicObject doSObject(final DynamicObject clazz, final SShape shape) {
       // Todo: Take into account that this would not work if the factory was already compiled in a fast path.
       SClass.setInstancesFactory(clazz, shape.getShape().createFactory());
       return clazz;
@@ -167,7 +167,7 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final SShape doSObject(DynamicObject clazz) {
+    public final SShape doSObject(final DynamicObject clazz) {
       return new SShape(SClass.getFactory(clazz).getShape());
     }
   }
@@ -205,8 +205,8 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final DynamicObject doSObject(DynamicObject receiver, MockJavaObject key,
-        DynamicObject value) {
+    public final DynamicObject doSObject(final DynamicObject receiver, final MockJavaObject key,
+        final DynamicObject value) {
       receiver.set(key.getMockedObject(), value);
       return value;
     }
@@ -221,7 +221,7 @@ public final class MatePrims {
     }
 
     @Specialization
-    public final Object doSObject(DynamicObject receiver, MockJavaObject key) {
+    public final Object doSObject(final DynamicObject receiver, final MockJavaObject key) {
       // TODO: We should create a property with Nil as defaultValue.
       Object value = receiver.get(key.getMockedObject());
       return value == null ? Nil.nilObject : value;

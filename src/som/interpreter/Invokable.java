@@ -1,9 +1,5 @@
 package som.interpreter;
 
-import som.compiler.MethodGenerationContext;
-import som.compiler.Variable.Local;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MateReturnNode;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -14,6 +10,11 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.compiler.MethodGenerationContext;
+import som.compiler.Variable.Local;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MateReturnNode;
 
 public abstract class Invokable extends RootNode implements ReflectiveNode {
 
@@ -26,7 +27,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized,
-      DynamicObject method) {
+      final DynamicObject method) {
     super(SomLanguage.class, sourceSection, frameDescriptor);
     this.uninitializedBody = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
@@ -39,7 +40,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
   }
 
   public abstract Invokable cloneWithNewLexicalContext(LexicalScope outerContext);
-  
+
   public ExpressionNode inline(final MethodGenerationContext mgenc,
       final Local[] locals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
@@ -61,7 +62,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
 
   public abstract void propagateLoopCountThroughoutLexicalScope(long count);
 
-  public void setMethod(DynamicObject method) {
+  public void setMethod(final DynamicObject method) {
     this.belongsToMethod = method;
   }
 
@@ -73,7 +74,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
       return super.isTaggedWith(tag);
     }
   }
-  
+
   @Override
   public Node asMateNode() {
     expressionOrSequence = new MateReturnNode(expressionOrSequence);

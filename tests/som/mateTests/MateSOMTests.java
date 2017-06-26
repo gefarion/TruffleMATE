@@ -13,7 +13,7 @@ import som.tests.SomTests;
 
 public class MateSOMTests extends SomTests {
 
-  public MateSOMTests(String testName) {
+  public MateSOMTests(final String testName) {
     super(testName);
   }
 
@@ -36,7 +36,7 @@ public class MateSOMTests extends SomTests {
         testName};
     return args;
   }
-  
+
   @Override
   protected List<URL> getCP() throws MalformedURLException {
     List<URL> urls = super.getCP();

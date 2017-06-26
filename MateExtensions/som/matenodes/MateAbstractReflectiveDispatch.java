@@ -1,5 +1,17 @@
 package som.matenodes;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.ValueProfile;
+
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
@@ -15,18 +27,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.profiles.ValueProfile;
-
 public abstract class MateAbstractReflectiveDispatch extends Node {
 
   protected static final int INLINE_CACHE_SIZE = 6;
@@ -35,7 +35,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     super();
   }
 
-  protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+  protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
     return SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments);
   }
 
@@ -77,7 +77,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     }
 
     @Override
-    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], arguments[1]};
     }
   }
@@ -86,35 +86,35 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       MateDispatchFieldRead{
 
     @Override
-    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], ((long) arguments[1]) - 1};
     }
   }
-  
+
   public abstract static class MateDispatchLocalVarRead extends
       MateDispatchFieldRead {
-    
+
     final DynamicObject context;
-    
-    public MateDispatchLocalVarRead(){
+
+    public MateDispatchLocalVarRead() {
       context = Universe.getCurrent().getObjectMemory().getGlobal(Universe.getCurrent().symbolFor("Context"));
     }
-    
+
     @Override
-    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
-      //Arguments at 1 contains the slot identifier.
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
+      // Arguments at 1 contains the slot identifier.
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
           arguments[1], new MockJavaObject(frame.materialize(), context)};
     }
   }
-  
+
   public abstract static class MateDispatchLocalVarWrite extends
       MateDispatchLocalVarRead {
-  
+
     @Override
-    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
-          arguments[1], new MockJavaObject(frame.materialize(), context), 
+          arguments[1], new MockJavaObject(frame.materialize(), context),
           ((ExpressionNode) arguments[2]).executeGeneric(frame)};
     }
   }
@@ -123,7 +123,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       MateDispatchFieldRead {
 
     @Override
-    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], arguments[1], arguments[2]};
     }
   }
@@ -132,7 +132,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       MateDispatchFieldWrite {
 
     @Override
-    protected Object[] computeArgumentsForMetaDispatch(VirtualFrame frame, Object[] arguments) {
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], (long) (arguments[1]) - 1, arguments[2]};
     }
   }
@@ -143,7 +143,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     private final SSymbol    selector;
     @Child MateMethodActivationNode activationNode;
 
-    public MateDispatchMessageLookup(SSymbol sel) {
+    public MateDispatchMessageLookup(final SSymbol sel) {
       selector = sel;
       activationNode = new MateMethodActivationNode();
     }
@@ -158,13 +158,13 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       return activationNode.doActivation(frame, actualMethod, arguments);
     }
 
-    public DynamicObject reflectiveLookup(final VirtualFrame frame, DirectCallNode reflectiveMethod,
-        final Object receiver, DynamicObject lookupSince) {
+    public DynamicObject reflectiveLookup(final VirtualFrame frame, final DirectCallNode reflectiveMethod,
+        final Object receiver, final DynamicObject lookupSince) {
       Object[] args = {SArguments.getEnvironment(frame), ExecutionLevel.Meta, receiver, this.getSelector(), lookupSince};
       return (DynamicObject) reflectiveMethod.call(args);
     }
 
-    protected DynamicObject lookupSinceFor(DynamicObject receiver) {
+    protected DynamicObject lookupSinceFor(final DynamicObject receiver) {
       return SObject.getSOMClass(receiver);
     }
 
@@ -176,13 +176,13 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   public abstract static class MateDispatchSuperMessageLookup extends MateDispatchMessageLookup{
     @Child private ISuperReadNode superNode;
 
-    public MateDispatchSuperMessageLookup(SSymbol sel, ISuperReadNode node) {
+    public MateDispatchSuperMessageLookup(final SSymbol sel, final ISuperReadNode node) {
       super(sel);
       superNode = node;
     }
 
     @Override
-    protected DynamicObject lookupSinceFor(DynamicObject receiver) {
+    protected DynamicObject lookupSinceFor(final DynamicObject receiver) {
       return superNode.getLexicalSuperClass();
     }
   }
@@ -191,7 +191,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   public abstract static class MateCachedDispatchMessageLookup extends
     MateDispatchMessageLookup {
 
-    public MateCachedDispatchMessageLookup(SSymbol sel) {
+    public MateCachedDispatchMessageLookup(final SSymbol sel) {
       super(sel);
     }
 
@@ -248,7 +248,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
       return activationNode.doActivation(frame, lookupResult, arguments);
     }
-    
+
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateSArrayNodeCached(final VirtualFrame frame, final DynamicObject method,
         final SBlock subject, final Object[] arguments,
@@ -277,7 +277,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       return super.doMateNode(frame, method, subject, arguments, cachedMethod, reflectiveMethod);
     }
 
-    protected Shape shapeOfReceiver(Object[] arguments) {
+    protected Shape shapeOfReceiver(final Object[] arguments) {
       return ((DynamicObject) arguments[0]).getShape();
     }
 
@@ -295,13 +295,13 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   public abstract static class MateCachedDispatchSuperMessageLookup extends MateCachedDispatchMessageLookup {
     @Child private ISuperReadNode superNode;
 
-    public MateCachedDispatchSuperMessageLookup(SSymbol sel, ISuperReadNode node) {
+    public MateCachedDispatchSuperMessageLookup(final SSymbol sel, final ISuperReadNode node) {
       super(sel);
       superNode = node;
     }
 
     @Override
-    protected DynamicObject lookupSinceFor(DynamicObject receiver) {
+    protected DynamicObject lookupSinceFor(final DynamicObject receiver) {
       return superNode.getLexicalSuperClass();
     }
   }
@@ -343,7 +343,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     }
   }
 
-  public static DirectCallNode createDirectCall(DynamicObject methodToActivate) {
+  public static DirectCallNode createDirectCall(final DynamicObject methodToActivate) {
     DirectCallNode node = DirectCallNode.create(SInvokable.getCallTarget(methodToActivate, ExecutionLevel.Base));
     node.forceInlining();
     return node;
@@ -352,8 +352,8 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   public static IndirectCallNode createIndirectCall() {
     return IndirectCallNode.create();
   }
-  
-  protected ValueProfile classProfile(){
+
+  protected ValueProfile classProfile() {
     return ValueProfile.createClassProfile();
   }
 }

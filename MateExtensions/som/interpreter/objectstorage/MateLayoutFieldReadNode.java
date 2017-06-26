@@ -1,16 +1,16 @@
 package som.interpreter.objectstorage;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+
 import som.interpreter.MateNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadFieldNode;
 import som.matenodes.IntercessionHandling;
 import som.vm.Universe;
 import som.vm.constants.ReflectiveOp;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
 
-
-public final class MateLayoutFieldReadNode extends ReadFieldNode 
+public final class MateLayoutFieldReadNode extends ReadFieldNode
     implements MateNode {
   @Child private IntercessionHandling ih;
   @Child private ReadFieldNode read;
@@ -31,7 +31,7 @@ public final class MateLayoutFieldReadNode extends ReadFieldNode
   }
 
   @Override
-  public Object executeRead(DynamicObject obj) {
+  public Object executeRead(final DynamicObject obj) {
     /*Should never enter here*/
     assert (false);
     Universe.errorExit("Mate enters an unexpected method");
