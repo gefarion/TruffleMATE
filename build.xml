@@ -70,7 +70,7 @@
     </target>
 
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean">
-        <exec executable="../mxtool/mx" dir="${truffle.dir}">
+        <exec executable="../mx/mx" dir="${truffle.dir}">
             <arg value="clean"/>
         </exec>
     </target>
@@ -89,7 +89,7 @@
     </target>
 
     <target name="truffle-libs" >
-        <exec executable="../mxtool/mx" dir="${truffle.dir}">
+        <exec executable="../mx/mx" dir="${truffle.dir}">
             <arg value="build"/>
         </exec>
     </target>
