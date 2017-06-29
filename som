@@ -2,35 +2,26 @@
 import argparse
 import sys
 import os
+import shlex
 
 BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
+OLD_GRAAL   = os.getenv('OLD_GRAAL',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
-
-GRAAL_LOCATIONS = ['/home/smarr/Projects/SOM/graal/jvmci',
-                   '/Users/smarr/Projects/SOM/graal/jvmci',
-                   BASE_DIR + '/../graal-jvmci-8']
-
 
 JAVA_BIN  = '/bin/java'
 
 if sys.argv[0].endswith('oficial'):
-    os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
-    GRAAL_LOCATIONS.insert(0, BASE_DIR + '/../graalvm-0.22')
-    if GRAAL_FLAGS:
-        flags = [GRAAL_FLAGS]
-    else:
-        flags = []
+    GRAAL_LOCATION = BASE_DIR + '/../graalvm-0.22'
+    JAVA_LOCATION = GRAAL_LOCATION
 else:
-    JAVA_BIN  = '/bin/java'
-    if GRAAL_FLAGS:
-        flags = [GRAAL_FLAGS]
-    else:
-        flags = ['-Djvmci.class.path.append=' + BASE_DIR + '/../graal/graal-core/mxbuild/dists/graal.jar']
+    GRAAL_LOCATION = BASE_DIR + '/../graal/compiler'
+    JAVA_LOCATION = GRAAL_LOCATION + '/../java-jvmci-8/'
+#    os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
+    if not GRAAL_FLAGS:
+        GRAAL_FLAGS = '-Djvmci.class.path.append=' + GRAAL_LOCATION + '/mxbuild/dists/graal.jar'
 
     
-JDK_VERSIONS = ['jdk1.8.0_111', 'jdk1.8.0_65']
-
 parser = argparse.ArgumentParser(
     description='Helper script to run TruffleMate with/without Graal')
 
@@ -115,6 +106,13 @@ parser.add_argument('-activateMate', help='enable mate nodes',
 
 parser.add_argument('-vv', '--verbose', action='store_true', default=False,
                     dest='verbose', help="print command-line before executing")
+parser.add_argument('--print-graal-options', action='store_true', default=False,
+                    dest='print_graal_options', help="print all Graal options")
+
+parser.add_argument('-J', help="Java VM Argument prefix",
+                    dest="java_args", action='append')
+parser.add_argument('-D', help="define a Java property",
+                    dest="java_properties", action='append')
 
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to TruffleMate')
@@ -126,45 +124,27 @@ JAVA_ARGS = ['-d64']
 if args.java_interpreter or args.dynamic_metrics:
     args.interpreter = True
 
-if args.interpreter:
-    java_bin = "java"
+if GRAAL_HOME:
+    graal_home = GRAAL_HOME
 else:
-    # determine graal binary
-    if GRAAL_HOME:
-        graal_home = GRAAL_HOME
-    else:
-        graal_home = None
-        for d in GRAAL_LOCATIONS:
-            if os.path.isdir(d):
-                graal_home = d
-                break
-        if not graal_home:
-            print "Graal couldn't be found. Please set GRAAL_HOME"
-            sys.exit(1)
+    if os.path.isdir(GRAAL_LOCATION):
+        graal_home = GRAAL_LOCATION
 
-    if sys.argv[0].endswith('oficial'):
-        java_bin = graal_home + JAVA_BIN
-    else:
-        java_bin = graal_home
-        for v in JDK_VERSIONS:
-	    p = graal_home + '/' + v + '/product'
-            if os.path.isdir(p):
-                java_bin = p + JAVA_BIN
-                break
-	            		
-    if java_bin is graal_home or not os.path.isfile(java_bin):
-      	print "No compatible JDK build found, is this script outdated?"
-      	sys.exit(1)
+if not graal_home:
+    print "Graal couldn't be found. Please set GRAAL_HOME"
+    sys.exit(1)
 
-if args.interpreter:
-    SOM_ARGS = ['-Xbootclasspath/a:'
+java_bin = JAVA_LOCATION + JAVA_BIN
+
+BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
-             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar',
-            "som.vm.Universe"]
-else:
-    SOM_ARGS = ['-Xbootclasspath/a:'
-             + BASE_DIR + '/build/classes:',
-            "som.vm.Universe"]
+             + GRAAL_LOCATION + '/../sdk/mxbuild/dists/graal-sdk.jar:'
+#             + BASE_DIR + '/libs/truffle/sdk/mxbuild/dists/graal-sdk.jar:'
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar:'
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar:')
+#             + BASE_DIR + '/../graalvm-0.22/jdk/jre/lib/jvmci/jvmci-api.jar')
+
+SOM_ARGS = [BOOT_CLASSPATH, "som.vm.Universe"]
     
 if args.dynamic_metrics:
     SOM_ARGS += ['--dynamic-metrics']
@@ -185,7 +165,6 @@ if args.inline_threshold:
 else:
    TWEAK_INLINING = []               
 
-
 # Handle executable names
 if sys.argv[0].endswith('fast'):
     args.assert_ = False
@@ -194,6 +173,14 @@ if sys.argv[0].endswith('debug'):
     args.perf_warnings = True
     args.background_compilation = False
 
+if not args.interpreter and GRAAL_FLAGS:
+    flags = shlex.split(str.strip(GRAAL_FLAGS))
+else:
+    flags = []
+
+if not args.interpreter:
+    flags += ['-server', '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI',
+              '-Djvmci.Compiler=graal', '-XX:-UseJVMCICompiler']
 if args.debug:
     flags += ['-Xdebug',
               '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
@@ -242,6 +229,8 @@ if args.threads:
     flags += ['-Dsom.threads=%s' % args.threads ]
 if args.java_interpreter:
     flags += ['-Xint']
+if args.print_graal_options:
+    flags += ['-XX:+JVMCIPrintProperties']
 
 
 if args.truffle_debugger:
@@ -261,7 +250,13 @@ if args.mate:
     mate_args += ['--mate']
 if args.mateActivated:
     mate_args += ['-activateMate']
-    
+
+if args.java_properties:
+    flags += ['-D' + property for property in args.java_properties]
+
+if args.java_args:
+    JAVA_ARGS += ['-' + property for property in args.java_args]
+
 all_args = JAVA_ARGS + unknown + flags + TWEAK_INLINING + SOM_ARGS  + mate_args + ['-cp'] + args.som_cp.split() + args.args
 
 if args.verbose:
