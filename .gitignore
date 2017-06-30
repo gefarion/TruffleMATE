@@ -7,3 +7,4 @@ user-dict.txt
 .classpath
 libs/*.jar
 *.data
+metrics/*
