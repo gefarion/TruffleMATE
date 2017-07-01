@@ -1,11 +1,11 @@
 #!/bin/sh
 
-GRAALVM_DIR=/Users/smarr/Projects/SOM/graalvm/graalvm-0.24
+GRAALVM_DIR=/Users/guidochari/Documents/Projects/graalvm-0.24
 JVMCI_DIR=${GRAALVM_DIR}/jdk/jre/lib/jvmci
 LIB=${GRAALVM_DIR}/lib
 GRAAL=${LIB}/graal
 
-SOM_DIR=/Users/smarr/Projects/SOM/SOMns
+SOM_DIR=/Users/guidochari/Documents/Projects/TruffleMATE
 TRUFFLE_DIR=${SOM_DIR}/libs/truffle/truffle/mxbuild/dists
 SDK_DIR=${SOM_DIR}/libs/truffle/sdk/mxbuild/dists/
 
@@ -28,7 +28,7 @@ ${GRAALVM_DIR}/jdk/bin/java \
  -H:InspectServerContentPath=${LIB}/svm/inspect \
  -H:CLibraryPath=${LIB}/svm/clibraries/darwin-amd64 \
  -H:Path=. -H:+MultiThreaded -R:YoungGenerationSize=1g -R:OldGenerationSize=3g \
- -H:Class=som.VM -H:Name=somns -H:Features=com.oracle.svm.truffle.TruffleFeature\
+ -H:Class=som.vm.Universe -H:Name=somns -H:Features=com.oracle.svm.truffle.TruffleFeature\
  -H:-ThrowUnsafeOffsetErrors
 
 # \

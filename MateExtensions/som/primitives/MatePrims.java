@@ -21,7 +21,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SReflectiveObject;
-import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SShape;
 
 public final class MatePrims {
@@ -83,20 +82,6 @@ public final class MatePrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "fieldsCount",
-             eagerSpecializable = false, mate = true)
-  public abstract static class MateShapeFieldsCountPrim extends UnaryExpressionNode {
-    public MateShapeFieldsCountPrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
-    @Specialization
-    public final long doSShape(final SShape shape) {
-      return shape.getShape().getPropertyCount();
-    }
-  }
-
-  @GenerateNodeFactory
   @Primitive(klass = "Object", selector = "shape", mate = true)
   public abstract static class MateGetShapePrim extends UnaryExpressionNode {
     public MateGetShapePrim(final boolean eagWrap, final SourceSection source) {
@@ -106,38 +91,6 @@ public final class MatePrims {
     @Specialization
     public final SShape doSObject(final DynamicObject receiver) {
       return new SShape(receiver.getShape());
-    }
-  }
-
-  @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "installEnvironment:",
-             eagerSpecializable = false, mate = true)
-  public abstract static class MateInstallEnvironmentInShapePrim extends BinaryExpressionNode {
-    public MateInstallEnvironmentInShapePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
-    @Specialization
-    public final SShape doSObject(final SShape shape, final DynamicObject environment) {
-      return new SShape(
-          shape.getShape().changeType(
-              ((SReflectiveObjectType) shape.getShape().getObjectType()).setEnvironment(environment)));
-    }
-  }
-
-  @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "installClass:",
-             eagerSpecializable = false, mate = true)
-  public abstract static class MateInstallClassInShapePrim extends BinaryExpressionNode {
-    public MateInstallClassInShapePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
-    @Specialization
-    public final SShape doSObject(final SShape shape, final DynamicObject klass) {
-      return new SShape(
-          shape.getShape().changeType(
-              ((SReflectiveObjectType) shape.getShape().getObjectType()).setKlass(klass)));
     }
   }
 

@@ -1,5 +1,13 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -11,14 +19,6 @@ import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public final class ObjectPrims {
 
@@ -49,6 +49,7 @@ public final class ObjectPrims {
       return doSObject(rcvr, idx);
     }
 
+    @Override
     public ReflectiveOp reflectiveOperation() {
       return ReflectiveOp.LayoutPrimReadField;
     }
@@ -82,6 +83,7 @@ public final class ObjectPrims {
       return doSObject(rcvr, idx, secondArg);
     }
 
+    @Override
     public ReflectiveOp reflectiveOperation() {
       return ReflectiveOp.LayoutPrimWriteField;
     }
@@ -148,7 +150,6 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "hashcode", eagerSpecializable = false)
   @Primitive(klass = "Object", selector = "identityHash", eagerSpecializable = false)
   public abstract static class HashPrim extends UnaryExpressionNode {
     public HashPrim(final boolean eagWrap, final SourceSection source) {
