@@ -1,17 +1,5 @@
 package som.matenodes;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.profiles.ValueProfile;
-
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
@@ -26,6 +14,19 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
+
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 public abstract class MateAbstractReflectiveDispatch extends Node {
 
@@ -93,8 +94,16 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
   public abstract static class MateDispatchLocalVarRead extends
       MateDispatchFieldRead {
-
     final DynamicObject context;
+
+    /*
+     I save the context in this variable to try to enfore that Truffle will not remove it since it will be used later.
+     I can not pass the materialized frame in the computeArguments because then it can not be used in any truffle node
+     because they always receive VirtualFrames. If this does not work, the alternative is to save the context in a special
+     global storage, pass an identifier, and then create special read nodes that read from that storage.
+     Anyway, if this finally works (tests are green) note that it is not thread safe!!!
+    */
+    MaterializedFrame lastFrame;
 
     public MateDispatchLocalVarRead() {
       context = Universe.getCurrent().getObjectMemory().getGlobal(Universe.getCurrent().symbolFor("Context"));
@@ -103,8 +112,9 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     @Override
     protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       // Arguments at 1 contains the slot identifier.
+      lastFrame = frame.materialize();
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
-          arguments[1], new MockJavaObject(frame.materialize(), context)};
+          arguments[1], new MockJavaObject(frame, context)};
     }
   }
 
