@@ -1,6 +1,8 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
 import som.matenodes.IntercessionHandling;
 import som.vmobjects.SSymbol;
 
@@ -11,8 +13,8 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode{
   @Child private IntercessionHandling messageSend;
   @Child private IntercessionHandling primitiveActivation;
 
-  public MateEagerBinaryPrimitiveNode(SSymbol selector, ExpressionNode receiver, ExpressionNode argument,
-      BinaryExpressionNode primitive) {
+  public MateEagerBinaryPrimitiveNode(final SSymbol selector, final ExpressionNode receiver, final ExpressionNode argument,
+      final BinaryExpressionNode primitive) {
     super(selector, receiver, argument, primitive);
     messageSend = IntercessionHandling.createForMessageLookup(this.getSelector());
     primitiveActivation = IntercessionHandling.createForOperation(this.getPrimitive().reflectiveOperation());
@@ -27,7 +29,7 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode{
   }
 
   @Override
-  public Object doPreEvaluated(VirtualFrame frame, Object[] args) {
+  public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
     Object value = messageSend.doMateSemantics(frame, args);
     if (value == null) {
      value = executeEvaluated(frame, args[0], args[1]);
@@ -43,5 +45,10 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode{
      value = super.executeEvaluated(frame, receiver, argument1);
     }
     return value;
+  }
+
+  @Override
+  protected AbstractMessageSpecializationsFactory getFactory() {
+    return MessageSendNode.mateSpecializationFactory;
   }
 }

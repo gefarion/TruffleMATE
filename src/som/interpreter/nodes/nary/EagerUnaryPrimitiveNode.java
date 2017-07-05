@@ -5,6 +5,7 @@ import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
@@ -18,6 +19,7 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
   @Child private ExpressionNode receiver;
   @Child private UnaryExpressionNode primitive;
 
+  @Override
   public ExpressionNode getReceiver() { return receiver; }
   protected ExpressionNode getPrimitive() { return primitive; }
 
@@ -30,7 +32,7 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
-  public Object executeGenericWithReceiver(final VirtualFrame frame, Object receiver) {
+  public Object executeGenericWithReceiver(final VirtualFrame frame, final Object receiver) {
     return executeEvaluated(frame, receiver);
   }
 
@@ -44,9 +46,11 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
     }
   }
 
-  private GenericMessageSendNode makeGenericSend(ExecutionLevel level) {
+  private GenericMessageSendNode makeGenericSend(final ExecutionLevel level) {
+    Universe.getCurrent().insertInstrumentationWrapper(this);
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver}, getSourceSection(), level);
+        new ExpressionNode[] {receiver}, getSourceSection(), level, this.getFactory());
+    Universe.getCurrent().insertInstrumentationWrapper(node);
     return replace(node);
   }
 
@@ -58,7 +62,7 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
-  public Object doPreEvaluated(VirtualFrame frame, Object[] args) {
+  public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
     return executeEvaluated(frame, args[0]);
   }
 

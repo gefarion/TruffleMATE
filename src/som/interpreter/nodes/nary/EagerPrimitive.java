@@ -1,5 +1,7 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
+import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.vm.constants.ReflectiveOp;
@@ -13,7 +15,7 @@ public abstract class EagerPrimitive extends ExpressionWithTagsNode
     implements OperationNode, ExpressionWithReceiver, PreevaluatedExpression {
   protected final SSymbol selector;
 
-  protected EagerPrimitive(final SourceSection source, SSymbol sel) {
+  protected EagerPrimitive(final SourceSection source, final SSymbol sel) {
     super(source);
     selector = sel;
   }
@@ -34,7 +36,12 @@ public abstract class EagerPrimitive extends ExpressionWithTagsNode
     return selector.getString();
   }
 
+  @Override
   public ReflectiveOp reflectiveOperation() {
     return ReflectiveOp.MessageLookup;
+  }
+
+  protected AbstractMessageSpecializationsFactory getFactory() {
+    return MessageSendNode.specializationFactory;
   }
 }

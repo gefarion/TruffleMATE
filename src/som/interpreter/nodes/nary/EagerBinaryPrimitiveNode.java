@@ -5,6 +5,7 @@ import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
@@ -30,13 +31,14 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
     this.adoptChildren();
   }
 
+  @Override
   public ExpressionNode getReceiver() {
     return receiver;
   }
   protected BinaryExpressionNode getPrimitive() { return primitive; }
 
   @Override
-  public Object executeGenericWithReceiver(final VirtualFrame frame, Object receiver) {
+  public Object executeGenericWithReceiver(final VirtualFrame frame, final Object receiver) {
     Object arg  = argument.executeGeneric(frame);
     return executeEvaluated(frame, receiver, arg);
   }
@@ -52,9 +54,15 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
     }
   }
 
-  private GenericMessageSendNode makeGenericSend(ExecutionLevel level) {
+  private GenericMessageSendNode makeGenericSend(final ExecutionLevel level) {
+    Universe.getCurrent().insertInstrumentationWrapper(this);
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver, argument}, getSourceSection(), level);
+        new ExpressionNode[] {receiver, argument}, getSourceSection(), level, this.getFactory());
+    if (argument.getParent() instanceof WrapperNode) {
+      // Disable previous wrapping of receiver node
+      Universe.getCurrent().insertInstrumentationWrapper(argument);
+    }
+    Universe.getCurrent().insertInstrumentationWrapper(argument);
     return replace(node);
   }
 
@@ -63,7 +71,7 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
-  public Object doPreEvaluated(VirtualFrame frame, Object[] args) {
+  public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
     return executeEvaluated(frame, args[0], args[1]);
   }
 

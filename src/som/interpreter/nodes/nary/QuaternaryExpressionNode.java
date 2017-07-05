@@ -1,8 +1,8 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -46,10 +46,11 @@ public abstract class QuaternaryExpressionNode extends EagerlySpecializableNode
     return arguments;
   }
 
+  @Override
   public EagerPrimitive wrapInEagerWrapper(
       final EagerlySpecializableNode prim, final SSymbol selector,
-      final ExpressionNode[] arguments, VirtualFrame frame) {
-    return AbstractMessageSendNode.specializationFactory.quaternaryPrimitiveFor(selector,
+      final ExpressionNode[] arguments, final VirtualFrame frame, final AbstractMessageSpecializationsFactory factory) {
+    return factory.quaternaryPrimitiveFor(selector,
         arguments[0], arguments[1], arguments[2],
         arguments[3], this, frame);
   }
