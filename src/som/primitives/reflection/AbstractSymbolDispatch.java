@@ -72,7 +72,7 @@ public abstract class AbstractSymbolDispatch extends Node {
     return realCachedSend.doPreEvaluated(frame, arguments);
   }
 
-  @Specialization(contains = "doCachedWithoutArgArr", guards = "argsArr == null")
+  @Specialization(replaces = "doCachedWithoutArgArr", guards = "argsArr == null")
   public Object doUncached(final VirtualFrame frame,
       final Object receiver, final SSymbol selector, final Object argsArr,
       @Cached("create()") final IndirectCallNode call) {
@@ -89,7 +89,7 @@ public abstract class AbstractSymbolDispatch extends Node {
     return call.call(target, SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments));
   }
 
-  @Specialization(contains = "doCached")
+  @Specialization(replaces = "doCached")
   public Object doUncached(final VirtualFrame frame,
       final Object receiver, final SSymbol selector, final SArray argsArr,
       @Cached("create()") final IndirectCallNode call,
