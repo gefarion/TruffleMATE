@@ -1,56 +1,24 @@
 package som.primitives;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
-import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitives.Specializer;
 import som.vm.Universe;
 import som.vm.constants.Globals;
-import som.vm.constants.MateClasses;
 import som.vm.constants.Nil;
 import som.vmobjects.MockJavaObject;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
 import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SShape;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 public final class MatePrims {
-  @GenerateNodeFactory
-  @Primitive(klass = "EnvironmentMO Class", selector = "new",
-             specializer = MateNewEnvironmentPrim.IsEnvironmentMOClass.class,
-             mate = true)
-  public abstract static class MateNewEnvironmentPrim extends UnaryExpressionNode {
-    public MateNewEnvironmentPrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
-    @Specialization
-    public final DynamicObject doSClass(final DynamicObject receiver) {
-      return Universe.getCurrent().getObjectMemory().newObject(receiver);
-    }
-
-    public static class IsEnvironmentMOClass extends Specializer<ExpressionNode> {
-      public IsEnvironmentMOClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
-
-      @Override
-      public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
-        try {
-          return SObject.getSOMClass((DynamicObject) args[0]) == MateClasses.environmentMO;
-        } catch (ClassCastException e) {
-          return false;
-        }
-      }
-    }
-  }
 
   @GenerateNodeFactory
   @Primitive(klass = "Shape Class", selector = "newWithFieldsCount:",
