@@ -1,13 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
@@ -16,6 +9,12 @@ import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class UninitializedDispatchNode extends AbstractDispatchNode {
@@ -57,9 +56,9 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
       } else {
         node = new CachedDnuNode(rcvrClass, guard, selector, newChainEnd, SArguments.getExecutionLevel(frame));
       }
-      Universe.insertInstrumentationWrapper(this);
+      Universe.getCurrent().insertInstrumentationWrapper(this);
       replace(node);
-      Universe.insertInstrumentationWrapper(node);
+      Universe.getCurrent().insertInstrumentationWrapper(node);
       return node;
     }
 

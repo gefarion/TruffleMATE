@@ -110,7 +110,7 @@ public class SInvokable {
 
   public static final String toString(final DynamicObject invokable) {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
-    if (InvokableLayoutImpl.INSTANCE.getHolder(invokable) == null) {
+    if (InvokableLayoutImpl.INSTANCE.getHolder(invokable) == Nil.nilObject) {
       return "Method(nil>>" + InvokableLayoutImpl.INSTANCE.getSignature(invokable).toString() + ")";
     }
 

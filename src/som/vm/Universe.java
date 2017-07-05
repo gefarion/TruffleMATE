@@ -38,27 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleLanguage.Env;
-import com.oracle.truffle.api.TruffleRuntime;
-import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectFactory;
-import com.oracle.truffle.api.object.ObjectType;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
-
 import som.VMOptions;
 import som.VmSettings;
 import som.interpreter.Invokable;
@@ -86,7 +65,29 @@ import som.vmobjects.SReflectiveObjectLayoutImpl;
 import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SSymbol;
 import tools.debugger.Tags;
+import tools.dym.DynamicMetrics;
 import tools.language.StructuralProbe;
+
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage.Env;
+import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.debug.Debugger;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectFactory;
+import com.oracle.truffle.api.object.ObjectType;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 
 public class Universe {
   final Env env;
@@ -131,7 +132,7 @@ public class Universe {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, arguments);
     PolyglotEngine engine = builder.build();
-    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
 
     // Trigger initialization
     assert null == engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
@@ -154,7 +155,7 @@ public class Universe {
       final VMOptions vmOptions) {
     engine = builder.build();
 
-    Map<String, Instrument> instruments = engine.getInstruments();
+    Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
     Instrument profiler = instruments.get("profiler");
     if (vmOptions.profilingEnabled && profiler == null) {
       errorPrintln("Truffle profiler not available. Might be a class path issue");
@@ -177,13 +178,13 @@ public class Universe {
       webDebugger.startServer(debugger);
     }*/
 
-    /*if (vmOptions.dynamicMetricsEnabled) {
+    if (vmOptions.dynamicMetricsEnabled) {
       assert VmSettings.DYNAMIC_METRICS;
       Instrument dynM = instruments.get(DynamicMetrics.ID);
       dynM.setEnabled(true);
       structuralProbe = dynM.lookup(StructuralProbe.class);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
-    }*/
+    }
 
     engine.eval(SomLanguage.START);
     engine.dispose();
@@ -534,16 +535,16 @@ public class Universe {
     }*/
   }
 
-  public static void insertInstrumentationWrapper(final Node node) {
-    // TODO: make thread-safe!!!
-    // TODO: can I assert that it is locked?? helper on Node??
+  public void insertInstrumentationWrapper(final Node node) {
     if (VmSettings.INSTRUMENTATION) {
       assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
-      // TODO: a way to check whether the node needs actually wrapping?
-      // String[] tags = node.getSourceSection().getTags();
-      // if (tags != null && tags.length > 0) {
-      // InstrumentationHandler.insertInstrumentationWrapper(node);
-      // }
+      Node baseNode;
+      if (node instanceof WrapperNode) {
+          baseNode = ((WrapperNode) node).getDelegateNode();
+      } else {
+          baseNode = node;
+      }
+      Universe.engine.getRuntime().getInstrumentationHandler().insertWrapper(baseNode, baseNode.getSourceSection());
     }
   }
 
@@ -592,7 +593,7 @@ public class Universe {
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
-  @CompilationFinal private static PolyglotEngine engine;
+  @CompilationFinal public static PolyglotEngine engine;
   @CompilationFinal ObjectMemory objectMemory;
   @CompilationFinal private static StructuralProbe structuralProbe;
   // @CompilationFinal private static WebDebugger webDebugger;

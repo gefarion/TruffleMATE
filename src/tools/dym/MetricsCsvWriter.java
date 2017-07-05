@@ -12,11 +12,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.Invokable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
@@ -41,6 +36,11 @@ import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
 import tools.language.StructuralProbe;
+
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class MetricsCsvWriter {
@@ -508,7 +508,7 @@ public final class MetricsCsvWriter {
       for (DynamicObject i : sortInv(structuralProbe.getMethods())) {
         int numInvokations = methodInvocationCount(i, profiles.values());
         String executed = (numInvokations == 0) ? "false" : "true";
-        file.write(i.toString(), executed, numInvokations);
+        file.write(SInvokable.toString(i), executed, numInvokations);
       }
     }
   }
@@ -640,7 +640,7 @@ public final class MetricsCsvWriter {
       final Comparator<Entry<K, V>> comparator) {
     SortedSet<Entry<K, V>> sortedSet = new TreeSet<>(comparator);
     sortedSet.addAll(map.entrySet());
-    assert sortedSet.size() == map.size();
+    // assert sortedSet.size() == map.size();
     return sortedSet;
   }
 }

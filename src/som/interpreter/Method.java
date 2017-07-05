@@ -23,6 +23,7 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
+
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
@@ -44,6 +45,7 @@ public final class Method extends Invokable {
         expressions, uninitialized, method);
     this.currentLexicalScope = currentLexicalScope;
     currentLexicalScope.setMethod(this);
+    expressions.markAsRootExpression();
   }
 
   @Override

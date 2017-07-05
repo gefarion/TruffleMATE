@@ -8,8 +8,40 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import som.interpreter.Invokable;
+import som.interpreter.nodes.OperationNode;
+import som.vm.NotYetImplementedException;
+import tools.debugger.Tags.LiteralTag;
+import tools.dym.Tags.BasicPrimitiveOperation;
+import tools.dym.Tags.ClassRead;
+import tools.dym.Tags.ComplexPrimitiveOperation;
+import tools.dym.Tags.ControlFlowCondition;
+import tools.dym.Tags.FieldRead;
+import tools.dym.Tags.FieldWrite;
+import tools.dym.Tags.LocalArgRead;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
+import tools.dym.Tags.LoopNode;
+import tools.dym.Tags.VirtualInvoke;
+import tools.dym.nodes.ControlFlowProfileNode;
+import tools.dym.nodes.CountingNode;
+import tools.dym.nodes.InvocationProfilingNode;
+import tools.dym.nodes.LoopProfilingNode;
+import tools.dym.nodes.OperationProfilingNode;
+import tools.dym.nodes.ReadProfilingNode;
+import tools.dym.profiles.AllocationProfile;
+import tools.dym.profiles.ArrayCreationProfile;
+import tools.dym.profiles.BranchProfile;
+import tools.dym.profiles.CallsiteProfile;
+import tools.dym.profiles.ClosureApplicationProfile;
+import tools.dym.profiles.Counter;
+import tools.dym.profiles.InvocationProfile;
+import tools.dym.profiles.LoopProfile;
+import tools.dym.profiles.OperationProfile;
+import tools.dym.profiles.ReadValueProfile;
+import tools.language.StructuralProbe;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
@@ -24,53 +56,6 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
-
-import som.instrumentation.InstrumentableDirectCallNode;
-import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
-import som.interpreter.Invokable;
-import som.interpreter.nodes.OperationNode;
-import som.vm.NotYetImplementedException;
-import tools.debugger.Tags.LiteralTag;
-import tools.dym.Tags.BasicPrimitiveOperation;
-import tools.dym.Tags.CachedClosureInvoke;
-import tools.dym.Tags.CachedVirtualInvoke;
-import tools.dym.Tags.ClassRead;
-import tools.dym.Tags.ComplexPrimitiveOperation;
-import tools.dym.Tags.ControlFlowCondition;
-import tools.dym.Tags.FieldRead;
-import tools.dym.Tags.FieldWrite;
-import tools.dym.Tags.LocalArgRead;
-import tools.dym.Tags.LocalVarRead;
-import tools.dym.Tags.LocalVarWrite;
-import tools.dym.Tags.LoopBody;
-import tools.dym.Tags.LoopNode;
-import tools.dym.Tags.OpClosureApplication;
-import tools.dym.Tags.PrimitiveArgument;
-import tools.dym.Tags.VirtualInvoke;
-import tools.dym.nodes.CallTargetNode;
-import tools.dym.nodes.ClosureTargetNode;
-import tools.dym.nodes.ControlFlowProfileNode;
-import tools.dym.nodes.CountingNode;
-import tools.dym.nodes.InvocationProfilingNode;
-import tools.dym.nodes.LateCallTargetNode;
-import tools.dym.nodes.LateClosureTargetNode;
-import tools.dym.nodes.LoopIterationReportNode;
-import tools.dym.nodes.LoopProfilingNode;
-import tools.dym.nodes.ReadProfilingNode;
-import tools.dym.nodes.OperationProfilingNode;
-import tools.dym.nodes.LateReportResultNode;
-import tools.dym.nodes.ReportResultNode;
-import tools.dym.profiles.AllocationProfile;
-import tools.dym.profiles.ArrayCreationProfile;
-import tools.dym.profiles.BranchProfile;
-import tools.dym.profiles.CallsiteProfile;
-import tools.dym.profiles.ClosureApplicationProfile;
-import tools.dym.profiles.Counter;
-import tools.dym.profiles.InvocationProfile;
-import tools.dym.profiles.LoopProfile;
-import tools.dym.profiles.OperationProfile;
-import tools.dym.profiles.ReadValueProfile;
-import tools.language.StructuralProbe;
 
 
 /**
@@ -229,7 +214,7 @@ public class DynamicMetrics extends TruffleInstrument {
     return primExpFactory;
   }
 
-  private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
+  /*private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(PrimitiveArgument.class);
@@ -245,7 +230,7 @@ public class DynamicMetrics extends TruffleInstrument {
       int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
       return new ReportResultNode(p.getProfile(), idx);
     });
-  }
+  }*/
 
   // Probably not neccesary because receivers are already tracked by Callsites
   /* private void addReceiverInstrumentation(final Instrumenter instrumenter,
@@ -263,7 +248,7 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }*/
 
-  private void addCalltargetInstrumentation(final Instrumenter instrumenter,
+  /*private void addCalltargetInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory virtInvokeFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedVirtualInvoke.class);
@@ -282,9 +267,9 @@ public class DynamicMetrics extends TruffleInstrument {
       RootCallTarget root = (RootCallTarget) disp.getCallTarget();
       return new CallTargetNode(profile, (Invokable) root.getRootNode());
     });
-  }
+  }*/
 
-  private void addClosureTargetInstrumentation(final Instrumenter instrumenter,
+  /*private void addClosureTargetInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedClosureInvoke.class);
@@ -303,7 +288,7 @@ public class DynamicMetrics extends TruffleInstrument {
       RootCallTarget root = (RootCallTarget) disp.getCallTarget();
       return new ClosureTargetNode(profile, (Invokable) root.getRootNode());
     });
-  }
+  }*/
 
   private static final Class<?>[] NO_TAGS = new Class<?>[0];
 
@@ -318,14 +303,14 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {VirtualInvoke.class}, NO_TAGS,
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
     // The receiver isn't already tracked inside the callTarget???
-    // addReceiverInstrumentation(instrumenter, virtInvokeFactory);
-    addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
+    /* addReceiverInstrumentation(instrumenter, virtInvokeFactory);
+    addCalltargetInstrumentation(instrumenter, virtInvokeFactory);*/
 
-    ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
+    /*ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
         instrumenter, closureProfiles,
         new Class<?>[] {OpClosureApplication.class}, NO_TAGS,
         ClosureApplicationProfile::new, CountingNode<ClosureApplicationProfile>::new);
-    addClosureTargetInstrumentation(instrumenter, closureApplicationFactory);
+    addClosureTargetInstrumentation(instrumenter, closureApplicationFactory);*/
 
     /*addInstrumentation(instrumenter, newObjectCounter,
         new Class<?>[] {NewObject.class}, NO_TAGS,
@@ -339,7 +324,7 @@ public class DynamicMetrics extends TruffleInstrument {
         Counter::new, CountingNode<Counter>::new);
 
     ExecutionEventNodeFactory opInstrumentFact = addOperationInstrumentation(instrumenter);
-    addSubexpressionInstrumentation(instrumenter, opInstrumentFact);
+    /*addSubexpressionInstrumentation(instrumenter, opInstrumentFact);*/
 
     addInstrumentation(instrumenter, fieldReadProfiles,
         new Class<?>[] {FieldRead.class}, NO_TAGS,
@@ -367,7 +352,7 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {LoopNode.class}, NO_TAGS,
         LoopProfile::new, LoopProfilingNode::new);
 
-    addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
+    /*addLoopBodyInstrumentation(instrumenter, loopProfileFactory);*/
 
     instrumenter.attachLoadSourceSectionListener(
         SourceSectionFilter.newBuilder().tagIs(RootTag.class).build(),
@@ -377,7 +362,7 @@ public class DynamicMetrics extends TruffleInstrument {
     env.registerService(structuralProbe);
   }
 
-  private void addLoopBodyInstrumentation(
+  /*private void addLoopBodyInstrumentation(
       final Instrumenter instrumenter,
       final ExecutionEventNodeFactory loopProfileFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
@@ -389,7 +374,7 @@ public class DynamicMetrics extends TruffleInstrument {
       LoopProfilingNode p = (LoopProfilingNode) parent;
       return new LoopIterationReportNode(p.getProfile());
     });
-  }
+  }*/
 
   @Override
   protected void onDispose(final Env env) {
