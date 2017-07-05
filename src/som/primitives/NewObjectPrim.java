@@ -34,7 +34,7 @@ public abstract class NewObjectPrim extends UnaryExpressionNode {
   }
 
   @TruffleBoundary
-  @Specialization(contains = "cachedClass")
+  @Specialization(replaces = "cachedClass")
   public DynamicObject uncached(final DynamicObject receiver) {
     return SClass.getFactory(receiver).newInstance(layoutClass.buildArguments());
   }
