@@ -22,13 +22,18 @@ import tools.dym.Tags.LocalArgRead;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
 import tools.dym.Tags.LoopNode;
+import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvoke;
+import tools.dym.Tags.VirtualInvokeReceiver;
 import tools.dym.nodes.ControlFlowProfileNode;
 import tools.dym.nodes.CountingNode;
 import tools.dym.nodes.InvocationProfilingNode;
+import tools.dym.nodes.LateReportResultNode;
 import tools.dym.nodes.LoopProfilingNode;
 import tools.dym.nodes.OperationProfilingNode;
 import tools.dym.nodes.ReadProfilingNode;
+import tools.dym.nodes.ReportReceiverNode;
+import tools.dym.nodes.ReportResultNode;
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.ArrayCreationProfile;
 import tools.dym.profiles.BranchProfile;
@@ -46,6 +51,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
@@ -214,13 +220,13 @@ public class DynamicMetrics extends TruffleInstrument {
     return primExpFactory;
   }
 
-  /*private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
+  private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(PrimitiveArgument.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
+      ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, factory);
 
       if (parent == null) {
         return new LateReportResultNode(ctx, factory);
@@ -230,23 +236,32 @@ public class DynamicMetrics extends TruffleInstrument {
       int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
       return new ReportResultNode(p.getProfile(), idx);
     });
-  }*/
+  }
 
-  // Probably not neccesary because receivers are already tracked by Callsites
-  /* private void addReceiverInstrumentation(final Instrumenter instrumenter,
+
+  public static ExecutionEventNode findDirectParentEventNode(final EventContext ctx,
+      final ExecutionEventNodeFactory factory) {
+    Node parent = ctx.getInstrumentedNode().getParent().getParent().getParent();
+    if (parent instanceof WrapperNode) {
+      return ((WrapperNode) parent).getProbeNode().findEventNode(factory);
+    }
+    return null;
+  }
+
+  private void addReceiverInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory virtInvokeFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(VirtualInvokeReceiver.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findDirectParentEventNode(virtInvokeFactory);
+      ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, virtInvokeFactory);
 
       @SuppressWarnings("unchecked")
       CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
       CallsiteProfile profile = p.getProfile();
       return new ReportReceiverNode(profile);
     });
-  }*/
+  }
 
   /*private void addCalltargetInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory virtInvokeFactory) {
@@ -302,9 +317,8 @@ public class DynamicMetrics extends TruffleInstrument {
         instrumenter, methodCallsiteProfiles,
         new Class<?>[] {VirtualInvoke.class}, NO_TAGS,
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
-    // The receiver isn't already tracked inside the callTarget???
-    /* addReceiverInstrumentation(instrumenter, virtInvokeFactory);
-    addCalltargetInstrumentation(instrumenter, virtInvokeFactory);*/
+    addReceiverInstrumentation(instrumenter, virtInvokeFactory);
+    // addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
 
     /*ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
         instrumenter, closureProfiles,
@@ -323,8 +337,8 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {LiteralTag.class}, NO_TAGS,
         Counter::new, CountingNode<Counter>::new);
 
-    ExecutionEventNodeFactory opInstrumentFact = addOperationInstrumentation(instrumenter);
-    /*addSubexpressionInstrumentation(instrumenter, opInstrumentFact);*/
+    /*ExecutionEventNodeFactory opInstrumentFact = addOperationInstrumentation(instrumenter);
+    addSubexpressionInstrumentation(instrumenter, opInstrumentFact);*/
 
     addInstrumentation(instrumenter, fieldReadProfiles,
         new Class<?>[] {FieldRead.class}, NO_TAGS,
