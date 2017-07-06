@@ -3,11 +3,6 @@ package som.interpreter.nodes.nary;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.vm.Universe;
-import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -58,23 +53,9 @@ public class EagerQuaternaryPrimitiveNode extends EagerPrimitive {
       return primitive.executeEvaluated(frame, receiver, argument1, argument2, argument3);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame,
+      return replaceWithGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2, argument3});
     }
-  }
-
-  private AbstractMessageSendNode makeGenericSend(final ExecutionLevel level) {
-    Universe.getCurrent().insertInstrumentationWrapper(this);
-    GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver, argument1, argument2, argument3},
-        getSourceSection(), level, this.getFactory());
-    Universe.getCurrent().insertInstrumentationWrapper(node);
-    if (argument1.getParent() instanceof WrapperNode) {
-      // Disable previous wrapping of receiver node
-      Universe.getCurrent().insertInstrumentationWrapper(argument1);
-    }
-    Universe.getCurrent().insertInstrumentationWrapper(argument1);
-    return replace(node);
   }
 
   public ExpressionNode getThirdArg() {
@@ -84,8 +65,7 @@ public class EagerQuaternaryPrimitiveNode extends EagerPrimitive {
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     assert !(primitive instanceof WrapperNode);
-    boolean result = super.isTaggedWith(tag) ? super.isTaggedWith(tag) : primitive.isTaggedWith(tag);
-    return result;
+    return primitive.isTaggedWithIgnoringEagerness(tag);
   }
 
   @Override
@@ -94,7 +74,13 @@ public class EagerQuaternaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
-  protected void setTags(final byte tagMark) {
-    primitive.tagMark = tagMark;
+  protected ExpressionNode[] getArgumentNodes() {
+    return new ExpressionNode[] {receiver, argument1, argument2, argument3};
   }
+
+  @Override
+  protected void tagWith(final byte mask) {
+    primitive.tagWith(mask);
+  }
+
 }

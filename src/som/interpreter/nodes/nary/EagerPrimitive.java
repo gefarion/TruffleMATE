@@ -1,13 +1,18 @@
 package som.interpreter.nodes.nary;
 
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.vm.Universe;
+import som.vm.constants.ExecutionLevel;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -24,8 +29,6 @@ public abstract class EagerPrimitive extends ExpressionWithTagsNode
   public Object executeGeneric(final VirtualFrame frame) {
     return executeGenericWithReceiver(frame, this.getReceiver().executeGeneric(frame));
   }
-
-  protected abstract void setTags(byte tagMark);
 
   protected SSymbol getSelector() {
     return selector;
@@ -44,4 +47,22 @@ public abstract class EagerPrimitive extends ExpressionWithTagsNode
   protected AbstractMessageSpecializationsFactory getFactory() {
     return MessageSendNode.specializationFactory;
   }
+
+  protected final GenericMessageSendNode replaceWithGenericSend(final ExecutionLevel level) {
+    Universe.getCurrent().insertInstrumentationWrapper(this);
+    ExpressionNode[] arguments = this.getArgumentNodes();
+    GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
+        arguments, getSourceSection(), level, this.getFactory());
+    replace(node);
+    Universe.getCurrent().insertInstrumentationWrapper(node);
+    if (arguments[0].getParent() instanceof WrapperNode) {
+      // Disable previous wrapping of receiver node
+      Universe.getCurrent().insertInstrumentationWrapper(arguments[0]);
+    }
+    Universe.getCurrent().insertInstrumentationWrapper(arguments[0]);
+    return node;
+  }
+
+  protected abstract ExpressionNode[] getArgumentNodes();
+
 }
