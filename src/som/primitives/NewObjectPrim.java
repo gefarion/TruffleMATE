@@ -1,11 +1,5 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
-import som.vmobjects.SClass;
-import som.vmobjects.SObject;
-import tools.dym.Tags.NewObject;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -14,6 +8,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.Universe;
+import som.vmobjects.SClass;
+import som.vmobjects.SObject;
+import tools.dym.Tags.NewObject;
 
 
 @GenerateNodeFactory
@@ -44,7 +44,7 @@ public abstract class NewObjectPrim extends UnaryExpressionNode {
     if (tag == NewObject.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

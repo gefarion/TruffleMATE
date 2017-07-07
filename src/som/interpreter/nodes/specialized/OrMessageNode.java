@@ -1,5 +1,14 @@
 package som.interpreter.nodes.specialized;
 
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
@@ -11,15 +20,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.ControlFlowCondition;
 import tools.dym.Tags.OpComparison;
-
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 @Primitive(selector = "or:", noWrapper = true, specializer = OrSplzr.class)
@@ -36,7 +36,7 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
     }
   }
 
-  public OrMessageNode(final SBlock arg, final SourceSection source, ExecutionLevel level) {
+  public OrMessageNode(final SBlock arg, final SourceSection source, final ExecutionLevel level) {
     super(true, source);
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
@@ -77,7 +77,7 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
     } else if (tag == OpComparison.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

@@ -1,15 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.Universe;
-import som.vm.constants.ExecutionLevel;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -22,6 +12,16 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.Invokable;
+import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
+import som.primitives.Primitive;
+import som.vm.Universe;
+import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 
 @Primitive(selector = "downTo:do:", noWrapper = true, disabled = true,
            requiresExecutionLevel = true, requiresArguments = true,
@@ -104,7 +104,7 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

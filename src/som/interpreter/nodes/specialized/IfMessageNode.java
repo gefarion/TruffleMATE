@@ -1,14 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.SArguments;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.constants.ExecutionLevel;
-import som.vm.constants.Nil;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-import tools.dym.Tags.ControlFlowCondition;
-
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -19,6 +10,15 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.Primitive;
+import som.vm.constants.ExecutionLevel;
+import som.vm.constants.Nil;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.ControlFlowCondition;
 
 
 @GenerateNodeFactory
@@ -45,7 +45,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     this.expected = expected;
   }
 
-  protected static DirectCallNode createDirect(final DynamicObject method, ExecutionLevel level) {
+  protected static DirectCallNode createDirect(final DynamicObject method, final ExecutionLevel level) {
     return Truffle.getRuntime().createDirectCallNode(SInvokable.getCallTarget(method, level));
   }
 
@@ -53,7 +53,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     return Truffle.getRuntime().createIndirectCallNode();
   }
 
-  protected static ExecutionLevel executionLevel(VirtualFrame frame) {
+  protected static ExecutionLevel executionLevel(final VirtualFrame frame) {
     return SArguments.getExecutionLevel(frame);
   }
 
@@ -98,7 +98,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     if (tag == ControlFlowCondition.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

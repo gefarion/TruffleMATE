@@ -1,5 +1,9 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -8,10 +12,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.StringAccess;
-
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public class StringPrims {
@@ -48,7 +48,7 @@ public class StringPrims {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -77,7 +77,7 @@ public class StringPrims {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -112,7 +112,7 @@ public class StringPrims {
       } else if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -122,7 +122,7 @@ public class StringPrims {
              eagerSpecializable = false, receiverType = String.class)
   /*
    * It is not specializable for avoiding the clash with Array at: primitive.
-   * We should improve the specialization so that it enables to store different 
+   * We should improve the specialization so that it enables to store different
    * specializers for the same selector.
    */
   public abstract static class AtStringPrim extends BinaryExpressionNode {
@@ -131,7 +131,7 @@ public class StringPrims {
     }
 
     @Specialization
-    public final char doString(final String receiver, long index) {
+    public final char doString(final String receiver, final long index) {
       if (index > receiver.length()) {
         Universe.errorExit("Accessing string:" + receiver + "out of range: " + String.valueOf(index));
       }
@@ -139,7 +139,7 @@ public class StringPrims {
     }
 
     @Specialization
-    public final char doSymbol(final SSymbol receiver, long index) {
+    public final char doSymbol(final SSymbol receiver, final long index) {
       return doString(receiver.getString(), index);
     }
 
@@ -148,7 +148,7 @@ public class StringPrims {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -175,7 +175,7 @@ public class StringPrims {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }

@@ -1,5 +1,11 @@
 package som.primitives.arrays;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Nil;
@@ -9,19 +15,13 @@ import som.vmobjects.SArray.PartiallyEmptyArray;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 @GenerateNodeFactory
 @Primitive(klass = "Array", selector = "at:put:", receiverType = SArray.class)
 @ImportStatic(ArrayType.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
 
-  public AtPutPrim(boolean eagerlyWrapped, SourceSection sourceSection) {
+  public AtPutPrim(final boolean eagerlyWrapped, final SourceSection sourceSection) {
     super(eagerlyWrapped, sourceSection);
   }
 
@@ -278,7 +278,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } else if (tag == ArrayWrite.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

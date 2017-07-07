@@ -1,15 +1,15 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-import som.vmobjects.SBlock;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.Primitive;
+import som.vmobjects.SBlock;
 
 
 @GenerateNodeFactory
@@ -46,7 +46,7 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

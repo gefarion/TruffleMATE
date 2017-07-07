@@ -1,15 +1,5 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.literals.IntegerLiteralNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.ExecutionLevel;
-import som.vm.constants.Nil;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -21,6 +11,16 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.Invokable;
+import som.interpreter.SArguments;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.literals.IntegerLiteralNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.vm.constants.ExecutionLevel;
+import som.vm.constants.Nil;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 
 
 public abstract class AbstractWhileNode extends BinaryExpressionNode {
@@ -42,7 +42,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   }
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final SourceSection source, ExecutionLevel level) {
+      final boolean predicateBool, final SourceSection source, final ExecutionLevel level) {
     super(false, source);
 
     CallTarget callTargetCondition = SInvokable.getCallTarget(rcvr.getMethod(), level);
@@ -105,7 +105,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }
