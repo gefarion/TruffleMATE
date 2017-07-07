@@ -1,5 +1,8 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -10,10 +13,6 @@ import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class EagerPrimitive extends ExpressionWithTagsNode
@@ -55,10 +54,6 @@ public abstract class EagerPrimitive extends ExpressionWithTagsNode
         arguments, getSourceSection(), level, this.getFactory());
     replace(node);
     Universe.getCurrent().insertInstrumentationWrapper(node);
-    if (arguments[0].getParent() instanceof WrapperNode) {
-      // Disable previous wrapping of receiver node
-      Universe.getCurrent().insertInstrumentationWrapper(arguments[0]);
-    }
     Universe.getCurrent().insertInstrumentationWrapper(arguments[0]);
     return node;
   }

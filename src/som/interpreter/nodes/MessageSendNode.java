@@ -2,6 +2,18 @@ package som.interpreter.nodes;
 
 import java.util.List;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.Introspection;
+import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
@@ -23,19 +35,6 @@ import som.vm.constants.ExecutionLevel;
 import som.vm.constants.MateClasses;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.dsl.Introspection;
-import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public final class MessageSendNode {
 
@@ -177,9 +176,6 @@ public final class MessageSendNode {
       // synchronized (getLock()) {
       if (specializer != null) {
         EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper(), frame);
-        for (ExpressionNode exp : argumentNodes) {
-          unwrapIfNecessary(exp).markAsPrimitiveArgument();
-        }
         if (specializer.noWrapper()) {
           return replace(newNode);
         } else {
@@ -200,10 +196,6 @@ public final class MessageSendNode {
           getSourceSection(), SArguments.getExecutionLevel(frame), this.getFactory());
       replace(send);
       Universe.getCurrent().insertInstrumentationWrapper(send);
-      if (argumentNodes[0].getParent() instanceof WrapperNode) {
-        // Disable previous wrapping of receiver node
-        Universe.getCurrent().insertInstrumentationWrapper(argumentNodes[0]);
-      }
       Universe.getCurrent().insertInstrumentationWrapper(argumentNodes[0]);
       return send;
     }
@@ -215,10 +207,6 @@ public final class MessageSendNode {
       Universe.getCurrent().insertInstrumentationWrapper((Node) result);
       for (ExpressionNode arg: argumentNodes) {
         unwrapIfNecessary(arg).markAsPrimitiveArgument();
-        if (arg.getParent() instanceof WrapperNode) {
-          // Disable previous wrapping of receiver node
-          Universe.getCurrent().insertInstrumentationWrapper(arg);
-        }
         Universe.getCurrent().insertInstrumentationWrapper(arg);
       }
       return result;
