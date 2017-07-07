@@ -8,11 +8,34 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.instrumentation.EventContext;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.TruffleInstrument;
+import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.instrumentation.InstrumentableDirectCallNode;
+import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.OperationNode;
 import som.vm.NotYetImplementedException;
+import som.vm.Universe;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.BasicPrimitiveOperation;
+import tools.dym.Tags.CachedClosureInvoke;
+import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.ControlFlowCondition;
@@ -21,14 +44,25 @@ import tools.dym.Tags.FieldWrite;
 import tools.dym.Tags.LocalArgRead;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
+import tools.dym.Tags.LoopBody;
 import tools.dym.Tags.LoopNode;
+import tools.dym.Tags.NewArray;
+import tools.dym.Tags.NewObject;
+import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
+import tools.dym.nodes.AllocationProfilingNode;
+import tools.dym.nodes.ArrayAllocationProfilingNode;
+import tools.dym.nodes.CallTargetNode;
+import tools.dym.nodes.ClosureTargetNode;
 import tools.dym.nodes.ControlFlowProfileNode;
 import tools.dym.nodes.CountingNode;
 import tools.dym.nodes.InvocationProfilingNode;
+import tools.dym.nodes.LateCallTargetNode;
+import tools.dym.nodes.LateClosureTargetNode;
 import tools.dym.nodes.LateReportResultNode;
+import tools.dym.nodes.LoopIterationReportNode;
 import tools.dym.nodes.LoopProfilingNode;
 import tools.dym.nodes.OperationProfilingNode;
 import tools.dym.nodes.ReadProfilingNode;
@@ -46,23 +80,6 @@ import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
 import tools.language.StructuralProbe;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.instrumentation.EventContext;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.Instrumenter;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.instrumentation.TruffleInstrument;
-import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 /**
  * DynamicMetric is a Truffle instrumentation tool to measure a wide range of
@@ -72,6 +89,15 @@ import com.oracle.truffle.api.source.SourceSection;
  *   - designed for single-threaded use only
  *   - designed for use in interpreted mode only
  */
+
+/*
+ * Status for Mate: All profiling is ported and providing some output.
+ * TODOs:
+ *  - The intToDoInlined node is failing for the loop profiles.
+ *  - The new primitive is different in Mate than in SOMns. Thus the new object profiling is not working properly.
+ *  - There is an assertion error while outputting data. Analyze what is happening
+ */
+
 @Registration(id = DynamicMetrics.ID)
 public class DynamicMetrics extends TruffleInstrument {
 
@@ -189,6 +215,9 @@ public class DynamicMetrics extends TruffleInstrument {
     for (@SuppressWarnings("unused") Node child : node.getChildren()) {
       i += 1;
     }
+    if (Universe.getCurrent().vmReflectionEnabled()) {
+      i -= 2;
+    }
     return i;
   }
 
@@ -241,9 +270,22 @@ public class DynamicMetrics extends TruffleInstrument {
 
   public static ExecutionEventNode findDirectParentEventNode(final EventContext ctx,
       final ExecutionEventNodeFactory factory) {
-    Node parent = ctx.getInstrumentedNode().getParent().getParent().getParent();
-    if (parent instanceof WrapperNode) {
-      return ((WrapperNode) parent).getProbeNode().findEventNode(factory);
+    return DynamicMetrics.findParentEventNode(ctx, factory, 2);
+  }
+
+  public static ExecutionEventNode findParentEventNode(final EventContext ctx,
+      final ExecutionEventNodeFactory factory, final int maxDepth) {
+    Node parent = ctx.getInstrumentedNode().getParent();
+    ExecutionEventNode eventNode = null;
+    int level = 0;
+    while ((parent = parent.getParent()) != null && level < maxDepth) {
+      if (parent instanceof WrapperNode) {
+        eventNode = ((WrapperNode) parent).getProbeNode().findEventNode(factory);
+        if (eventNode != null) {
+          return eventNode;
+        }
+        level = level + 1;
+      }
     }
     return null;
   }
@@ -263,13 +305,13 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
-  /*private void addCalltargetInstrumentation(final Instrumenter instrumenter,
+  private void addCalltargetInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory virtInvokeFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedVirtualInvoke.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
+      ExecutionEventNode parent = DynamicMetrics.findParentEventNode(ctx, virtInvokeFactory, 10);
       InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
 
       if (parent == null) {
@@ -282,15 +324,15 @@ public class DynamicMetrics extends TruffleInstrument {
       RootCallTarget root = (RootCallTarget) disp.getCallTarget();
       return new CallTargetNode(profile, (Invokable) root.getRootNode());
     });
-  }*/
+  }
 
-  /*private void addClosureTargetInstrumentation(final Instrumenter instrumenter,
+  private void addClosureTargetInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedClosureInvoke.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findParentEventNode(factory);
+      ExecutionEventNode parent = DynamicMetrics.findParentEventNode(ctx, factory, 10);
       InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
 
       if (parent == null) {
@@ -303,7 +345,7 @@ public class DynamicMetrics extends TruffleInstrument {
       RootCallTarget root = (RootCallTarget) disp.getCallTarget();
       return new ClosureTargetNode(profile, (Invokable) root.getRootNode());
     });
-  }*/
+  }
 
   private static final Class<?>[] NO_TAGS = new Class<?>[0];
 
@@ -318,27 +360,27 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {VirtualInvoke.class}, NO_TAGS,
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
     addReceiverInstrumentation(instrumenter, virtInvokeFactory);
-    // addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
+    addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
 
-    /*ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
+    ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
         instrumenter, closureProfiles,
         new Class<?>[] {OpClosureApplication.class}, NO_TAGS,
         ClosureApplicationProfile::new, CountingNode<ClosureApplicationProfile>::new);
-    addClosureTargetInstrumentation(instrumenter, closureApplicationFactory);*/
+    addClosureTargetInstrumentation(instrumenter, closureApplicationFactory);
 
-    /*addInstrumentation(instrumenter, newObjectCounter,
+    addInstrumentation(instrumenter, newObjectCounter,
         new Class<?>[] {NewObject.class}, NO_TAGS,
         AllocationProfile::new, AllocationProfilingNode::new);
     addInstrumentation(instrumenter, newArrayCounter,
         new Class<?>[] {NewArray.class}, NO_TAGS,
-        ArrayCreationProfile::new, ArrayAllocationProfilingNode::new);*/
+        ArrayCreationProfile::new, ArrayAllocationProfilingNode::new);
 
     addInstrumentation(instrumenter, literalReadCounter,
         new Class<?>[] {LiteralTag.class}, NO_TAGS,
         Counter::new, CountingNode<Counter>::new);
 
-    /*ExecutionEventNodeFactory opInstrumentFact = addOperationInstrumentation(instrumenter);
-    addSubexpressionInstrumentation(instrumenter, opInstrumentFact);*/
+    ExecutionEventNodeFactory opInstrumentFact = addOperationInstrumentation(instrumenter);
+    addSubexpressionInstrumentation(instrumenter, opInstrumentFact);
 
     addInstrumentation(instrumenter, fieldReadProfiles,
         new Class<?>[] {FieldRead.class}, NO_TAGS,
@@ -366,7 +408,7 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {LoopNode.class}, NO_TAGS,
         LoopProfile::new, LoopProfilingNode::new);
 
-    /*addLoopBodyInstrumentation(instrumenter, loopProfileFactory);*/
+    addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
 
     instrumenter.attachLoadSourceSectionListener(
         SourceSectionFilter.newBuilder().tagIs(RootTag.class).build(),
@@ -376,19 +418,22 @@ public class DynamicMetrics extends TruffleInstrument {
     env.registerService(structuralProbe);
   }
 
-  /*private void addLoopBodyInstrumentation(
+  private void addLoopBodyInstrumentation(
       final Instrumenter instrumenter,
       final ExecutionEventNodeFactory loopProfileFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(LoopBody.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
+      ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, loopProfileFactory);
+      if (parent == null) {
+        parent = DynamicMetrics.findDirectParentEventNode(ctx, loopProfileFactory);
+      }
       assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;
       return new LoopIterationReportNode(p.getProfile());
     });
-  }*/
+  }
 
   @Override
   protected void onDispose(final Env env) {
