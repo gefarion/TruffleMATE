@@ -6,6 +6,8 @@ import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 
+import tools.dym.DynamicMetrics;
+
 
 /**
  * This node will try to specialize itself at a later point, hopefully
@@ -21,7 +23,7 @@ public class LateReportResultNode extends ExecutionEventNode {
   }
 
   private ExecutionEventNode specialize() {
-    ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
+    ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, factory);
 
     if (parent == null) {
       return this;

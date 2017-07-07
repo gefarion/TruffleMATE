@@ -1,14 +1,15 @@
 package tools.dym.nodes;
 
-import som.instrumentation.InstrumentableDirectCallNode;
-import som.interpreter.Invokable;
-import tools.dym.profiles.CallsiteProfile;
-
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+
+import som.instrumentation.InstrumentableDirectCallNode;
+import som.interpreter.Invokable;
+import tools.dym.DynamicMetrics;
+import tools.dym.profiles.CallsiteProfile;
 
 
 public class LateCallTargetNode extends ExecutionEventNode {
@@ -21,7 +22,7 @@ public class LateCallTargetNode extends ExecutionEventNode {
   }
 
   private ExecutionEventNode specialize() {
-    ExecutionEventNode parent = ctx.findParentEventNode(factory);
+    ExecutionEventNode parent = DynamicMetrics.findParentEventNode(ctx, factory, 10);
     InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
 
     if (parent == null) {

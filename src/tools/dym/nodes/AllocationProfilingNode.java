@@ -1,6 +1,7 @@
 package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
 
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.AllocationProfile.AllocProfileNode;
@@ -16,6 +17,6 @@ public final class AllocationProfilingNode extends CountingNode<AllocationProfil
 
   @Override
   protected void onReturnValue(final VirtualFrame frame, final Object result) {
-    profile.executeProfiling(result);
+    profile.executeProfiling((DynamicObject) result);
   }
 }

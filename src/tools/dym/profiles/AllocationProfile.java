@@ -1,15 +1,15 @@
 package tools.dym.profiles;
 
-import som.vmobjects.SClass;
-import som.vmobjects.SObject;
-import tools.dym.profiles.AllocationProfileFactory.AllocProfileNodeGen;
-
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.vmobjects.SClass;
+import som.vmobjects.SObject;
+import tools.dym.profiles.AllocationProfileFactory.AllocProfileNodeGen;
 
 
 public class AllocationProfile extends Counter {
@@ -37,7 +37,7 @@ public class AllocationProfile extends Counter {
     protected int numFields = -1;
     protected DynamicObjectFactory classFactory;
 
-    public abstract void executeProfiling(Object obj);
+    public abstract void executeProfiling(DynamicObject obj);
 
     public int getNumberOfFields() {
       return numFields;
@@ -63,11 +63,10 @@ public class AllocationProfile extends Counter {
       return factory;
     }
 
-    @Specialization(guards = "getFactory(obj) == factory", limit = "1")
+    @Specialization(guards = "getFactory(obj) == factory", limit = "100")
     public void doDynamicObject(final DynamicObject obj,
         @Cached("create(getFactory(obj))") final DynamicObjectFactory factory) { }
 
-    @SuppressWarnings("unused")
     protected static DynamicObjectFactory getFactory(final DynamicObject object) {
       return SClass.getFactory(SObject.getSOMClass(object));
     }
