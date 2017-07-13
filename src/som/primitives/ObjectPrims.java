@@ -1,13 +1,5 @@
 package som.primitives;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -19,6 +11,14 @@ import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
+
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
 
 public final class ObjectPrims {
 
@@ -96,6 +96,8 @@ public final class ObjectPrims {
       super(false, source);
     }
 
+    // TODO: Specialize for optimization
+
     @TruffleBoundary
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final SSymbol fieldName) {
@@ -103,6 +105,24 @@ public final class ObjectPrims {
       return receiver.get(SClass.lookupFieldIndex(SObject.getSOMClass(receiver), fieldName), Nil.nilObject);
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "Object", selector = "instVarNamed:put:")
+  public abstract static class InstVarNamedPutPrim extends TernaryExpressionNode {
+    public InstVarNamedPutPrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+
+    // TODO: Specialize for optimization
+
+    @TruffleBoundary
+    @Specialization
+    public final Object doSObject(final DynamicObject receiver, final SSymbol fieldName, final Object val) {
+      receiver.define(SClass.lookupFieldIndex(SObject.getSOMClass(receiver), fieldName), val);
+      return val;
+    }
+  }
+
 
   @GenerateNodeFactory
   @Primitive(klass = "Object", selector = "halt", eagerSpecializable = false)

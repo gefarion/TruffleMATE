@@ -43,6 +43,7 @@ public class MateTests extends SomTests {
   @Parameters
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
+        {"BasicOperations"},
         {"Immutability"},
         {"Layout"},
         {"Compiler"},

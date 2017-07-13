@@ -9,7 +9,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode{
+public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode {
   @Child private IntercessionHandling messageSend;
   @Child private IntercessionHandling primitiveActivation;
 
