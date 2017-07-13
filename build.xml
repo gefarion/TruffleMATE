@@ -136,10 +136,6 @@
         <javac includeantruntime="false" destdir="${classes.dir}" debug="true">
           <src path="${src.dir}"/>
         	<exclude name="**/tools/debugger/**"/>
-        	<exclude name="**/tools/dym/DynamicMetrics.java"/>
-        	<exclude name="**/tools/dym/MetricsCsvWriter.java"/>
-        	<exclude name="**/tools/dym/profiles/**"/>
-        	<exclude name="**/tools/dym/nodes/**"/>
           <src path="${src.dirMate}"/>
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
