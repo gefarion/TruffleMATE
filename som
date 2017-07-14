@@ -146,10 +146,6 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
 
 SOM_ARGS = [BOOT_CLASSPATH, "som.vm.Universe"]
     
-if args.dynamic_metrics:
-    SOM_ARGS += ['--dynamic-metrics']
-    flags += ['-Dsom.dynamicMetrics=true']
-
 # == Hotspot -XX:CompileCommand=print,*::callRoot
 # Splitting
 # -G:+TruffleSplitting
@@ -177,6 +173,10 @@ if not args.interpreter and GRAAL_FLAGS:
     flags = shlex.split(str.strip(GRAAL_FLAGS))
 else:
     flags = []
+    
+if args.dynamic_metrics:
+    SOM_ARGS += ['--dynamic-metrics']
+    flags += ['-Dsom.dynamicMetrics=true']
 
 if not args.interpreter:
     flags += ['-server', '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI',

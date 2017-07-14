@@ -2,12 +2,13 @@ package tools.dym.profiles;
 
 import java.util.Arrays;
 
-import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 import som.interpreter.Types;
+import som.vmobjects.SClass;
 
 public final class Arguments {
 
@@ -15,7 +16,7 @@ public final class Arguments {
 
   // TODO: do we need this, or is the first sufficient?
   //       this makes it language specific...
-  private final Shape[]   argSomTypes;
+  private final DynamicObject[]   argSomTypes;
 
   Arguments(final Object[] arguments) {
     this.argJavaTypes = getJavaTypes(arguments);
@@ -28,10 +29,10 @@ public final class Arguments {
         toArray(Class[]::new);  // remove the <?> because of checkstyle issue
   }
 
-  private static Shape[] getSomTypes(final Object[] args) {
+  private static DynamicObject[] getSomTypes(final Object[] args) {
     return Arrays.stream(args).
-        map(e -> Types.getClassOf(e).getShape()).
-        toArray(Shape[]::new);
+        map(e -> Types.getClassOf(e)).
+        toArray(DynamicObject[]::new);
   }
 
   @Override
@@ -50,11 +51,15 @@ public final class Arguments {
   }
 
   public boolean argTypeIs(final int idx, final String name) {
-    return argSomTypes[idx].getObjectType().toString().equals(name);
+    return getArgType(idx).equals(name);
   }
 
   public String getArgType(final int idx) {
-    return argSomTypes[idx].getObjectType().toString();
+    return getArgType(argSomTypes[idx]);
+  }
+
+  public String getArgType(final DynamicObject o) {
+    return SClass.getName(o).getString();
   }
 
   @Override
@@ -77,8 +82,8 @@ public final class Arguments {
     result.add("javaTypes", javaTypes);
 
     JSONArrayBuilder somTypes = JSONHelper.array();
-    for (Shape c : argSomTypes) {
-      somTypes.add(c.getObjectType().toString());
+    for (DynamicObject c : argSomTypes) {
+      somTypes.add(getArgType(c).toString());
     }
     result.add("somTypes", somTypes);
     return result;
@@ -87,11 +92,11 @@ public final class Arguments {
   @Override
   public String toString() {
     String result = "";
-    for (Shape c : argSomTypes) {
+    for (DynamicObject c : argSomTypes) {
       if (result.equals("")) {
-        result = c.getObjectType().toString();
+        result = getArgType(c);
       } else {
-        result += ", " + c.getObjectType().toString();
+        result += ", " + getArgType(c);
       }
     }
     return result;

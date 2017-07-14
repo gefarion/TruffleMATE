@@ -84,7 +84,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer Class", selector = "fromString:",
       specializer = FromStringPrim.IsIntegerClass.class)
-  public abstract static class FromStringPrim extends ArithmeticPrim {
+  public abstract static class FromStringPrim extends BinaryExpressionNode {
     public FromStringPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }

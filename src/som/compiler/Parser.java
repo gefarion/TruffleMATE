@@ -55,14 +55,14 @@ import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.Plus;
 import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.Primitive;
-import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.STChar;
+import static som.compiler.Symbol.STString;
+import static som.compiler.Symbol.SemiColon;
 import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
-import static som.compiler.Symbol.SemiColon;
+import static som.interpreter.SNodeFactory.createCascadeMessageSend;
 import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
-import static som.interpreter.SNodeFactory.createCascadeMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 
 import java.io.Reader;
@@ -70,6 +70,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VmSettings;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
@@ -108,10 +113,6 @@ import tools.debugger.Tags.IdentifierTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.debugger.Tags.StatementSeparatorTag;
 import tools.language.StructuralProbe;
-
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 public class Parser {
   protected final ObjectMemory      objectMemory;
@@ -574,8 +575,8 @@ public class Parser {
   }
 
   private CascadeMessageSendNode cascadeMessages(final MethodGenerationContext mgenc,
-      ExpressionWithTagsNode firstMessage, ExpressionWithTagsNode receiver,
-      SourceCoordinate coord, SourceSection section) throws ParseError {
+      final ExpressionWithTagsNode firstMessage, final ExpressionWithTagsNode receiver,
+      final SourceCoordinate coord, final SourceSection section) throws ParseError {
     List<ExpressionWithTagsNode> expressions = new ArrayList<ExpressionWithTagsNode>();
     expressions.add(firstMessage);
     while (accept(SemiColon, StatementSeparatorTag.class)) {
@@ -765,7 +766,7 @@ public class Parser {
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
-      } else if ("to:do:".equals(msgStr) &&
+      } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = mgenc.addLocal("i:" + source.getCharIndex());
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(mgenc, loopIdx);
