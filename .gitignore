@@ -8,3 +8,5 @@ user-dict.txt
 libs/*.jar
 *.data
 metrics/*
+/tests/dym/expected-results
+/tests/dym/results

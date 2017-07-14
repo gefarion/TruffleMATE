@@ -3,7 +3,7 @@
     <property name="src.dir"     value="src"/>
     <property name="src.dirMate" value="MateExtensions"/>
     <property name="src_gen.dir" value="src_gen"/>
-    <property name="test.dir"    value="tests"/>
+    <property name="test.dir"    value="tests/java"/>
     <property name="lib.dir"     value="libs" />
     <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
@@ -163,7 +163,7 @@
             <jvmarg value="-esa" />
             <classpath refid="project.classpath" />
             <batchtest fork="yes" filtertrace="false">
-              <fileset dir="tests">
+              <fileset dir="${test.dir}">
                   <include name="**/*Test*.java"/>
               </fileset>
             </batchtest>
