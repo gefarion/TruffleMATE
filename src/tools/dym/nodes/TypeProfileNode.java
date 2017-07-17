@@ -2,19 +2,19 @@ package tools.dym.nodes;
 
 import java.math.BigInteger;
 
+import som.interpreter.Types;
+import som.vmobjects.SArray;
+import som.vmobjects.SBlock;
+import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
+import tools.dym.profiles.CreateCounter;
+import tools.dym.profiles.ReadValueProfile.ProfileCounter;
+
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Shape;
-
-import som.interpreter.Types;
-import som.vmobjects.SArray;
-import som.vmobjects.SBlock;
-import som.vmobjects.SSymbol;
-import tools.dym.profiles.CreateCounter;
-import tools.dym.profiles.ReadValueProfile.ProfileCounter;
-
 
 public abstract class TypeProfileNode extends Node {
   protected final CreateCounter profile;
@@ -26,7 +26,7 @@ public abstract class TypeProfileNode extends Node {
   public abstract void executeProfiling(Object obj);
 
   protected ProfileCounter create(final Object obj) {
-      return profile.createCounter(Types.getClassOf(obj).getShape());
+    return profile.createCounter(Types.getClassOf(obj));
   }
 
   @Specialization
@@ -88,7 +88,11 @@ public abstract class TypeProfileNode extends Node {
   @Specialization(guards = "obj.getShape() == shape", limit = "100")
   public void doDynamicObject(final DynamicObject obj,
       @Cached("obj.getShape()") final Shape shape,
-      @Cached("profile.createCounter(shape)") final ProfileCounter cnt) {
+      @Cached("profile.createCounter(getClass(obj))") final ProfileCounter cnt) {
     cnt.inc();
+  }
+
+  protected static DynamicObject getClass(final DynamicObject object) {
+    return SObject.getSOMClass(object);
   }
 }

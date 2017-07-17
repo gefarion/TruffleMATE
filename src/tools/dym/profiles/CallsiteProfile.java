@@ -6,17 +6,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.Invokable;
 import tools.dym.profiles.ReadValueProfile.ProfileCounter;
+
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class CallsiteProfile extends Counter implements CreateCounter {
 
   private final Map<Invokable, Counter> callTargetMap;
-  private final Map<Shape, Integer> receiverMap;
+  private final Map<DynamicObject, Integer> receiverMap;
   private final List<ProfileCounter> counters;
   // private TypeProfileNode typeProfile;
 
@@ -28,7 +28,7 @@ public class CallsiteProfile extends Counter implements CreateCounter {
   }
 
   @Override
-  public ProfileCounter createCounter(final Shape type) {
+  public ProfileCounter createCounter(final DynamicObject type) {
     ProfileCounter counter = new ProfileCounter(type);
     counters.add(counter);
     return counter;
@@ -56,8 +56,8 @@ public class CallsiteProfile extends Counter implements CreateCounter {
     return result;
   }
 
-  public Map<Shape, Integer> getReceivers() {
-    Map<Shape, Integer> result = new HashMap<>(receiverMap);
+  public Map<DynamicObject, Integer> getReceivers() {
+    Map<DynamicObject, Integer> result = new HashMap<>(receiverMap);
     for (ProfileCounter c : counters) {
       Integer val = result.get(c.getType());
       if (val == null) {
