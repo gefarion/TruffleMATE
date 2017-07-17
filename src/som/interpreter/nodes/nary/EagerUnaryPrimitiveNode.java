@@ -19,6 +19,7 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
 
   @Override
   public ExpressionNode getReceiver() { return receiver; }
+  @Override
   protected ExpressionNode getPrimitive() { return primitive; }
 
   public EagerUnaryPrimitiveNode(final SSymbol selector,
@@ -45,12 +46,6 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    assert !(primitive instanceof WrapperNode);
-    return primitive.isTaggedWithIgnoringEagerness(tag);
-  }
-
-  @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
     return executeEvaluated(frame, args[0]);
   }
@@ -69,10 +64,5 @@ public class EagerUnaryPrimitiveNode extends EagerPrimitive {
   @Override
   protected ExpressionNode[] getArgumentNodes() {
     return new ExpressionNode[] {receiver};
-  }
-
-  @Override
-  protected void tagWith(final byte mask) {
-    primitive.tagWith(mask);
   }
 }

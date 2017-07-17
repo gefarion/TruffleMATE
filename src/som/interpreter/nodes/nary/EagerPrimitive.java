@@ -1,8 +1,5 @@
 package som.interpreter.nodes.nary;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -14,8 +11,12 @@ import som.vm.constants.ExecutionLevel;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.source.SourceSection;
 
-public abstract class EagerPrimitive extends ExpressionWithTagsNode
+
+public abstract class EagerPrimitive extends ExpressionNode
     implements OperationNode, ExpressionWithReceiver, PreevaluatedExpression {
   protected final SSymbol selector;
 
@@ -59,5 +60,47 @@ public abstract class EagerPrimitive extends ExpressionWithTagsNode
   }
 
   protected abstract ExpressionNode[] getArgumentNodes();
+
+  protected void setTags(final byte tagMark) {
+    ((ExpressionWithTagsNode) this.getPrimitive()).tagWith(tagMark);
+  }
+
+  @Override
+  public void markAsRootExpression() {
+    ((ExpressionWithTagsNode) this.getPrimitive()).markAsRootExpression();
+  }
+
+  @Override
+  public boolean isMarkedAsRootExpression() {
+    return ((ExpressionWithTagsNode) this.getPrimitive()).isMarkedAsRootExpression();
+  }
+
+  @Override
+  public void markAsLoopBody() {
+    ((ExpressionWithTagsNode) this.getPrimitive()).markAsLoopBody();
+  }
+
+  @Override
+  public void markAsControlFlowCondition() {
+    ((ExpressionWithTagsNode) this.getPrimitive()).markAsControlFlowCondition();
+  }
+
+  @Override
+  public void markAsPrimitiveArgument() {
+    ((ExpressionWithTagsNode) this.getPrimitive()).markAsPrimitiveArgument();
+  }
+
+  @Override
+  public void markAsVirtualInvokeReceiver() {
+    ((ExpressionWithTagsNode) this.getPrimitive()).markAsVirtualInvokeReceiver();
+  }
+
+  protected abstract ExpressionNode getPrimitive();
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    assert !(this.getPrimitive() instanceof WrapperNode);
+    return ((EagerlySpecializableNode) this.getPrimitive()).isTaggedWithIgnoringEagerness(tag);
+  }
 
 }

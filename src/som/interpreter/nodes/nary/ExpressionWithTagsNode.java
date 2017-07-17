@@ -1,6 +1,5 @@
 package som.interpreter.nodes.nary;
 
-import som.interpreter.ReflectiveNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
 import tools.dym.Tags.ControlFlowCondition;
@@ -131,13 +130,13 @@ public abstract class ExpressionWithTagsNode extends ExpressionNode {
 
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode || newNode instanceof ReflectiveNode) { return; }
+    if (newNode instanceof WrapperNode) { return; }
 
     if (newNode instanceof ExpressionWithTagsNode) {
       ExpressionWithTagsNode n = (ExpressionWithTagsNode) newNode;
       n.tagMark = tagMark;
     } else if (newNode instanceof EagerPrimitive) {
-      ((EagerPrimitive) newNode).tagWith(tagMark);
+      ((EagerPrimitive) newNode).setTags(tagMark);
     } else {
       throw new NotYetImplementedException();
     }

@@ -7,7 +7,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 
 public class EagerBinaryPrimitiveNode extends EagerPrimitive {
 
@@ -31,6 +30,7 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
   public ExpressionNode getReceiver() {
     return receiver;
   }
+  @Override
   protected BinaryExpressionNode getPrimitive() { return primitive; }
 
   @Override
@@ -57,17 +57,6 @@ public class EagerBinaryPrimitiveNode extends EagerPrimitive {
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
     return executeEvaluated(frame, args[0], args[1]);
-  }
-
-  @Override
-  protected void tagWith(final byte mask) {
-    primitive.tagWith(mask);
-  }
-
-  @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    assert !(primitive instanceof WrapperNode);
-    return primitive.isTaggedWithIgnoringEagerness(tag);
   }
 
   @Override
