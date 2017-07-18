@@ -364,10 +364,14 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "new-objects.csv",
         "Source Section", "New Objects", "Number of Fields", "Class")) {
-      for (Entry<SourceSection, AllocationProfile> e : sortSS(profiles)) {
-        AllocationProfile p = e.getValue();
+      for (Entry<SourceSection, AllocationProfile> ee : sortSS(profiles)) {
+        AllocationProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        file.write(abbrv, p.getValue(), p.getNumberOfObjectFields(), p.getTypeName());
+        for (Entry<DynamicObject, Integer> e : sortCF(p.getAllocations())) {
+          file.write(abbrv, e.getValue(),
+              SClass.getFactory(e.getKey()).getShape().getPropertyCount(),
+              SClass.getName(e.getKey()).getString());
+        }
       }
     }
   }

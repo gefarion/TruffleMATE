@@ -1,18 +1,21 @@
 package tools.dym.profiles;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import som.vmobjects.SObject;
+import tools.dym.profiles.AllocationProfileFactory.AllocProfileNodeGen;
+import tools.dym.profiles.CallsiteProfile.Counter;
+
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.vmobjects.SClass;
-import som.vmobjects.SObject;
-import tools.dym.profiles.AllocationProfileFactory.AllocProfileNodeGen;
 
-
-public class AllocationProfile extends Counter {
+public class AllocationProfile extends tools.dym.profiles.Counter {
 
   protected final AllocProfileNode profile;
 
@@ -25,50 +28,42 @@ public class AllocationProfile extends Counter {
     return profile;
   }
 
-  public int getNumberOfObjectFields() {
-    return profile.getNumberOfFields();
-  }
-
-  public String getTypeName() {
-    return profile.getTypeName();
+  public Map<DynamicObject, Integer> getAllocations() {
+    return profile.getAllocations();
   }
 
   public abstract static class AllocProfileNode extends Node {
-    protected int numFields = -1;
-    protected DynamicObjectFactory classFactory;
+    protected Map<DynamicObject, Counter> allocationMap = new HashMap<>();
 
     public abstract void executeProfiling(DynamicObject obj);
 
-    public int getNumberOfFields() {
-      return numFields;
-    }
-
-    public String getTypeName() {
-      return classFactory.getShape().getObjectType().toString();
-    }
-
-    protected DynamicObjectFactory create(final DynamicObjectFactory factory) {
-      int n;
-      if (factory.getShape() == null) {
-        n = 0;
-      } else {
-        n = factory.getShape().getPropertyCount();
+    public Map<DynamicObject, Integer> getAllocations() {
+      HashMap<DynamicObject, Integer> result = new HashMap<>();
+      for (Entry<DynamicObject, Counter> e : allocationMap.entrySet()) {
+        result.put(e.getKey(), e.getValue().val);
       }
-      if (numFields == -1) {
-        numFields = n;
-        classFactory = factory;
-      } else {
-        assert numFields == n;
-      }
-      return factory;
+      return result;
     }
 
-    @Specialization(guards = "getFactory(obj) == factory", limit = "100")
-    public void doDynamicObject(final DynamicObject obj,
-        @Cached("create(getFactory(obj))") final DynamicObjectFactory factory) { }
+    protected Counter createCounterFor(final DynamicObject klass) {
+      Counter c = allocationMap.get(klass);
+      if (c != null) {
+        return c;
+      }
+      c = new Counter();
+      allocationMap.put(klass, c);
+      return c;
+    }
 
-    protected static DynamicObjectFactory getFactory(final DynamicObject object) {
-      return SClass.getFactory(SObject.getSOMClass(object));
+    @Specialization(guards = "getClass(object) == cachedClass", limit = "100")
+    public void doDynamicObject(final DynamicObject object,
+        @Cached("getClass(object)") final DynamicObject cachedClass,
+        @Cached("createCounterFor(cachedClass)") final Counter counter) {
+      counter.inc();
+    }
+
+    public static DynamicObject getClass(final DynamicObject obj) {
+      return SObject.getSOMClass(obj);
     }
   }
 }

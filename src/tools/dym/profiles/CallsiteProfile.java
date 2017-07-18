@@ -70,7 +70,7 @@ public class CallsiteProfile extends Counter implements CreateCounter {
   }
 
   public static final class Counter {
-    private int val;
+    int val;
 
     public void inc() {
       val += 1;
