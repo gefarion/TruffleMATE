@@ -57,4 +57,17 @@ public abstract class MethodPrims {
       return new MockJavaObject(SInvokable.getInvokable(receiver), MateClasses.astNodeClass);
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "Method", selector = "sourceCode", eagerSpecializable = false)
+  public abstract static class SourceCodePrim extends UnaryExpressionNode {
+    public SourceCodePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    @Specialization
+    public final String doSMethod(final DynamicObject receiver) {
+      return SInvokable.getInvokable(receiver).getSourceSection().getCode();
+    }
+  }
 }

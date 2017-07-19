@@ -1,10 +1,5 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
-import som.vmobjects.SClass;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -13,6 +8,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
+import som.vmobjects.SClass;
+
 
 public class ClassPrims {
 
@@ -20,7 +20,7 @@ public class ClassPrims {
   @Primitive(klass = "Class", selector = "name", eagerSpecializable = false)
   @ImportStatic(SClass.class)
   public abstract static class NamePrim extends UnaryExpressionNode {
-    public NamePrim(final boolean eagWrap, SourceSection source) {
+    public NamePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -36,7 +36,7 @@ public class ClassPrims {
   @Primitive(klass = "Class", selector = "superclass")
   @ImportStatic(SClass.class)
   public abstract static class SuperClassPrim extends UnaryExpressionNode {
-    public SuperClassPrim(final boolean eagWrap, SourceSection source) {
+    public SuperClassPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -51,7 +51,7 @@ public class ClassPrims {
   @Primitive(klass = "Class", selector = "methods")
   @ImportStatic(SClass.class)
   public abstract static class InstanceInvokablesPrim extends UnaryExpressionNode {
-    public InstanceInvokablesPrim(final boolean eagWrap, SourceSection source) {
+    public InstanceInvokablesPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -67,7 +67,7 @@ public class ClassPrims {
   @Primitive(klass = "Class", selector = "fields")
   @ImportStatic(SClass.class)
   public abstract static class InstanceFieldsPrim extends UnaryExpressionNode {
-    public InstanceFieldsPrim(final boolean eagWrap, SourceSection source) {
+    public InstanceFieldsPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
