@@ -70,10 +70,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.VmSettings;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
@@ -113,6 +109,10 @@ import tools.debugger.Tags.IdentifierTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.debugger.Tags.StatementSeparatorTag;
 import tools.language.StructuralProbe;
+
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 public class Parser {
   protected final ObjectMemory      objectMemory;
@@ -372,6 +372,7 @@ public class Parser {
   }
 
   private ExpressionWithTagsNode method(final MethodGenerationContext mgenc) throws ParseError {
+    SourceCoordinate coord = getCoordinate();
     pattern(mgenc);
     expect(Equal, KeywordTag.class);
     if (sym == Primitive) {
@@ -379,7 +380,7 @@ public class Parser {
       primitiveBlock();
       return null;
     } else {
-      return methodBlock(mgenc);
+      return methodBlock(mgenc, coord);
     }
   }
 
@@ -423,9 +424,8 @@ public class Parser {
     mgenc.setSignature(objectMemory.symbolFor(kw.toString()));
   }
 
-  private ExpressionWithTagsNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionWithTagsNode methodBlock(final MethodGenerationContext mgenc, final SourceCoordinate coord) throws ParseError {
     expect(NewTerm, null);
-    SourceCoordinate coord = getCoordinate();
     ExpressionWithTagsNode methodBody = blockContents(mgenc);
     lastMethodsSourceSection = getSource(coord);
     expect(EndTerm, null);

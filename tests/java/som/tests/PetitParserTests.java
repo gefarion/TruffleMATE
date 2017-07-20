@@ -10,10 +10,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
-public class PetitParserTests extends SomTests {
+import som.mateTests.MateTests;
 
-  public PetitParserTests(String testName) {
+@RunWith(Parameterized.class)
+public class PetitParserTests extends MateTests {
+
+  public PetitParserTests(final String testName) {
     super(testName);
   }
 
@@ -32,8 +34,8 @@ public class PetitParserTests extends SomTests {
         {"PPParserTest"            },
         {"PPPredicateTest"         },
         {"PPScriptingTest"         },
-        {"PPTokenTest"             }
-//        {"PPSmalltalkClassesTest"  },
+        {"PPTokenTest"             },
+        {"PPSmalltalkClassesTest"  },
 //        {"PPSmalltalkGrammarTest"  },
  //       {"PPSmalltalkParserTest"   }
       });
