@@ -36,8 +36,8 @@ public class PetitParserTests extends MateTests {
         {"PPScriptingTest"         },
         {"PPTokenTest"             },
         {"PPSmalltalkClassesTest"  },
-//        {"PPSmalltalkGrammarTest"  },
- //       {"PPSmalltalkParserTest"   }
+        {"PPSmalltalkGrammarTest"  } // ,
+//        {"PPSmalltalkParserTest"   }
       });
   }
 
