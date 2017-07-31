@@ -12,6 +12,11 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.Invokable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
@@ -36,10 +41,6 @@ import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
 import tools.language.StructuralProbe;
-
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class MetricsCsvWriter {
@@ -367,9 +368,10 @@ public final class MetricsCsvWriter {
       for (Entry<SourceSection, AllocationProfile> ee : sortSS(profiles)) {
         AllocationProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        final ValueProfile storageType = ValueProfile.createClassProfile();
         for (Entry<DynamicObject, Integer> e : sortCF(p.getAllocations())) {
           file.write(abbrv, e.getValue(),
-              SClass.getFactory(e.getKey()).getShape().getPropertyCount(),
+              SClass.getInstanceFields(e.getKey()).getObjectStorage(storageType).length,
               SClass.getName(e.getKey()).getString());
         }
       }

@@ -270,7 +270,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
   public static ExecutionEventNode findDirectParentEventNode(final EventContext ctx,
       final ExecutionEventNodeFactory factory) {
-    return DynamicMetrics.findParentEventNode(ctx, factory, 2);
+    return DynamicMetrics.findParentEventNode(ctx, factory, 1);
   }
 
   public static ExecutionEventNode findParentEventNode(final EventContext ctx,
