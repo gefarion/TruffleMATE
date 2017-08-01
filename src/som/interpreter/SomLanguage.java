@@ -2,6 +2,20 @@ package som.interpreter;
 
 import java.io.IOException;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.ProvidedTags;
+import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.Source;
+
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import tools.debugger.Tags.ArgumentTag;
@@ -40,20 +54,6 @@ import tools.dym.Tags.UnspecifiedInvoke;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.ProvidedTags;
-import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
-
 @TruffleLanguage.Registration(name = "TruffleMate", version = "0.1.0", mimeType = SomLanguage.MIME_TYPE)
  @ProvidedTags({RootTag.class, StatementTag.class, CallTag.class,
   KeywordTag.class, LiteralTag.class,
@@ -78,12 +78,12 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   public static final String FILE_EXTENSION = "som";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
-  public SomLanguage(){
+  public SomLanguage() {
     super();
   }
-  
+
   public static final Source START = getSyntheticSource("", "START");
-  
+
   public static Source getSyntheticSource(final String text, final String name) {
     return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE).build();
   }
@@ -91,7 +91,7 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   private static final class ParseResult extends RootNode {
     private final DynamicObject klass;
 
-    ParseResult(SomLanguage language, final DynamicObject klassArg) {
+    ParseResult(final SomLanguage language, final DynamicObject klassArg) {
       super(language);
       this.klass = klassArg;
     }
@@ -112,16 +112,16 @@ public class SomLanguage extends TruffleLanguage<Universe> {
     }
     return vm;
   }
-  
+
   @Override
-  protected void initializeContext(Universe context) throws Exception {
+  protected void initializeContext(final Universe context) throws Exception {
     context.initialize();
   }
 
 
   private static class StartInterpretation extends RootNode {
 
-    protected StartInterpretation(SomLanguage language) {
+    protected StartInterpretation(final SomLanguage language) {
       super(language);
     }
 

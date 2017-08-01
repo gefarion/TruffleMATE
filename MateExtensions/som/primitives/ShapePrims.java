@@ -2,17 +2,6 @@ package som.primitives;
 
 import java.util.EnumSet;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.constants.Nil;
-import som.vmobjects.MockJavaObject;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
-import som.vmobjects.SShape;
-import som.vmobjects.SSymbol;
-import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
@@ -20,6 +9,17 @@ import com.oracle.truffle.api.object.HiddenKey;
 import com.oracle.truffle.api.object.LocationModifier;
 import com.oracle.truffle.api.object.Property;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.constants.Nil;
+import som.vmobjects.MockJavaObject;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
+import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
+import som.vmobjects.SShape;
+import som.vmobjects.SSymbol;
 
 
 public class ShapePrims {
@@ -46,7 +46,7 @@ public class ShapePrims {
     }
 
     @Specialization
-    public final long doSShape(SShape shape) {
+    public final long doSShape(final SShape shape) {
       return shape.getShape().getPropertyCount();
     }
   }
@@ -60,7 +60,7 @@ public class ShapePrims {
     }
 
     @Specialization
-    public final SShape doSObject(SShape shape, DynamicObject environment) {
+    public final SShape doSObject(final SShape shape, final DynamicObject environment) {
       return new SShape(
           shape.getShape().changeType(
               ((SReflectiveObjectType) shape.getShape().getObjectType()).setEnvironment(environment)));
@@ -76,7 +76,7 @@ public class ShapePrims {
     }
 
     @Specialization
-    public final SShape doSObject(SShape shape, DynamicObject klass) {
+    public final SShape doSObject(final SShape shape, final DynamicObject klass) {
       return new SShape(
           shape.getShape().changeType(
               ((SReflectiveObjectType) shape.getShape().getObjectType()).setKlass(klass)));
@@ -92,7 +92,7 @@ public class ShapePrims {
     }
 
     @Specialization
-    public final SArray doSSymbol(SShape shape, SSymbol keyValue, boolean isFinal, boolean hidden) {
+    public final SArray doSSymbol(final SShape shape, final SSymbol keyValue, final boolean isFinal, final boolean hidden) {
       Object key;
       if (hidden) {
         key = new HiddenKey(keyValue.getString());
@@ -105,9 +105,9 @@ public class ShapePrims {
       return SArray.create(new Object[]{new MockJavaObject(key, Nil.nilObject),
           new SShape(shape.getShape().addProperty(environment))});
     }
-    
+
     @Specialization
-    public final SArray doLong(SShape shape, long key, boolean isFinal, boolean hidden) {
+    public final SArray doLong(final SShape shape, final long key, final boolean isFinal, final boolean hidden) {
       // If key is an instance variable index it is not hidden nor final
       Property environment = Property.create(key,
           shape.getShape().allocator().locationForType(com.oracle.truffle.api.object.DynamicObject.class,

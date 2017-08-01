@@ -36,19 +36,25 @@ import som.tests.SomTests;
 @RunWith(Parameterized.class)
 public class MateTests extends SomTests {
 
-  public MateTests(String testName) {
+  public MateTests(final String testName) {
     super(testName);
   }
 
   @Parameters
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
-        {"Immutability"},
-        {"Layout"},
+        {"BasicOperations"},
+        /* Immutability and Layout use heavility the environment in the shape for optimizations.
+         * In case it is necessary we can provide alternatives for this functionality with this
+         * setting too
+         */
+        // {"Immutability"},
+        // {"Layout"},
         {"Compiler"},
       });
   }
 
+  @Override
   protected String[] getArguments() {
     String[] arg = {
         "--mate",
@@ -57,7 +63,7 @@ public class MateTests extends SomTests {
         testName};
     return arg;
   }
-  
+
   @Override
   protected List<URL> getCP() throws MalformedURLException {
     List<URL> urls = super.getCP();

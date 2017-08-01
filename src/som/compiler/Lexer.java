@@ -147,6 +147,7 @@ public final class Lexer {
       }
       skipWhiteSpace();
       skipComment();
+      state.startCoord = new SourceCoordinate(state);
     }
     while (endOfBuffer() || Character.isWhitespace(currentChar())
         || currentChar() == '"');

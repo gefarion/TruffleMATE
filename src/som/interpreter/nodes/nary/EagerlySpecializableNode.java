@@ -1,14 +1,15 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.PreevaluatedExpression;
+import som.vmobjects.SSymbol;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
-
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
-import som.vmobjects.SSymbol;
 
 public abstract class EagerlySpecializableNode extends ExpressionWithTagsNode
   implements PreevaluatedExpression {
@@ -58,5 +59,5 @@ public abstract class EagerlySpecializableNode extends ExpressionWithTagsNode
    * Create an eager primitive wrapper, which wraps this node.
    */
   public abstract EagerPrimitive wrapInEagerWrapper(EagerlySpecializableNode prim,
-      SSymbol selector, ExpressionNode[] arguments, VirtualFrame frame);
+      SSymbol selector, ExpressionNode[] arguments, VirtualFrame frame, AbstractMessageSpecializationsFactory factory);
 }

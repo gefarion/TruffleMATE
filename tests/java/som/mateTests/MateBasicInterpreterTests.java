@@ -29,11 +29,11 @@ import som.tests.BasicInterpreterTests;
 @RunWith(Parameterized.class)
 public class MateBasicInterpreterTests extends BasicInterpreterTests{
 
-  public MateBasicInterpreterTests(String testClass, String testSelector,
-      Object expectedResult, Class<?> resultType) {
+  public MateBasicInterpreterTests(final String testClass, final String testSelector,
+      final Object expectedResult, final Class<?> resultType) {
     super(testClass, testSelector, expectedResult, resultType);
   }
-  
+
   @Override
   protected String[] getVMArguments() {
     return new String[] {

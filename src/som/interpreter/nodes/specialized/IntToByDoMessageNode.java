@@ -1,13 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.constants.ExecutionLevel;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -20,7 +12,15 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
-//Should have noWrapper = true? 
+import som.interpreter.Invokable;
+import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.primitives.Primitive;
+import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+
+//Should have noWrapper = true?
 @Primitive(selector = "to:by:do:", disabled = true,
            requiresArguments = true, requiresExecutionLevel = true)
 @GenerateNodeFactory
@@ -30,7 +30,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
   @Child private DirectCallNode valueSend;
 
   public IntToByDoMessageNode(final boolean eagWrap, final SourceSection section,
-      final Object[] args, ExecutionLevel level) {
+      final Object[] args, final ExecutionLevel level) {
     super(false, section);
     blockMethod = ((SBlock) args[3]).getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
@@ -64,7 +64,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
         }
       }
     } finally {
-      long count = (long) (Math.abs(limit) - Math.abs(receiver));
+      long count = Math.abs(limit) - Math.abs(receiver);
       if (CompilerDirectives.inInterpreter() && count > 0) {
         reportLoopCount(count);
       }
@@ -106,7 +106,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

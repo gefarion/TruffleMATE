@@ -55,14 +55,14 @@ import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.Plus;
 import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.Primitive;
-import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.STChar;
+import static som.compiler.Symbol.STString;
+import static som.compiler.Symbol.SemiColon;
 import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
-import static som.compiler.Symbol.SemiColon;
+import static som.interpreter.SNodeFactory.createCascadeMessageSend;
 import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
-import static som.interpreter.SNodeFactory.createCascadeMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 
 import java.io.Reader;
@@ -70,6 +70,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VmSettings;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
@@ -108,10 +113,6 @@ import tools.debugger.Tags.IdentifierTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.debugger.Tags.StatementSeparatorTag;
 import tools.language.StructuralProbe;
-
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 public class Parser {
   protected final ObjectMemory      objectMemory;
@@ -305,7 +306,7 @@ public class Parser {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
       if (tag != null) {
-        Universe.reportSyntaxElement(tag, getSource(coord));
+        Universe.reportSyntaxElement(tag, getSource(coord, 0));
       }
       return true;
     }
@@ -358,7 +359,7 @@ public class Parser {
     }
   }
 
-  private SourceSection getSource(final SourceCoordinate coord) {
+  private SourceSection getSource(final SourceCoordinate coord, final int extraChars) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     int line = coord.startLine == 0 ? 1 : coord.startLine;
     int column = coord.startColumn;
@@ -367,10 +368,11 @@ public class Parser {
       column = 1;
     }
     return source.createSection(line, column,
-        lexer.getNumberOfCharactersRead() - coord.charIndex);
+        lexer.getNumberOfCharactersRead() - coord.charIndex + extraChars);
   }
 
   private ExpressionWithTagsNode method(final MethodGenerationContext mgenc) throws ParseError {
+    SourceCoordinate coord = getCoordinate();
     pattern(mgenc);
     expect(Equal, KeywordTag.class);
     if (sym == Primitive) {
@@ -378,7 +380,7 @@ public class Parser {
       primitiveBlock();
       return null;
     } else {
-      return methodBlock(mgenc);
+      return methodBlock(mgenc, coord);
     }
   }
 
@@ -422,13 +424,11 @@ public class Parser {
     mgenc.setSignature(objectMemory.symbolFor(kw.toString()));
   }
 
-  private ExpressionWithTagsNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionWithTagsNode methodBlock(final MethodGenerationContext mgenc, final SourceCoordinate coord) throws ParseError {
     expect(NewTerm, null);
-    SourceCoordinate coord = getCoordinate();
     ExpressionWithTagsNode methodBody = blockContents(mgenc);
-    lastMethodsSourceSection = getSource(coord);
+    lastMethodsSourceSection = getSource(coord, 1);
     expect(EndTerm, null);
-
     return methodBody;
   }
 
@@ -498,7 +498,7 @@ public class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        ExpressionWithTagsNode self = variableRead(mgenc, "self", getSource(getCoordinate()));
+        ExpressionWithTagsNode self = variableRead(mgenc, "self", getSource(getCoordinate(), 0));
         expressions.add(self);
         return createSequenceNode(coord, expressions);
       }
@@ -511,11 +511,11 @@ public class Parser {
   private ExpressionWithTagsNode createSequenceNode(final SourceCoordinate coord,
       final List<ExpressionWithTagsNode> expressions) {
     if (expressions.size() == 0) {
-      return createGlobalRead("nil", objectMemory, getSource(coord));
+      return createGlobalRead("nil", objectMemory, getSource(coord, 0));
     } else if (expressions.size() == 1)  {
       return expressions.get(0);
     }
-    return createSequence(expressions, getSource(coord));
+    return createSequence(expressions, getSource(coord, 0));
   }
 
   private ExpressionWithTagsNode result(final MethodGenerationContext mgenc) throws ParseError {
@@ -525,7 +525,7 @@ public class Parser {
     accept(Period, StatementSeparatorTag.class);
 
     if (mgenc.isBlockMethod()) {
-      return mgenc.getNonLocalReturn(exp, getSource(coord));
+      return mgenc.getNonLocalReturn(exp, getSource(coord, 0));
     } else {
       return exp;
     }
@@ -564,7 +564,7 @@ public class Parser {
       value = evaluation(mgenc);
     }
 
-    return variableWrite(mgenc, variable, value, getSource(coord));
+    return variableWrite(mgenc, variable, value, getSource(coord, 0));
   }
 
   private String assignment() throws ParseError {
@@ -574,8 +574,8 @@ public class Parser {
   }
 
   private CascadeMessageSendNode cascadeMessages(final MethodGenerationContext mgenc,
-      ExpressionWithTagsNode firstMessage, ExpressionWithTagsNode receiver,
-      SourceCoordinate coord, SourceSection section) throws ParseError {
+      final ExpressionWithTagsNode firstMessage, final ExpressionWithTagsNode receiver,
+      final SourceCoordinate coord, final SourceSection section) throws ParseError {
     List<ExpressionWithTagsNode> expressions = new ArrayList<ExpressionWithTagsNode>();
     expressions.add(firstMessage);
     while (accept(SemiColon, StatementSeparatorTag.class)) {
@@ -591,7 +591,7 @@ public class Parser {
         || symIn(binaryOpSyms)) {
       ExpressionWithTagsNode receiver = exp;
       SourceCoordinate coord = getCoordinate();
-      SourceSection section = getSource(coord);
+      SourceSection section = getSource(coord, 0);
 
       exp = messages(mgenc, exp);
 
@@ -608,7 +608,7 @@ public class Parser {
       case Primitive: {
         SourceCoordinate coord = getCoordinate();
         String v = variable();
-        return variableRead(mgenc, v, getSource(coord));
+        return variableRead(mgenc, v, getSource(coord, 0));
       }
       case NewTerm: {
         return nestedTerm(mgenc);
@@ -623,9 +623,9 @@ public class Parser {
         mgenc.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
-          return new BlockNodeWithContext(blockMethod, getSource(coord));
+          return new BlockNodeWithContext(blockMethod, getSource(coord, 0));
         } else {
-          return new BlockNode(blockMethod, getSource(coord));
+          return new BlockNode(blockMethod, getSource(coord, 0));
         }
       }
       default: {
@@ -675,7 +675,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        getSource(coord));
+        getSource(coord, 0));
   }
 
   private AbstractMessageSendNode binaryMessage(final MethodGenerationContext mgenc,
@@ -685,7 +685,7 @@ public class Parser {
     ExpressionNode operand = binaryOperand(mgenc);
 
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        getSource(coord));
+        getSource(coord, 0));
   }
 
   private ExpressionWithTagsNode binaryOperand(final MethodGenerationContext mgenc) throws ParseError {
@@ -717,7 +717,7 @@ public class Parser {
     String msgStr = kw.toString();
     SSymbol msg = objectMemory.symbolFor(msgStr);
 
-    SourceSection source = getSource(coord);
+    SourceSection source = getSource(coord, 0);
 
     if (msg.getNumberOfSignatureArguments() == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
@@ -765,7 +765,7 @@ public class Parser {
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
-      } else if ("to:do:".equals(msgStr) &&
+      } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = mgenc.addLocal("i:" + source.getCharIndex());
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(mgenc, loopIdx);
@@ -802,24 +802,24 @@ public class Parser {
         try { peekForNextSymbolFromLexer(); } catch (IllegalStateException e) { /*Come from a trace that already peeked*/ }
         if (nextSym == NewTerm) {
           expect(Pound, null);
-          return new ArrayLiteralNode(this.literalArray(), getSource(coord));
+          return new ArrayLiteralNode(this.literalArray(), getSource(coord, 0));
         } else {
-          return new SymbolLiteralNode(literalSymbol(), getSource(coord));
+          return new SymbolLiteralNode(literalSymbol(), getSource(coord, 0));
         }
-      case STString:  return new StringLiteralNode(literalString(), getSource(coord));
-      case STChar:    return new CharLiteralNode(literalChar(), getSource(coord));
+      case STString:  return new StringLiteralNode(literalString(), getSource(coord, 0));
+      case STChar:    return new CharLiteralNode(literalChar(), getSource(coord, 0));
       default:
         boolean isNegative = isNegativeNumber();
         if (sym == Integer) {
           long value = literalInteger(isNegative);
           if (value < Long.MIN_VALUE || value > Long.MAX_VALUE) {
-            return new BigIntegerLiteralNode(BigInteger.valueOf(value), getSource(coord));
+            return new BigIntegerLiteralNode(BigInteger.valueOf(value), getSource(coord, 0));
           } else {
-            return new IntegerLiteralNode(value, getSource(coord));
+            return new IntegerLiteralNode(value, getSource(coord, 0));
           }
         } else {
           assert sym == Double;
-          return new DoubleLiteralNode(literalDouble(isNegative), getSource(coord));
+          return new DoubleLiteralNode(literalDouble(isNegative), getSource(coord, 0));
         }
     }
   }
@@ -977,7 +977,7 @@ public class Parser {
 
     ExpressionWithTagsNode expressions = blockContents(mgenc);
 
-    lastMethodsSourceSection = getSource(coord);
+    lastMethodsSourceSection = getSource(coord, 0);
 
     expect(EndBlock, DelimiterClosingTag.class);
     return expressions;

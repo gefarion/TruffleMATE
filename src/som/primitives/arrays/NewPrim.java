@@ -1,5 +1,11 @@
 package som.primitives.arrays;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.Primitive;
@@ -8,12 +14,6 @@ import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import tools.dym.Tags.NewArray;
-
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @Primitive(klass = "Array class", selector = "new:",
@@ -55,7 +55,7 @@ public abstract class NewPrim extends BinaryExpressionNode {
     if (tag == NewArray.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

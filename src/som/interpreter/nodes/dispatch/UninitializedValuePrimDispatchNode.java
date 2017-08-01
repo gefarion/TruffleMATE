@@ -1,22 +1,23 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.interpreter.SArguments;
-import som.primitives.BlockPrims.ValuePrimitiveNode;
-import som.vm.constants.ExecutionLevel;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SArguments;
+import som.primitives.BlockPrims.ValuePrimitiveNode;
+import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+
 
 public final class UninitializedValuePrimDispatchNode
     extends AbstractDispatchNode {
 
-  public UninitializedValuePrimDispatchNode(SourceSection source) {
+  public UninitializedValuePrimDispatchNode(final SourceSection source) {
     super(source);
   }
 
@@ -38,7 +39,7 @@ public final class UninitializedValuePrimDispatchNode
       assert method != null;
       UninitializedValuePrimDispatchNode uninitialized = new UninitializedValuePrimDispatchNode(this.sourceSection);
       CachedDispatchNode node = new CachedDispatchNode(
-          DispatchGuard.createForBlock(rcvr), SInvokable.getCallTarget(method, SArguments.getExecutionLevel(frame)), 
+          DispatchGuard.createForBlock(rcvr), SInvokable.getCallTarget(method, SArguments.getExecutionLevel(frame)),
           uninitialized, false);
       return replace(node);
     } else {

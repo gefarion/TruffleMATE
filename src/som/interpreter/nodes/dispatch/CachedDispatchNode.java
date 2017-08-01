@@ -27,9 +27,11 @@ public final class CachedDispatchNode extends AbstractCachedDispatchNode {
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod,
           nextInCache.getSourceSection()));
-      Universe.insertInstrumentationWrapper(cachedMethod);
+      Universe.getCurrent().insertInstrumentationWrapper(cachedMethod);
     }
-    if (shouldSplit) cachedMethod.cloneCallTarget();
+    if (shouldSplit) {
+      cachedMethod.cloneCallTarget();
+    }
   }
 
   @Override

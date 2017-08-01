@@ -2,21 +2,21 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Globals;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.primitives.arithmetic.ArithmeticPrim;
+import som.vm.constants.Globals;
+import som.vmobjects.SSymbol;
 
 
 @GenerateNodeFactory
 @Primitive(klass = "Integer", selector = "=")
 @Primitive(klass = "Double", selector = "=", eagerSpecializable = false)
 @Primitive(klass = "String", selector = "=", eagerSpecializable = false)
-public abstract class EqualsPrim extends BinaryExpressionNode {
+public abstract class EqualsPrim extends ArithmeticPrim {
   public EqualsPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
   }

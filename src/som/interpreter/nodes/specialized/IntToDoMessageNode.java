@@ -1,17 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.VmSettings;
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
-import som.primitives.Primitive;
-import som.primitives.Primitives.Specializer;
-import som.vm.constants.ExecutionLevel;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -25,6 +13,18 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.VmSettings;
+import som.interpreter.Invokable;
+import som.interpreter.SArguments;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
+import som.primitives.Primitive;
+import som.primitives.Primitives.Specializer;
+import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 //Should have noWrapper = true?
 @GenerateNodeFactory
 @Primitive(selector = "to:do:", disabled = true,
@@ -47,7 +47,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   @Child private DirectCallNode valueSend;
 
   public IntToDoMessageNode(final boolean eagWrap, final SourceSection source,
-      final Object[] args, ExecutionLevel level) {
+      final Object[] args, final ExecutionLevel level) {
     super(false, source);
     blockMethod = ((SBlock) args[2]).getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
@@ -88,7 +88,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   }
 
   protected void doLooping(final VirtualFrame frame, final long receiver,
-      long limit, final SBlock block) {
+      final long limit, final SBlock block) {
     if (receiver <= limit) {
       valueSend.call(new Object[] {SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), block, receiver});
     }
@@ -113,7 +113,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

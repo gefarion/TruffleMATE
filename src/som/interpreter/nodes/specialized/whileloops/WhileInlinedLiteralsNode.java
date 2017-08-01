@@ -1,12 +1,5 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.Invokable;
-import som.interpreter.MateifyVisitor;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-import som.vm.constants.Nil;
-import tools.dym.Tags.LoopNode;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -15,6 +8,13 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.Invokable;
+import som.interpreter.MateifyVisitor;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExpressionWithTagsNode;
+import som.vm.constants.Nil;
+import tools.dym.Tags.LoopNode;
 
 
 public final class WhileInlinedLiteralsNode extends ExpressionWithTagsNode {
@@ -93,7 +93,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionWithTagsNode {
     bodyActualNode.accept(visitor);
     return super.asMateNode();
   }
-  
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LoopNode.class) {

@@ -8,10 +8,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import som.vm.Universe;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
+import som.vm.Universe;
 
 public class VMOptions {
   public final String[] args;
@@ -117,7 +117,7 @@ public class VMOptions {
     Universe.println("    -d            enable disassembling");
     Universe.getCurrent().exit(1);
   }
-  
+
   @TruffleBoundary
   public void setupClassPath(final String cp) {
     // Create a new tokenizer to split up the string of directories
@@ -125,7 +125,7 @@ public class VMOptions {
 
     // Get the default class path of the appropriate size
     List<URL> classPath = new ArrayList<URL>(tokenizer.countTokens());
-    
+
     // Get the directories and put them into the class path array
     for (int i = 0; tokenizer.hasMoreTokens(); i++) {
       try {

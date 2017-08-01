@@ -90,7 +90,7 @@ public final class SNodeFactory {
 
   public static ContextualNode createVariableWrite(final Local variable,
         final int contextLevel,
-        final ExpressionWithTagsNode exp, final SourceSection source) {
+        final ExpressionNode exp, final SourceSection source) {
     return new UninitializedVariableWriteNode(variable, contextLevel, exp, source);
   }
 

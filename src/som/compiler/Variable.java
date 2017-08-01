@@ -3,9 +3,10 @@ package som.compiler;
 import static som.interpreter.SNodeFactory.createArgumentRead;
 import static som.interpreter.SNodeFactory.createLocalVarRead;
 import static som.interpreter.SNodeFactory.createSuperRead;
-import static som.interpreter.SNodeFactory.createVariableWrite;
 import static som.interpreter.SNodeFactory.createThisContext;
+import static som.interpreter.SNodeFactory.createVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 import som.vm.Universe;
 import som.vmobjects.SSymbol;
@@ -144,7 +145,7 @@ public abstract class Variable {
     }
 
     public ExpressionWithTagsNode getWriteNode(final int contextLevel,
-        final ExpressionWithTagsNode valueExpr, final SourceSection source) {
+        final ExpressionNode valueExpr, final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
       isWritten = true;
       if (contextLevel > 0) {

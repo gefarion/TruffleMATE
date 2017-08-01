@@ -2,6 +2,18 @@ package som.interpreter.nodes;
 
 import java.util.List;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.Introspection;
+import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
@@ -10,7 +22,6 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatc
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
-import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExpressionWithReceiver;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
@@ -25,18 +36,6 @@ import som.vm.constants.MateClasses;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
 
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.dsl.Introspection;
-import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 public final class MessageSendNode {
 
   public static AbstractMessageSendNode create(final SSymbol selector,
@@ -48,24 +47,38 @@ public final class MessageSendNode {
     return new UninitializedSymbolSendNode(selector, null);
   }
 
+  public static AbstractMessageSpecializationsFactory specializationFactory = new AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory();
+  public static AbstractMessageSpecializationsFactory mateSpecializationFactory = new MateMessageSpecializationsFactory();
+
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes,
-      final SourceSection source, final ExecutionLevel level) {
-    if (Universe.getCurrent().vmReflectionEnabled() && level == ExecutionLevel.Base) {
-      return new MateGenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(source, selector), source);
-    } else {
-      return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(source, selector), source);
+      final SourceSection source, final ExecutionLevel level,
+      final AbstractMessageSpecializationsFactory factory) {
+
+    /*if (unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend) {
+        if (((ISpecialSend) rcvrNode).isSuperSend()) {
+          dispatch = UninitializedDispatchNode.createSuper(
+              source, selector, (ISuperReadNode) rcvrNode);
+        } else {
+          dispatch = UninitializedDispatchNode.createLexicallyBound(
+              source, selector, ((ISpecialSend) rcvrNode).getEnclosingMixinId());
+        }
+      }
+    }*/
+
+    if (argumentNodes != null && argumentNodes.length > 0) {
+      ExpressionNode rcvrNode = SOMNode.unwrapIfNecessary(argumentNodes[0]);
+      rcvrNode.markAsVirtualInvokeReceiver();
     }
+
+    return factory.genericMessageFor(selector, argumentNodes, source);
   }
 
   public abstract static class AbstractMessageSendNode extends ExpressionWithTagsNode
       implements PreevaluatedExpression, ExpressionWithReceiver {
-    
+
     protected final SSymbol selector;
 
-    public static AbstractMessageSpecializationsFactory specializationFactory = new AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory();
     @Children protected final ExpressionNode[] argumentNodes;
 
     protected AbstractMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
@@ -123,9 +136,13 @@ public final class MessageSendNode {
       }
       return super.isTaggedWith(tag);
     }
-    
-    public DynamicObject[] getSpecializations(){
+
+    public DynamicObject[] getSpecializations() {
       return new DynamicObject[0];
+    }
+
+    protected AbstractMessageSpecializationsFactory getFactory() {
+      return specializationFactory;
     }
   }
 
@@ -165,27 +182,32 @@ public final class MessageSendNode {
           return makeEagerPrim(newNode, frame);
         }
       }
-      return makeGenericSend();
+      return makeGenericSend(frame);
       // }
     }
 
 
     protected abstract PreevaluatedExpression makeSuperSend();
 
-    protected GenericMessageSendNode makeGenericSend() {
-      return replace(new GenericMessageSendNode(selector,
-          argumentNodes,
-          new UninitializedDispatchNode(this.sourceSection, selector),
-          getSourceSection()));
+
+    protected GenericMessageSendNode makeGenericSend(final VirtualFrame frame) {
+      Universe.getCurrent().insertInstrumentationWrapper(this);
+      GenericMessageSendNode send = MessageSendNode.createGeneric(selector, argumentNodes,
+          getSourceSection(), SArguments.getExecutionLevel(frame), this.getFactory());
+      replace(send);
+      Universe.getCurrent().insertInstrumentationWrapper(send);
+      Universe.getCurrent().insertInstrumentationWrapper(argumentNodes[0]);
+      return send;
     }
 
-    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim, VirtualFrame frame) {
-      Universe.insertInstrumentationWrapper(this);
-      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes, frame));
-      Universe.insertInstrumentationWrapper((Node) result);
+    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim, final VirtualFrame frame) {
+      Universe.getCurrent().insertInstrumentationWrapper(this);
+      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector,
+          argumentNodes, frame, this.getFactory()));
+      Universe.getCurrent().insertInstrumentationWrapper((Node) result);
       for (ExpressionNode arg: argumentNodes) {
         unwrapIfNecessary(arg).markAsPrimitiveArgument();
-        Universe.insertInstrumentationWrapper(arg);
+        Universe.getCurrent().insertInstrumentationWrapper(arg);
       }
       return result;
     }
@@ -225,8 +247,7 @@ public final class MessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector,
         final SourceSection source) {
-      super(selector, new ExpressionNode[selector.getNumberOfSignatureArguments()], source);
-      // super(selector, new ExpressionNode[0], source);
+      super(selector, new ExpressionNode[0], source);
     }
 
     @Override
@@ -243,7 +264,7 @@ public final class MessageSendNode {
 
     /*
      * There is a problem with the specialization of reflective nodes.
-     * TODO: fix! 
+     * TODO: fix!
      */
     @Override
     protected PreevaluatedExpression specialize(final Object[] arguments, final VirtualFrame frame) {
@@ -266,16 +287,14 @@ public final class MessageSendNode {
       }
 
       return super.specialize(arguments, frame);*/
-      return this.makeGenericSend();
+      return this.makeGenericSend(frame);
     }
 
     @Override
-    protected GenericMessageSendNode makeGenericSend() {
+    protected GenericMessageSendNode makeGenericSend(final VirtualFrame frame) {
       // TODO: figure out what to do with reflective sends and how to instrument them.
-      GenericMessageSendNode send = new GenericMessageSendNode(selector,
-          argumentNodes,
-          new UninitializedDispatchNode(getSourceSection(), selector),
-          getSourceSection());
+      GenericMessageSendNode send = MessageSendNode.createGeneric(selector, argumentNodes,
+          getSourceSection(), SArguments.getExecutionLevel(frame), this.getFactory());
       return replace(send);
     }
   }
@@ -328,16 +347,16 @@ public final class MessageSendNode {
         return super.isTaggedWith(tag);
       }
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
-    public DynamicObject[] getSpecializations(){
-      java.util.List<Node> specializations = 
+    public DynamicObject[] getSpecializations() {
+      java.util.List<Node> specializations =
           MateFilterNodesByClassPrim.filterChildrenByClass(this, AbstractCachedDispatchNode.class);
-      SpecializationInfo specialization = new Introspection.SpecializationInfo("CachedDispatch", (byte)0b01 /* active */, null, 
-          (List<Object>)(List<?>) specializations); 
+      SpecializationInfo specialization = new Introspection.SpecializationInfo("CachedDispatch", (byte) 0b01 /* active */, null,
+          (List<Object>) (List<?>) specializations);
       DynamicObject[] stSpecializations = new DynamicObject[1];
-      stSpecializations[0] = CompilationPrims.translateSpecializationInfo(specialization); 
+      stSpecializations[0] = CompilationPrims.translateSpecializationInfo(specialization);
       return stSpecializations;
     }
   }

@@ -1,5 +1,12 @@
 package som.interpreter.nodes.literals;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MethodGenerationContext;
 import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
@@ -13,13 +20,6 @@ import som.vmobjects.InvokableLayoutImpl;
 import som.vmobjects.MethodLayoutImpl;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public class BlockNode extends LiteralNode {
 
@@ -98,7 +98,7 @@ public class BlockNode extends LiteralNode {
     assert SInvokable.getNumberOfArguments(blockMethod) - 1 == blockArguments.length;
     return InvokableLayoutImpl.INSTANCE.getInvokable(blockMethod).inline(mgenc, blockArguments);
   }
-  
+
   @Override
   public Node asMateNode() {
     Universe.getCurrent().mateifyMethod(blockMethod);

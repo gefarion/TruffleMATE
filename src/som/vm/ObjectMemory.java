@@ -16,19 +16,17 @@ import static som.vm.constants.Classes.stringClass;
 import static som.vm.constants.Classes.symbolClass;
 import static som.vm.constants.Classes.systemClass;
 import static som.vm.constants.Classes.trueClass;
+import static som.vm.constants.MateClasses.astNodeClass;
 import static som.vm.constants.MateClasses.contextClass;
 import static som.vm.constants.MateClasses.environmentMO;
 import static som.vm.constants.MateClasses.messageMO;
 import static som.vm.constants.MateClasses.operationalSemanticsMO;
 import static som.vm.constants.MateClasses.shapeClass;
-import static som.vm.constants.MateClasses.astNodeClass;
 
 import java.io.IOException;
 import java.util.HashMap;
 
 import som.compiler.Disassembler;
-import som.interpreter.nodes.MateMessageSpecializationsFactory;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.primitives.Primitives;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
@@ -142,8 +140,6 @@ public class ObjectMemory {
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(messageMO)), messageMO);
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(shapeClass)), shapeClass);
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(astNodeClass)), astNodeClass);
-
-      AbstractMessageSendNode.specializationFactory = new MateMessageSpecializationsFactory();
     }
   }
 
@@ -176,7 +172,7 @@ public class ObjectMemory {
     }
   }
 
-  public void initializeSystemClassName(DynamicObject klass, String name) {
+  public void initializeSystemClassName(final DynamicObject klass, final String name) {
     SClass.setName(klass, symbolFor(name));
     SClass.setName(SObject.getSOMClass(klass), symbolFor(name + " class"));
   }
@@ -229,13 +225,13 @@ public class ObjectMemory {
         SArray.create(new Object[0]));
   }
 
-  public static DynamicObject newMetaclassClass(String name) {
+  public static DynamicObject newMetaclassClass(final String name) {
     DynamicObject result = SClass.createWithoutClass(new SSymbol("Fake for initialization"));
     SObject.setClass(result, SClass.createEmptyClass(result, new SSymbol("Fake for initialization")));
     return result;
   }
 
-  /*  
+  /*
    *  If systemClass is null a new class object is created, if not the methods are loaded into systemClass.
    *  Used mainly for system initialization.
    */

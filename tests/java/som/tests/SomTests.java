@@ -96,7 +96,7 @@ public class SomTests {
         testName};
     return arg;
   }
-  
+
   protected List<URL> getCP() throws MalformedURLException {
     return new ArrayList<URL>(
         Arrays.asList(
@@ -105,6 +105,6 @@ public class SomTests {
             new File("Smalltalk/FileSystem/Core").toURI().toURL(),
             new File("Smalltalk/FileSystem/Disk").toURI().toURL(),
             new File("TestSuite/FileSystem").toURI().toURL()));
-    
+
   }
 }

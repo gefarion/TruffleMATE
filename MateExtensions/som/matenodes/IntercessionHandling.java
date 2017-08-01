@@ -1,5 +1,10 @@
 package som.matenodes;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.BranchProfile;
+
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.nary.EagerPrimitive;
@@ -7,8 +12,8 @@ import som.matenodes.MateAbstractReflectiveDispatch.MateAbstractStandardDispatch
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchMessageLookupNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchSuperMessageLookupNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchFieldReadNodeGen;
-import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarReadNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchFieldWriteNodeGen;
+import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarReadNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarWriteNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimFieldReadNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimFieldWriteNodeGen;
@@ -19,16 +24,11 @@ import som.vm.constants.ExecutionLevel;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.profiles.BranchProfile;
-
 public abstract class IntercessionHandling extends Node {
   public abstract Object doMateSemantics(VirtualFrame frame,
       Object[] arguments);
 
-  public static IntercessionHandling createForOperation(ReflectiveOp operation) {
+  public static IntercessionHandling createForOperation(final ReflectiveOp operation) {
     if (operation == ReflectiveOp.None) {
       return new VoidIntercessionHandling();
     } else {
@@ -36,11 +36,11 @@ public abstract class IntercessionHandling extends Node {
     }
   }
 
-  public static IntercessionHandling createForMessageLookup(SSymbol selector) {
+  public static IntercessionHandling createForMessageLookup(final SSymbol selector) {
     return new MateIntercessionHandling(selector);
   }
 
-  public static IntercessionHandling createForSuperMessageLookup(SSymbol selector, ISuperReadNode node) {
+  public static IntercessionHandling createForSuperMessageLookup(final SSymbol selector, final ISuperReadNode node) {
     return new MateIntercessionHandling(selector, node);
   }
 
@@ -57,7 +57,7 @@ public abstract class IntercessionHandling extends Node {
     @Child MateAbstractStandardDispatch     reflectiveDispatch;
     private final BranchProfile semanticsRedefined = BranchProfile.create();
 
-    protected MateIntercessionHandling(ReflectiveOp operation) {
+    protected MateIntercessionHandling(final ReflectiveOp operation) {
       semanticCheck = MateSemanticCheckNodeGen.create(Universe.emptySource.createUnavailableSection(), operation);
       switch (operation) {
         case LayoutReadField: case ExecutorReadField:
@@ -75,7 +75,7 @@ public abstract class IntercessionHandling extends Node {
         case ExecutorLocalArg: case ExecutorNonLocalArg: case ExecutorLocalSuperArg: case ExecutorNonLocalSuperArg:
           reflectiveDispatch = MateDispatchLocalVarReadNodeGen.create();
           break;
-        case ExecutorReadLocal: 
+        case ExecutorReadLocal:
           reflectiveDispatch = MateDispatchLocalVarReadNodeGen.create();
           break;
         case ExecutorWriteLocal:
@@ -90,13 +90,13 @@ public abstract class IntercessionHandling extends Node {
       this.adoptChildren();
     }
 
-    protected MateIntercessionHandling(SSymbol selector) {
+    protected MateIntercessionHandling(final SSymbol selector) {
       semanticCheck = MateSemanticCheckNodeGen.create(Universe.emptySource.createUnavailableSection(), ReflectiveOp.MessageLookup);
       reflectiveDispatch = MateCachedDispatchMessageLookupNodeGen.create(selector);
       this.adoptChildren();
     }
 
-    protected MateIntercessionHandling(SSymbol selector, ISuperReadNode node) {
+    protected MateIntercessionHandling(final SSymbol selector, final ISuperReadNode node) {
       semanticCheck = MateSemanticCheckNodeGen.create(Universe.emptySource.createUnavailableSection(), ReflectiveOp.MessageLookup);
       reflectiveDispatch = MateCachedDispatchSuperMessageLookupNodeGen.create(selector, node);
       this.adoptChildren();

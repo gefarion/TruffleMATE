@@ -1,18 +1,5 @@
 package som.primitives;
 
-import som.interpreter.FrameOnStackMarker;
-import som.interpreter.Invokable;
-import som.interpreter.MateVisitors;
-import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
-import som.vmobjects.MockJavaObject;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleRuntime;
@@ -26,16 +13,28 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.FrameOnStackMarker;
+import som.interpreter.Invokable;
+import som.interpreter.MateVisitors;
+import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.Universe;
+import som.vmobjects.MockJavaObject;
 
 
 public class ContextPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Context", selector = "method", receiverType = {FrameInstance.class})
   public abstract static class GetMethodPrim extends UnaryExpressionNode {
-    public GetMethodPrim(final boolean eagWrap, SourceSection source) {
+    public GetMethodPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -49,7 +48,7 @@ public class ContextPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Context", selector = "sender", receiverType = {FrameInstance.class})
   public abstract static class SenderPrim extends UnaryExpressionNode {
-    public SenderPrim(final boolean eagWrap, SourceSection source) {
+    public SenderPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -75,7 +74,7 @@ public class ContextPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Context", selector = "receiver", receiverType = {FrameInstance.class})
   public abstract static class GetReceiverFromContextPrim extends UnaryExpressionNode {
-    public GetReceiverFromContextPrim(final boolean eagWrap, SourceSection source) {
+    public GetReceiverFromContextPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -85,24 +84,24 @@ public class ContextPrims {
       return (DynamicObject) SArguments.rcvr(virtualFrame);
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "Context", selector = "localAt:", receiverType = { MockJavaObject.class })
   public abstract static class GetLocalVarAtPrim extends BinaryExpressionNode {
-    public GetLocalVarAtPrim(final boolean eagWrap, SourceSection source) {
+    public GetLocalVarAtPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
     @Specialization(guards = {"identifier==cachedIdentifier"})
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
-        String identifier,
+        final String identifier,
         @Cached(value = "identifier") final String cachedIdentifier,
         @Cached(value = "variableNodeForIdentifier(identifier, 1)") final LocalVariableReadNode readnode) {
       VirtualFrame frame = (VirtualFrame) mockedFrame.getMockedObject();
       return readnode.executeGeneric(frame);
     }
-    
-    protected static FrameSlot findSlotForIdInLevel(final String identifier, int level){
+
+    protected static FrameSlot findSlotForIdInLevel(final String identifier, final int level) {
       int[] currentLevel = new int[1];
       FrameInstance f = Universe.getCurrent().getTruffleRuntime().iterateFrames(fi -> {
         if (currentLevel[0] == level) {
@@ -112,67 +111,67 @@ public class ContextPrims {
         return null;
       });
       f.getFrame(FrameAccess.READ_WRITE);
-      return ((RootNode)f.getCallNode().getRootNode()).getFrameDescriptor().findFrameSlot(identifier);
+      return f.getCallNode().getRootNode().getFrameDescriptor().findFrameSlot(identifier);
     }
-    
-    protected static LocalVariableReadNode variableNodeForIdentifier(String identifier, int level){
-      FrameSlot slot = findSlotForIdInLevel(identifier, level);  
+
+    protected static LocalVariableReadNode variableNodeForIdentifier(final String identifier, final int level) {
+      FrameSlot slot = findSlotForIdInLevel(identifier, level);
       return LocalVariableReadNodeGen.create(slot, null);
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "Context", selector = "localAt:put:", receiverType = { MockJavaObject.class })
   public abstract static class LocalVarAtPutPrim extends TernaryExpressionNode {
-    public LocalVarAtPutPrim(final boolean eagWrap, SourceSection source) {
+    public LocalVarAtPutPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
     @Specialization(guards = {"identifier==cachedIdentifier"})
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
-        String identifier, Object value, 
+        final String identifier, final Object value,
         @Cached(value = "identifier") final String cachedIdentifier,
         @Cached(value = "findSlotForId(identifier)") final FrameSlot slot) {
       MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
-      if (slot.getKind() != FrameSlotKind.Object){
+      if (slot.getKind() != FrameSlotKind.Object) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         slot.setKind(FrameSlotKind.Object);
       }
       frame.setObject(slot, value);
       return value;
     }
-    
+
     @Specialization(guards = {"identifier==cachedIdentifier"})
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
-        String identifier, long value, 
+        final String identifier, final long value,
         @Cached(value = "identifier") final String cachedIdentifier,
         @Cached(value = "findSlotForId(identifier)") final FrameSlot slot) {
       MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
-      if (slot.getKind() != FrameSlotKind.Long){
+      if (slot.getKind() != FrameSlotKind.Long) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         slot.setKind(FrameSlotKind.Long);
       }
       frame.setObject(slot, value);
       return value;
     }
-    
-    protected FrameSlot findSlotForId(final String identifier){
+
+    protected FrameSlot findSlotForId(final String identifier) {
       return GetLocalVarAtPrim.findSlotForIdInLevel(identifier, 1);
     }
   }
-  
+
   @GenerateNodeFactory
   @Primitive(klass = "Context", selector = "argAt:", receiverType = { MockJavaObject.class })
   public abstract static class GetArgAtPrim extends BinaryExpressionNode {
-    public GetArgAtPrim(final boolean eagWrap, SourceSection source) {
+    public GetArgAtPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
-    //Todo: dispatch chain index->slot
+    // Todo: dispatch chain index->slot
     @Specialization
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
-        long index) {
-      MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
+        final long index) {
+      Frame frame = (Frame) mockedFrame.getMockedObject();
       return SArguments.arg(frame, (int) index);
     }
   }

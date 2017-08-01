@@ -26,27 +26,27 @@ package som.vmobjects;
 
 import java.util.HashMap;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectFactory;
+import com.oracle.truffle.api.object.ObjectType;
+import com.oracle.truffle.api.object.dsl.Layout;
+import com.oracle.truffle.api.profiles.ValueProfile;
+
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Nil;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SReflectiveObjectEnvInObj.SReflectiveObjectEnvInObjLayout;
 
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.ObjectType;
-import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.object.DynamicObjectFactory;
-import com.oracle.truffle.api.object.dsl.Layout;
-
 public final class SClass {
   @Layout
   public interface SClassLayout extends SReflectiveObjectEnvInObjLayout {
-  //public interface SClassLayout extends SReflectiveObjectLayout {
+    // public interface SClassLayout extends SReflectiveObjectLayout {
     DynamicObject createSClass(DynamicObjectFactory factory, DynamicObject environment, SSymbol name, DynamicObject superclass, SArray instanceFields, SArray instanceInvokables, @SuppressWarnings("rawtypes") HashMap invokablesTable, DynamicObjectFactory instancesFactory);
     DynamicObjectFactory createSClassShape(DynamicObject klass);
-    //DynamicObjectFactory createSClassShape(DynamicObject klass, DynamicObject environment);
+    // DynamicObjectFactory createSClassShape(DynamicObject klass, DynamicObject environment);
     DynamicObject getSuperclass(DynamicObject object);
     SSymbol getName(DynamicObject object);
     SArray getInstanceFields(DynamicObject object);
@@ -62,20 +62,20 @@ public final class SClass {
     boolean isSClass(DynamicObject object);
     boolean isSClass(ObjectType objectType);
   }
- 
-  //class which get's its own class set only later (to break up cyclic dependencies)
-  //private static final DynamicObjectFactory INIT_CLASS_FACTORY = SClassLayoutImpl.INSTANCE.createSClassShape(Nil.nilObject, Nil.nilObject);
+
+  // class which get's its own class set only later (to break up cyclic dependencies)
+  // private static final DynamicObjectFactory INIT_CLASS_FACTORY = SClassLayoutImpl.INSTANCE.createSClassShape(Nil.nilObject, Nil.nilObject);
   private static final DynamicObjectFactory INIT_CLASS_FACTORY = SClassLayoutImpl.INSTANCE.createSClassShape(Nil.nilObject);
-  
-  public static DynamicObject createSClass(DynamicObject klass, SSymbol name, DynamicObject superclass, SArray fields, SArray methods){
-    return createSClass(klass, name, superclass, fields, methods, 
+
+  public static DynamicObject createSClass(final DynamicObject klass, final SSymbol name, final DynamicObject superclass, final SArray fields, final SArray methods) {
+    return createSClass(klass, name, superclass, fields, methods,
         new HashMap<SSymbol, DynamicObject>(), Universe.getCurrent().getInstancesFactory());
 
   }
-  
-  public static DynamicObject createSClass(DynamicObject klass, SSymbol name, DynamicObject superclass, SArray instanceFields, SArray instanceInvokables, HashMap<SSymbol, DynamicObject> invokablesTable, DynamicObjectFactory instancesFactory){
-    //DynamicObject resultClass = SClassLayoutImpl.INSTANCE.createSClass(SClassLayoutImpl.INSTANCE.createSClassShape(klass, Nil.nilObject),
-    //name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
+
+  public static DynamicObject createSClass(final DynamicObject klass, final SSymbol name, final DynamicObject superclass, final SArray instanceFields, final SArray instanceInvokables, final HashMap<SSymbol, DynamicObject> invokablesTable, final DynamicObjectFactory instancesFactory) {
+    // DynamicObject resultClass = SClassLayoutImpl.INSTANCE.createSClass(SClassLayoutImpl.INSTANCE.createSClassShape(klass, Nil.nilObject),
+    // name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
     DynamicObject resultClass = SClassLayoutImpl.INSTANCE.createSClass(SClassLayoutImpl.INSTANCE.createSClassShape(klass),
         Nil.nilObject, name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
     setInstancesFactory(resultClass, Universe.getCurrent().createObjectShapeFactoryForClass(resultClass));
@@ -85,11 +85,11 @@ public final class SClass {
     return resultClass;
   }
 
-  public static DynamicObject createEmptyClass(DynamicObject klass, SSymbol name) {
+  public static DynamicObject createEmptyClass(final DynamicObject klass, final SSymbol name) {
     return createSClass(klass, name, Nil.nilObject, SArray.create(new Object[0]), SArray.create(new Object[0]));
   }
 
-  public static DynamicObject createWithoutClass(SSymbol name) {
+  public static DynamicObject createWithoutClass(final SSymbol name) {
     CompilerAsserts.neverPartOfCompilation("Class creation");
     DynamicObject clazz =  INIT_CLASS_FACTORY.newInstance(
         Nil.nilObject,                             // ENVIRONMENT
@@ -109,7 +109,7 @@ public final class SClass {
 
   public static DynamicObjectFactory getFactory(final DynamicObject clazz) {
     assert isSClass(clazz);
-    return (DynamicObjectFactory) SClassLayoutImpl.INSTANCE.getInstancesFactory(clazz);
+    return SClassLayoutImpl.INSTANCE.getInstancesFactory(clazz);
   }
 
   public static DynamicObject getSuperClass(final DynamicObject classObj) {
@@ -123,13 +123,13 @@ public final class SClass {
 
   public static SSymbol getName(final DynamicObject classObj) {
     // CompilerAsserts.neverPartOfCompilation("optimize caller");
-    /* We are using it inside the fast path for checking if the class is a byteArray. 
-     * We should optimize NewPrim>>doByteSClass to enable again the neverPartOfCompilation 
+    /* We are using it inside the fast path for checking if the class is a byteArray.
+     * We should optimize NewPrim>>doByteSClass to enable again the neverPartOfCompilation
      */
     return SClassLayoutImpl.INSTANCE.getName(classObj);
   }
 
-  public static void setName(final DynamicObject classObj, SSymbol value) {
+  public static void setName(final DynamicObject classObj, final SSymbol value) {
     SClassLayoutImpl.INSTANCE.setNameUnsafe(classObj, value);
   }
 

@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import som.primitives.LengthPrim;
 import som.primitives.LengthPrimFactory;
 import som.vm.constants.Classes;
+import som.vm.constants.ExecutionLevel;
 import som.vm.constants.MateClasses;
 import som.vm.constants.Nil;
 import som.vmobjects.MockJavaObject;
@@ -67,6 +68,8 @@ public class Types {
 
     if (obj instanceof SAbstractObject) {
       return ((SAbstractObject) obj).getSOMClass();
+    } else if (obj instanceof DynamicObject) {
+      return SObject.getSOMClass((DynamicObject) obj);
     } else if (obj instanceof Boolean) {
       if ((boolean) obj) {
         return Classes.trueClass;
@@ -85,8 +88,8 @@ public class Types {
       return MateClasses.contextClass;
     } else if (obj instanceof SFile) {
       return Classes.objectClass;
-    } else if (obj instanceof DynamicObject) {
-      return SObject.getSOMClass((DynamicObject) obj);
+    } else if (obj instanceof ExecutionLevel) {
+      return Classes.objectClass;
     }
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");

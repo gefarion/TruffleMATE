@@ -50,6 +50,7 @@ public final class ObjectPrims {
       return doSObject(rcvr, idx);
     }
 
+    @Override
     public ReflectiveOp reflectiveOperation() {
       return ReflectiveOp.LayoutPrimReadField;
     }
@@ -83,6 +84,7 @@ public final class ObjectPrims {
       return doSObject(rcvr, idx, secondArg);
     }
 
+    @Override
     public ReflectiveOp reflectiveOperation() {
       return ReflectiveOp.LayoutPrimWriteField;
     }
@@ -95,6 +97,8 @@ public final class ObjectPrims {
       super(false, source);
     }
 
+    // TODO: Specialize for optimization
+
     @TruffleBoundary
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final SSymbol fieldName) {
@@ -102,6 +106,24 @@ public final class ObjectPrims {
       return receiver.get(SClass.lookupFieldIndex(SObject.getSOMClass(receiver), fieldName), Nil.nilObject);
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "Object", selector = "instVarNamed:put:")
+  public abstract static class InstVarNamedPutPrim extends TernaryExpressionNode {
+    public InstVarNamedPutPrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+
+    // TODO: Specialize for optimization
+
+    @TruffleBoundary
+    @Specialization
+    public final Object doSObject(final DynamicObject receiver, final SSymbol fieldName, final Object val) {
+      receiver.define(SClass.lookupFieldIndex(SObject.getSOMClass(receiver), fieldName), val);
+      return val;
+    }
+  }
+
 
   @GenerateNodeFactory
   @Primitive(klass = "Object", selector = "halt", eagerSpecializable = false)
@@ -149,7 +171,6 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "hashcode", eagerSpecializable = false)
   @Primitive(klass = "Object", selector = "identityHash", eagerSpecializable = false)
   public abstract static class HashPrim extends UnaryExpressionNode {
     public HashPrim(final boolean eagWrap, final SourceSection source) {

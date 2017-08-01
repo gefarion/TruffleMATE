@@ -7,13 +7,13 @@ import java.util.Map;
 
 import som.vm.Universe;
 
-import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 public class ReadValueProfile extends Counter implements CreateCounter {
 
-  private final Map<Shape, Integer> typesOfReadValue;
+  private final Map<DynamicObject, Integer> typesOfReadValue;
   private final List<ProfileCounter> counters;
 
   // TODO: add support for reading fields from profiled type of receiver objects.
@@ -25,13 +25,13 @@ public class ReadValueProfile extends Counter implements CreateCounter {
     counters = new ArrayList<>();
   }
 
-  public void profileValueType(final Shape valueType) {
+  public void profileValueType(final DynamicObject valueType) {
     Universe.callerNeedsToBeOptimized("This is a fallback method");
     typesOfReadValue.merge(valueType, 1, Integer::sum);
   }
 
-  public Map<Shape, Integer> getTypeProfile() {
-    Map<Shape, Integer> result = new HashMap<>(typesOfReadValue);
+  public Map<DynamicObject, Integer> getTypeProfile() {
+    Map<DynamicObject, Integer> result = new HashMap<>(typesOfReadValue);
     for (ProfileCounter c : counters) {
       Integer val = result.get(c.getType());
       if (val == null) {
@@ -44,7 +44,7 @@ public class ReadValueProfile extends Counter implements CreateCounter {
   }
 
   @Override
-  public ProfileCounter createCounter(final Shape type) {
+  public ProfileCounter createCounter(final DynamicObject type) {
     ProfileCounter counter = new ProfileCounter(type);
     counters.add(counter);
     return counter;
@@ -52,9 +52,9 @@ public class ReadValueProfile extends Counter implements CreateCounter {
 
   public static final class ProfileCounter {
     private int count;
-    private final Shape type;
+    private final DynamicObject type;
 
-    public ProfileCounter(final Shape type) {
+    public ProfileCounter(final DynamicObject type) {
       this.type = type;
     }
 
@@ -62,7 +62,7 @@ public class ReadValueProfile extends Counter implements CreateCounter {
       count += 1;
     }
 
-    public Shape getType() {
+    public DynamicObject getType() {
       return type;
     }
 

@@ -6,9 +6,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import som.primitives.Primitives.Specializer;
-
 import com.oracle.truffle.api.dsl.NodeFactory;
+
+import som.primitives.Primitives.Specializer;
 
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -70,4 +70,7 @@ public @interface Primitive {
   }
 
   abstract class NoChild implements NodeFactory<Object> {}
+
+  /** Pass VM object, i.e., execution context to node constructor. */
+  boolean requiresContext() default false;
 }

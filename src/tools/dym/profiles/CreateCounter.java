@@ -1,10 +1,10 @@
 package tools.dym.profiles;
 
-import com.oracle.truffle.api.object.Shape;
-
 import tools.dym.profiles.ReadValueProfile.ProfileCounter;
+
+import com.oracle.truffle.api.object.DynamicObject;
 
 
 public interface CreateCounter {
-  ProfileCounter createCounter(Shape factory);
+  ProfileCounter createCounter(DynamicObject klass);
 }

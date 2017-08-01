@@ -3,15 +3,10 @@ package som.interpreter.nodes.nary;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 
 public class EagerTernaryPrimitiveNode extends EagerPrimitive {
 
@@ -34,13 +29,15 @@ public class EagerTernaryPrimitiveNode extends EagerPrimitive {
     // this.adoptChildren();
   }
 
+  @Override
   public ExpressionNode getReceiver() { return receiver; }
   protected ExpressionNode getFirstArg() { return argument1; }
   protected ExpressionNode getSecondArg() { return argument2; }
+  @Override
   protected TernaryExpressionNode getPrimitive() { return primitive; }
 
   @Override
-  public Object executeGenericWithReceiver(final VirtualFrame frame, Object receiver) {
+  public Object executeGenericWithReceiver(final VirtualFrame frame, final Object receiver) {
     Object arg1 = argument1.executeGeneric(frame);
     Object arg2 = argument2.executeGeneric(frame);
 
@@ -53,32 +50,18 @@ public class EagerTernaryPrimitiveNode extends EagerPrimitive {
       return primitive.executeEvaluated(frame, receiver, argument1, argument2);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame,
+      return replaceWithGenericSend(SArguments.getExecutionLevel(frame)).doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2});
     }
   }
 
-  private AbstractMessageSendNode makeGenericSend(ExecutionLevel level) {
-    GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver, argument1, argument2},
-        getSourceSection(), level);
-    return replace(node);
-  }
-
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    assert !(primitive instanceof WrapperNode);
-    boolean result = super.isTaggedWith(tag) ? super.isTaggedWith(tag) : primitive.isTaggedWith(tag);
-    return result;
-  }
-
-  @Override
-  public Object doPreEvaluated(VirtualFrame frame, Object[] args) {
+  public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
     return executeEvaluated(frame, args[0], args[1], args[2]);
   }
 
   @Override
-  protected void setTags(final byte tagMark) {
-    primitive.tagMark = tagMark;
+  protected ExpressionNode[] getArgumentNodes() {
+    return new ExpressionNode[] {receiver, argument1, argument2};
   }
 }

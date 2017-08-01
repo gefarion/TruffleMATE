@@ -50,13 +50,13 @@ public abstract class FieldNode extends ExpressionWithTagsNode {
     @Child protected ReadFieldNode read;
 
     protected FieldReadNode(final int fieldIndex, final SourceSection source) {
-//    implements PreevaluatedExpression {       
+//    implements PreevaluatedExpression {
       super(source);
       read = FieldAccessorNode.createRead(fieldIndex);
     }
 
     @Specialization
-    public Object executeEvaluated(VirtualFrame frame, final DynamicObject obj) {
+    public Object executeEvaluated(final VirtualFrame frame, final DynamicObject obj) {
       return read.executeRead(obj);
     }
 
@@ -96,7 +96,7 @@ public abstract class FieldNode extends ExpressionWithTagsNode {
     }
 
     @Specialization
-    public Object executeEvaluated(VirtualFrame frame, final DynamicObject self, final Object value) {
+    public Object executeEvaluated(final VirtualFrame frame, final DynamicObject self, final Object value) {
       return write.executeWrite(self, value);
     }
 

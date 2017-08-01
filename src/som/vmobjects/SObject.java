@@ -75,6 +75,11 @@ public class SObject {
     return SObjectLayoutImpl.INSTANCE.getKlass(obj);
   }
 
+  @TruffleBoundary
+  public static DynamicObject getSOMClass(final ObjectType obj) {
+    return SObjectLayoutImpl.INSTANCE.getKlass(obj);
+  }
+
   public static final int getNumberOfFields(final DynamicObject obj) {
     throw new NotYetImplementedException();
   }

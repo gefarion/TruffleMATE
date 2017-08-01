@@ -38,38 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import som.VMOptions;
-import som.VmSettings;
-import som.interpreter.Invokable;
-import som.interpreter.NodeVisitorUtil;
-import som.interpreter.ReflectiveNode;
-import som.interpreter.MateifyVisitor;
-import som.interpreter.SomLanguage;
-import som.interpreter.TruffleCompiler;
-import som.interpreter.nodes.ExpressionNode;
-import som.primitives.Primitives;
-import som.vm.constants.ExecutionLevel;
-import som.vm.constants.MateClasses;
-import som.vm.constants.Nil;
-import som.vmobjects.InvokableLayoutImpl;
-import som.vmobjects.SArray;
-import som.vmobjects.SBasicObjectLayoutImpl;
-import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SMethod;
-import som.vmobjects.SInvokable.SPrimitive;
-import som.vmobjects.SObject;
-import som.vmobjects.SObjectLayoutImpl;
-import som.vmobjects.SReflectiveObject;
-import som.vmobjects.SReflectiveObjectEnvInObj;
-import som.vmobjects.SReflectiveObjectEnvInObjLayoutImpl;
-import som.vmobjects.SReflectiveObjectLayoutImpl;
-import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
-import som.vmobjects.SSymbol;
-import tools.debugger.Tags;
-import tools.language.StructuralProbe;
-
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -89,22 +57,52 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
+import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
+
+import som.VMOptions;
+import som.VmSettings;
+import som.interpreter.Invokable;
+import som.interpreter.MateifyVisitor;
+import som.interpreter.NodeVisitorUtil;
+import som.interpreter.SomLanguage;
+import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.ExpressionNode;
+import som.primitives.Primitives;
+import som.vm.constants.ExecutionLevel;
+import som.vm.constants.MateClasses;
+import som.vm.constants.Nil;
+import som.vmobjects.InvokableLayoutImpl;
+import som.vmobjects.SArray;
+import som.vmobjects.SBasicObjectLayoutImpl;
+import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable.SPrimitive;
+import som.vmobjects.SObject;
+import som.vmobjects.SObjectLayoutImpl;
+import som.vmobjects.SReflectiveObjectEnvInObj;
+import som.vmobjects.SReflectiveObjectEnvInObjLayoutImpl;
+import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
+import som.vmobjects.SSymbol;
+import tools.debugger.Tags;
+import tools.dym.DynamicMetrics;
+import tools.language.StructuralProbe;
 
 public class Universe {
-  final Env env; 
-  
-  public Universe(Env environment) throws IOException {
+  final Env env;
+
+  public Universe(final Env environment) throws IOException {
     env = environment;
     truffleRuntime = Truffle.getRuntime();
   }
-  
-  public void initialize(){
+
+  public void initialize() {
     if (current != null) {
       current.validUniverse.invalidate();
     }
     current = this;
-    
+
     avoidExit    = false;
     lastExitCode = 0;
     options = new VMOptions((String[]) env.getConfig().get(SomLanguage.CMD_ARGS));
@@ -130,11 +128,11 @@ public class Universe {
     }
   }
 
-  public static Universe getInitializedVM(String[] arguments) {
+  public static Universe getInitializedVM(final String[] arguments) {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, arguments);
     PolyglotEngine engine = builder.build();
-    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
 
     // Trigger initialization
     assert null == engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
@@ -157,7 +155,7 @@ public class Universe {
       final VMOptions vmOptions) {
     engine = builder.build();
 
-    Map<String, Instrument> instruments = engine.getInstruments();
+    Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
     Instrument profiler = instruments.get("profiler");
     if (vmOptions.profilingEnabled && profiler == null) {
       errorPrintln("Truffle profiler not available. Might be a class path issue");
@@ -180,13 +178,13 @@ public class Universe {
       webDebugger.startServer(debugger);
     }*/
 
-    /*if (vmOptions.dynamicMetricsEnabled) {
+    if (vmOptions.dynamicMetricsEnabled) {
       assert VmSettings.DYNAMIC_METRICS;
       Instrument dynM = instruments.get(DynamicMetrics.ID);
       dynM.setEnabled(true);
       structuralProbe = dynM.lookup(StructuralProbe.class);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
-    }*/
+    }
 
     engine.eval(SomLanguage.START);
     engine.dispose();
@@ -216,24 +214,23 @@ public class Universe {
 
     return SInvokable.invoke(initialize, MateClasses.STANDARD_ENVIRONMENT, ExecutionLevel.Base, objectMemory.getSystemObject(), SArray.create(arguments));
   }
-  
-  
-  public void mateify(DynamicObject clazz) {
+
+
+  public void mateify(final DynamicObject clazz) {
     int countOfInvokables = SClass.getNumberOfInstanceInvokables(clazz);
     for (int i = 0; i < countOfInvokables; i++) {
       this.mateifyMethod(SClass.getInstanceInvokable(clazz, i));
     }
   }
 
-  public void mateifyMethod(DynamicObject method) {
+  public void mateifyMethod(final DynamicObject method) {
     this.mateifyNode(InvokableLayoutImpl.INSTANCE.getInvokable(method));
-    
   }
 
-  public Node mateifyNode(Node node) {
+  public Node mateifyNode(final Node node) {
     MateifyVisitor visitor = new MateifyVisitor();
     if (!(node instanceof RootNode) & node.getParent() == null) {
-      return NodeVisitorUtil.applyVisitor((ExpressionNode)node, visitor);
+      return NodeVisitorUtil.applyVisitor((ExpressionNode) node, visitor);
     }
     node.accept(visitor);
     return node;
@@ -292,7 +289,7 @@ public class Universe {
         this.symbolFor(className));
     return objectMemory.newObject(klass);
   }
-      
+
   @TruffleBoundary
   public static DynamicObject newMethod(final SSymbol signature,
       final Invokable truffleInvokable, final boolean isPrimitive,
@@ -305,11 +302,11 @@ public class Universe {
   }
 
   public DynamicObject loadClass(final SSymbol name) {
-    DynamicObject result = (DynamicObject) getGlobal(name);
+    DynamicObject result = getGlobal(name);
     if (result != null) { return result; }
     return this.loadClass(getSourceForClassName(name));
   }
-  
+
   @TruffleBoundary
   public Source getSourceForClassName(final SSymbol name) {
     File file = new File(resolveClassFilePath(name.getString()));
@@ -399,19 +396,19 @@ public class Universe {
     current = universe;
   }
 
-  public DynamicObjectFactory getInstancesFactory(){
-    if (options.vmReflectionEnabled){
-      //return SReflectiveObject.SREFLECTIVE_OBJECT_FACTORY;
+  public DynamicObjectFactory getInstancesFactory() {
+    if (options.vmReflectionEnabled) {
+      // return SReflectiveObject.SREFLECTIVE_OBJECT_FACTORY;
       return SReflectiveObjectEnvInObj.SREFLECTIVE_OBJECT_ENVINOBJ_FACTORY;
     } else {
       return SObject.SOBJECT_FACTORY;
     }
   }
-  
-  public SObject getInstanceArgumentsBuilder(){
-    if (vmReflectionEnabled()){
+
+  public SObject getInstanceArgumentsBuilder() {
+    if (vmReflectionEnabled()) {
       return new SReflectiveObjectEnvInObj();
-      //return new SReflectiveObject();
+      // return new SReflectiveObject();
     } else {
       return new SObject();
     }
@@ -429,8 +426,8 @@ public class Universe {
 
   public DynamicObject createNilObject() {
     DynamicObject dummyObjectForInitialization = SBasicObjectLayoutImpl.INSTANCE.createSBasicObject();
-    if (options.vmReflectionEnabled){
-      //return SReflectiveObjectLayoutImpl.INSTANCE.createSReflectiveObjectShape(dummyObjectForInitialization, dummyObjectForInitialization).newInstance();
+    if (options.vmReflectionEnabled) {
+      // return SReflectiveObjectLayoutImpl.INSTANCE.createSReflectiveObjectShape(dummyObjectForInitialization, dummyObjectForInitialization).newInstance();
       return SReflectiveObjectEnvInObjLayoutImpl.INSTANCE.createSReflectiveObjectEnvInObjShape(dummyObjectForInitialization).newInstance(dummyObjectForInitialization);
     } else {
       return SObjectLayoutImpl.INSTANCE.createSObjectShape(dummyObjectForInitialization).newInstance();
@@ -438,8 +435,8 @@ public class Universe {
   }
 
   public DynamicObjectFactory createObjectShapeFactoryForClass(final DynamicObject clazz) {
-    if (options.vmReflectionEnabled){
-      //return SReflectiveObject.createObjectShapeFactoryForClass(clazz);
+    if (options.vmReflectionEnabled) {
+      // return SReflectiveObject.createObjectShapeFactoryForClass(clazz);
       return SReflectiveObjectEnvInObj.createObjectShapeFactoryForClass(clazz);
     } else {
       return SObject.createObjectShapeFactoryForClass(clazz);
@@ -478,7 +475,7 @@ public class Universe {
     return this.globalSemantics;
   }
 
-  public void cacheNewObjectType(DynamicObject klass, ObjectType type) {
+  public void cacheNewObjectType(final DynamicObject klass, final ObjectType type) {
     if (objectTypes.containsKey(klass)) {
       objectTypes.get(klass).add(type);
     } else {
@@ -488,7 +485,7 @@ public class Universe {
     }
   }
 
-  public ObjectType getCachedObjectType(DynamicObject klass, DynamicObject environment) {
+  public ObjectType getCachedObjectType(final DynamicObject klass, final DynamicObject environment) {
     if (objectTypes.containsKey(klass)) {
       for (ObjectType type : objectTypes.get(klass)) {
         if (((SReflectiveObjectType) type).getEnvironment() == environment) {
@@ -513,7 +510,7 @@ public class Universe {
     mateDeactivated = this.getTruffleRuntime().createAssumption();
   }
 
-  public String resolveClassFilePath(String className) throws IllegalStateException {
+  public String resolveClassFilePath(final String className) throws IllegalStateException {
     URL url = ClassLoader.getSystemResource(className + ".som");
     if (url != null) {
       return url.getPath();
@@ -532,25 +529,25 @@ public class Universe {
 
   public static void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
-    /*if (webDebugger != null) {    
+    /*if (webDebugger != null) {
       webDebugger.reportSyntaxElement(type, source);
     }*/
   }
 
-  public static void insertInstrumentationWrapper(final Node node) {
-    // TODO: make thread-safe!!!
-    // TODO: can I assert that it is locked?? helper on Node??
+  public void insertInstrumentationWrapper(final Node node) {
     if (VmSettings.INSTRUMENTATION) {
       assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
-      // TODO: a way to check whether the node needs actually wrapping?
-      // String[] tags = node.getSourceSection().getTags();
-      // if (tags != null && tags.length > 0) {
-      // InstrumentationHandler.insertInstrumentationWrapper(node);
-      // }
+      Node baseNode;
+      if (node instanceof WrapperNode) {
+          baseNode = ((WrapperNode) node).getDelegateNode();
+      } else {
+          baseNode = node;
+      }
+      Universe.engine.getRuntime().getInstrumentationHandler().insertWrapper(baseNode, baseNode.getSourceSection());
     }
   }
 
-  public void setGlobalEnvironment(DynamicObject environment) {
+  public void setGlobalEnvironment(final DynamicObject environment) {
     if (globalSemanticsActivated.isValid()) {
       globalSemanticsActivated.invalidate();
     } else {
@@ -573,12 +570,12 @@ public class Universe {
   public Object getExport(final String name) {
     return exports.get(name);
   }
-  
-  public static void addURLs2CP(List<URL> urls) {
+
+  public static void addURLs2CP(final List<URL> urls) {
     try {
       Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
       method.setAccessible(true);
-      for(URL url : urls){
+      for (URL url : urls) {
         method.invoke(ClassLoader.getSystemClassLoader(), url);
       }
     } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -595,7 +592,7 @@ public class Universe {
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
-  @CompilationFinal private static PolyglotEngine engine;
+  @CompilationFinal public static PolyglotEngine engine;
   @CompilationFinal ObjectMemory objectMemory;
   @CompilationFinal private static StructuralProbe structuralProbe;
   // @CompilationFinal private static WebDebugger webDebugger;

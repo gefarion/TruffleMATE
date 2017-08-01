@@ -2,6 +2,13 @@ package som.primitives;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -14,20 +21,13 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.OpArithmetic;
 import tools.dym.Tags.StringAccess;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.profiles.BranchProfile;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "atRandom", receiverType = Long.class)
   public abstract static class RandomPrim extends UnaryExpressionNode {
-    public RandomPrim(final boolean eagWrap, SourceSection source) {
+    public RandomPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -40,7 +40,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "as32BitSignedValue", receiverType = Long.class)
   public abstract static class As32BitSignedValue extends UnaryExpressionNode {
-    public As32BitSignedValue(final boolean eagWrap, SourceSection source) {
+    public As32BitSignedValue(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -54,7 +54,7 @@ public abstract class IntegerPrims {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -62,7 +62,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "as32BitUnsignedValue", receiverType = Long.class)
   public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
-    public As32BitUnsignedValue(final boolean eagWrap, SourceSection source) {
+    public As32BitUnsignedValue(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -76,7 +76,7 @@ public abstract class IntegerPrims {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -84,8 +84,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer Class", selector = "fromString:",
       specializer = FromStringPrim.IsIntegerClass.class)
-  public abstract static class FromStringPrim extends ArithmeticPrim {
-    public FromStringPrim(final boolean eagWrap, SourceSection source) {
+  public abstract static class FromStringPrim extends BinaryExpressionNode {
+    public FromStringPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -123,7 +123,7 @@ public abstract class IntegerPrims {
       } else if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -131,7 +131,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "<<", receiverType = Long.class)
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
-    public LeftShiftPrim(final boolean eagWrap, SourceSection source) {
+    public LeftShiftPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -160,7 +160,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = ">>>", receiverType = Long.class)
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
-    public UnsignedRightShiftPrim(final boolean eagWrap, SourceSection source) {
+    public UnsignedRightShiftPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -174,7 +174,7 @@ public abstract class IntegerPrims {
   @Primitive(klass = "Integer", selector = "max:",
              receiverType = Long.class, disabled = true)
   public abstract static class MaxIntPrim extends ArithmeticPrim {
-    public MaxIntPrim(final boolean eagWrap, SourceSection source) {
+    public MaxIntPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -188,7 +188,7 @@ public abstract class IntegerPrims {
   @Primitive(klass = "Integer", selector = "to:",
              receiverType = Long.class, disabled = true)
   public abstract static class ToPrim extends BinaryExpressionNode {
-    public ToPrim(final boolean eagWrap, SourceSection source) {
+    public ToPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 
@@ -207,7 +207,7 @@ public abstract class IntegerPrims {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
   }
@@ -215,7 +215,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "abs", receiverType = Long.class)
   public abstract static class AbsPrim extends UnaryExpressionNode {
-    public AbsPrim(final boolean eagWrap, SourceSection source) {
+    public AbsPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
 

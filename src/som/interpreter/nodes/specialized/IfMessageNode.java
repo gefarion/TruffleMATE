@@ -45,7 +45,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     this.expected = expected;
   }
 
-  protected static DirectCallNode createDirect(final DynamicObject method, ExecutionLevel level) {
+  protected static DirectCallNode createDirect(final DynamicObject method, final ExecutionLevel level) {
     return Truffle.getRuntime().createDirectCallNode(SInvokable.getCallTarget(method, level));
   }
 
@@ -53,7 +53,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     return Truffle.getRuntime().createIndirectCallNode();
   }
 
-  protected static ExecutionLevel executionLevel(VirtualFrame frame) {
+  protected static ExecutionLevel executionLevel(final VirtualFrame frame) {
     return SArguments.getExecutionLevel(frame);
   }
 
@@ -69,7 +69,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     }
   }
 
-  @Specialization(contains = "cachedBlock")
+  @Specialization(replaces = "cachedBlock")
   public final Object fallback(final VirtualFrame frame, final boolean rcvr,
       final SBlock arg,
       @Cached("createIndirect()") final IndirectCallNode callNode) {
@@ -98,7 +98,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     if (tag == ControlFlowCondition.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

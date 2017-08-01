@@ -13,7 +13,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -329,7 +329,7 @@ public final class MetricsCsvWriter {
 
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
 
-        Map<Shape, Integer> receivers = p.getReceivers();
+        Map<DynamicObject, Integer> receivers = p.getReceivers();
 //      int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
         Map<Invokable, Integer> calltargets = p.getCallTargets();
 //      int numCalltargetsInvoked = calltargets.values().stream().reduce(0, Integer::sum);
@@ -365,10 +365,15 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "new-objects.csv",
         "Source Section", "New Objects", "Number of Fields", "Class")) {
-      for (Entry<SourceSection, AllocationProfile> e : sortSS(profiles)) {
-        AllocationProfile p = e.getValue();
+      for (Entry<SourceSection, AllocationProfile> ee : sortSS(profiles)) {
+        AllocationProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        file.write(abbrv, p.getValue(), p.getNumberOfObjectFields(), p.getTypeName());
+        final ValueProfile storageType = ValueProfile.createClassProfile();
+        for (Entry<DynamicObject, Integer> e : sortCF(p.getAllocations())) {
+          file.write(abbrv, e.getValue(),
+              SClass.getInstanceFields(e.getKey()).getObjectStorage(storageType).length,
+              SClass.getName(e.getKey()).getString());
+        }
       }
     }
   }
@@ -401,8 +406,8 @@ public final class MetricsCsvWriter {
       for (Entry<SourceSection, ReadValueProfile> ee : sortSS(reads)) {
         ReadValueProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<Shape, Integer> e : sortCF(p.getTypeProfile())) {
-          file.write(abbrv, "read", e.getKey().getObjectType().toString(), e.getValue());
+        for (Entry<DynamicObject, Integer> e : sortCF(p.getTypeProfile())) {
+          file.write(abbrv, "read", SClass.getName(e.getKey()).toString().substring(1), e.getValue());
         }
 
         file.write(abbrv, "read", "ALL", p.getValue());
@@ -427,11 +432,11 @@ public final class MetricsCsvWriter {
       for (Entry<SourceSection, ReadValueProfile> ee : sortSS(reads)) {
         ReadValueProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<Shape, Integer> e : sortCF(p.getTypeProfile())) {
+        for (Entry<DynamicObject, Integer> e : sortCF(p.getTypeProfile())) {
           file.write(
               abbrv,
               "read",
-              e.getKey().getObjectType().toString(),
+              SClass.getName(e.getKey()).getString(),
               e.getValue());
         }
 
@@ -508,7 +513,7 @@ public final class MetricsCsvWriter {
       for (DynamicObject i : sortInv(structuralProbe.getMethods())) {
         int numInvokations = methodInvocationCount(i, profiles.values());
         String executed = (numInvokations == 0) ? "false" : "true";
-        file.write(i.toString(), executed, numInvokations);
+        file.write(SInvokable.toString(i), executed, numInvokations);
       }
     }
   }
@@ -623,16 +628,16 @@ public final class MetricsCsvWriter {
     return sort(map, (a, b) -> a.getKey().toString().compareTo(b.getKey().toString()));
   }
 
-  private static int compare(final Shape a, final Shape b) {
+  private static int compare(final DynamicObject a, final DynamicObject b) {
     if (a == b) {
       return 0;
     }
-    int cmp = a.toString().compareTo(b.toString());
+    int cmp = SClass.getName(a).getString().compareTo(SClass.getName(b).getString());
     assert cmp != 0 : "Need to add that case";
     return cmp;
   }
 
-  private static <V> SortedSet<Entry<Shape, V>> sortCF(final Map<Shape, V> map) {
+  private static <V> SortedSet<Entry<DynamicObject, V>> sortCF(final Map<DynamicObject, V> map) {
     return sort(map, (a, b) -> compare(a.getKey(), b.getKey()));
   }
 
@@ -640,7 +645,7 @@ public final class MetricsCsvWriter {
       final Comparator<Entry<K, V>> comparator) {
     SortedSet<Entry<K, V>> sortedSet = new TreeSet<>(comparator);
     sortedSet.addAll(map.entrySet());
-    assert sortedSet.size() == map.size();
+    // assert sortedSet.size() == map.size();
     return sortedSet;
   }
 }

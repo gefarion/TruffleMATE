@@ -18,7 +18,7 @@ public class MateGenericMessageSendNode extends GenericMessageSendNode
       final ExpressionNode[] arguments,
       final AbstractDispatchNode dispatchNode, final SourceSection source) {
     super(selector, arguments, dispatchNode, source);
-    if (this.isSuperSend()) {
+    if (arguments.length > 0 && this.isSuperSend()) {
       ih = IntercessionHandling.createForSuperMessageLookup(this.getSelector(), (ISuperReadNode) this.argumentNodes[0]);
     } else {
       ih = IntercessionHandling.createForMessageLookup(this.getSelector());

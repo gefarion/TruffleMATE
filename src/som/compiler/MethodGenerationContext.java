@@ -306,7 +306,7 @@ public final class MethodGenerationContext {
   }
 
   public ExpressionWithTagsNode getLocalWriteNode(final String variableName,
-      final ExpressionWithTagsNode valExpr, final SourceSection source) {
+      final ExpressionNode valExpr, final SourceSection source) {
     Local variable = getLocal(variableName);
     return variable.getWriteNode(getContextLevel(variableName), valExpr, source);
   }

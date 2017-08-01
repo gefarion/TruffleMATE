@@ -51,14 +51,14 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
       DispatchGuard guard = DispatchGuard.create(rcvr);
       AbstractCachedDispatchNode node;
       if (method != null) {
-        boolean shouldSplit = selector.getString().equals("new")? true : false;  
+        boolean shouldSplit = selector.getString().equals("new") ? true : false;
         node = new CachedDispatchNode(guard, callTarget, newChainEnd, shouldSplit);
       } else {
         node = new CachedDnuNode(rcvrClass, guard, selector, newChainEnd, SArguments.getExecutionLevel(frame));
       }
-      Universe.insertInstrumentationWrapper(this);
+      Universe.getCurrent().insertInstrumentationWrapper(this);
       replace(node);
-      Universe.insertInstrumentationWrapper(node);
+      Universe.getCurrent().insertInstrumentationWrapper(node);
       return node;
     }
 
