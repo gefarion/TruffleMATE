@@ -26,6 +26,13 @@ import static som.vm.constants.MateClasses.shapeClass;
 import java.io.IOException;
 import java.util.HashMap;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectFactory;
+import com.oracle.truffle.api.source.Source;
+
 import som.compiler.Disassembler;
 import som.primitives.Primitives;
 import som.vm.constants.Globals;
@@ -36,13 +43,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SReflectiveObjectEnvInObj;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectFactory;
-import com.oracle.truffle.api.source.Source;
 
 //This is a pseudo object memory because the objects are actually managed by the Truffle/Java memory manager
 public class ObjectMemory {
@@ -129,11 +129,11 @@ public class ObjectMemory {
 
     loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(contextClass)), contextClass);
 
-    if (Universe.getCurrent().vmReflectionEnabled()){
-      //Setup the fields that were not possible to setup before to avoid cyclic initialization dependencies
-      //SReflectiveObject.setEnvironment(Nil.nilObject, Nil.nilObject);
+    if (Universe.getCurrent().vmReflectionEnabled()) {
+      // Setup the fields that were not possible to setup before to avoid cyclic initialization dependencies
+      // SReflectiveObject.setEnvironment(Nil.nilObject, Nil.nilObject);
       SReflectiveObjectEnvInObj.setEnvironment(Nil.nilObject, Nil.nilObject);
-      
+
       // Load methods and fields into the Mate MOP.
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(environmentMO)), environmentMO);
       loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(operationalSemanticsMO)), operationalSemanticsMO);
