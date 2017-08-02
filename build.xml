@@ -6,8 +6,10 @@
     <property name="test.dir"    value="tests/java"/>
     <property name="lib.dir"     value="libs" />
     <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
+	<property name="graal.dir" 	 value="${lib.dir}/truffle/compiler" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="junit.version" value="4.12" />
+	<property name="jvmci8" value="${lib.dir}/truffle/java-jvmci-8/"/>
 
     <property name="checkstyle.version" value="7.8.1" />
 
@@ -94,6 +96,13 @@
         </exec>
     </target>
 	
+	<target name="graal" >
+        <exec executable="../../mx/mx" dir="${graal.dir}">
+        	<env key="JAVA_HOME" value="../java-jvmci-8/"/>
+        	<arg value="build"/>
+        </exec>
+    </target>
+	
 	<target name="websocket-lib" depends="core-lib">
 		<subant buildpath="libs/websocket" target="jar" failonerror="true" />		
 	</target>		
@@ -102,7 +111,7 @@
 		<subant buildpath="libs/json" target="jar" failonerror="true" />		
 	</target>
 	
-	<target name="libs" depends="core-lib, truffle-libs, websocket-lib, minimal-json-lib">
+	<target name="libs" depends="core-lib, truffle-libs, graal, websocket-lib, minimal-json-lib">
         <get src="https://repo1.maven.org/maven2/junit/junit/${junit.version}/junit-${junit.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/junit-${junit.version}.jar" />
