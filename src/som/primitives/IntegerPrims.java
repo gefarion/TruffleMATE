@@ -2,16 +2,9 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.profiles.BranchProfile;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.primitives.Primitives.Specializer;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
@@ -21,12 +14,19 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.OpArithmetic;
 import tools.dym.Tags.StringAccess;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 
 public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "atRandom", receiverType = Long.class)
-  public abstract static class RandomPrim extends UnaryExpressionNode {
+  public abstract static class RandomPrim extends UnaryBasicOperation {
     public RandomPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
@@ -35,11 +35,20 @@ public abstract class IntegerPrims {
     public final long doLong(final long receiver) {
       return (long) (receiver * Math.random());
     }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == OpArithmetic.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
   }
 
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "as32BitSignedValue", receiverType = Long.class)
-  public abstract static class As32BitSignedValue extends UnaryExpressionNode {
+  public abstract static class As32BitSignedValue extends UnaryBasicOperation {
     public As32BitSignedValue(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
@@ -61,7 +70,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "as32BitUnsignedValue", receiverType = Long.class)
-  public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
+  public abstract static class As32BitUnsignedValue extends UnaryBasicOperation {
     public As32BitUnsignedValue(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
@@ -214,7 +223,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive(klass = "Integer", selector = "abs", receiverType = Long.class)
-  public abstract static class AbsPrim extends UnaryExpressionNode {
+  public abstract static class AbsPrim extends UnaryBasicOperation {
     public AbsPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }

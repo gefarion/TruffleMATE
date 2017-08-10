@@ -2,7 +2,7 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -16,7 +16,7 @@ import com.oracle.truffle.api.source.SourceSection;
 @Primitive(klass = "Symbol", selector = "asString", eagerSpecializable = false)
 @Primitive(klass = "Integer", selector = "asString", eagerSpecializable = false)
 @Primitive(klass = "Double", selector = "asString", eagerSpecializable = false)
-public abstract class AsStringPrim extends UnaryExpressionNode {
+public abstract class AsStringPrim extends UnaryBasicOperation {
   public AsStringPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
   }

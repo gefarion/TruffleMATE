@@ -1,17 +1,18 @@
 package som.primitives;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.StringAccess;
+
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class StringPrims {
@@ -55,7 +56,7 @@ public class StringPrims {
 
   @GenerateNodeFactory
   @Primitive(klass = "String", selector = "asSymbol")
-  public abstract static class AsSymbolPrim extends UnaryExpressionNode {
+  public abstract static class AsSymbolPrim extends UnaryBasicOperation {
     private final Universe universe;
     public AsSymbolPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
