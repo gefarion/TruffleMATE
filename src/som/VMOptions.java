@@ -25,10 +25,12 @@ public class VMOptions {
   @CompilationFinal public boolean printAST;
   @CompilationFinal public boolean vmReflectionEnabled;
   @CompilationFinal public boolean vmReflectionActivated;
+  @CompilationFinal public boolean unoptimizedIH;
 
   public VMOptions(final String[] args) {
     vmReflectionEnabled = false;
     printAST = false;
+    unoptimizedIH = false;
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
@@ -76,6 +78,9 @@ public class VMOptions {
           currentArg += 1;
         } else if (arguments[currentArg].equals("--mate")) {
           vmReflectionEnabled = true;
+          currentArg += 1;
+        } else if (arguments[currentArg].equals("--unoptimizedIH")) {
+          unoptimizedIH = true;
           currentArg += 1;
         } else {
           parsedArgument = false;

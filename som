@@ -93,6 +93,8 @@ tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
 
 parser.add_argument('--mate', help='run som with mate nodes',
                     dest='mate', action='store_true', default=False)
+parser.add_argument('--unoptimizedIH', help='enable mate nodes',
+                    dest='unoptimizedIH', action='store_true', default=False)
 parser.add_argument('-activateMate', help='enable mate nodes',
                     dest='mateActivated', action='store_true', default=False)
 
@@ -248,6 +250,8 @@ if args.mate:
     mate_args += ['--mate']
 if args.mateActivated:
     mate_args += ['-activateMate']
+    if args.unoptimizedIH:
+    	mate_args += ['--unoptimizedIH']
 
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]

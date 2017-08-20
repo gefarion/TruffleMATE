@@ -38,6 +38,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage.Env;
+import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.debug.Debugger;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectFactory;
+import com.oracle.truffle.api.object.ObjectType;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
+
 import som.VMOptions;
 import som.VmSettings;
 import som.interpreter.Invokable;
@@ -68,27 +89,6 @@ import tools.debugger.Tags;
 import tools.dym.DynamicMetrics;
 import tools.language.StructuralProbe;
 
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleLanguage.Env;
-import com.oracle.truffle.api.TruffleRuntime;
-import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectFactory;
-import com.oracle.truffle.api.object.ObjectType;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
-
 public class Universe {
   final Env env;
 
@@ -112,10 +112,16 @@ public class Universe {
     globalSemanticsActivated = null;
     globalSemantics = null;
     validUniverse = this.getTruffleRuntime().createAssumption();
+    optimizedIH = this.getTruffleRuntime().createAssumption();
 
     if (options.vmReflectionActivated) {
       activatedMate();
     }
+
+    if (options.unoptimizedIH) {
+      unoptimizedIH();
+    }
+
 
     if (ObjectMemory.last == null) {
       objectMemory = new ObjectMemory(structuralProbe);
@@ -468,6 +474,10 @@ public class Universe {
     return this.globalSemanticsActivated;
   }
 
+  public Assumption getOptimizedIHAssumption() {
+    return this.optimizedIH;
+  }
+
   public Assumption getValidUniverseAssumption() {
     return this.validUniverse;
   }
@@ -502,6 +512,10 @@ public class Universe {
       this.getMateDeactivatedAssumption().invalidate();
     }
     mateActivated = this.getTruffleRuntime().createAssumption();
+  }
+
+  public void unoptimizedIH() {
+    optimizedIH.invalidate();
   }
 
   public void deactivateMate() {
@@ -608,6 +622,7 @@ public class Universe {
   @CompilationFinal private Assumption mateDeactivated;
   @CompilationFinal private Assumption globalSemanticsActivated;
   @CompilationFinal private Assumption globalSemanticsDeactivated;
+  @CompilationFinal private Assumption optimizedIH;
   @CompilationFinal private DynamicObject globalSemantics;
   @CompilationFinal private Assumption validUniverse;
   @CompilationFinal private Map<DynamicObject, List<ObjectType>> objectTypes = new HashMap<DynamicObject, List<ObjectType>>();
