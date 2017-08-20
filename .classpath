@@ -12,7 +12,7 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="libs/websocket/dist/websocket.jar"/>
 	<classpathentry kind="lib" path="libs/gson-2.7.jar"/>
-	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-api.jar"/>
+	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-api.jar" sourcepath="libs/truffle/truffle/mxbuild/dists/truffle-api.src.zip"/>
 	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-dsl-processor.jar"/>
 	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-tck.jar"/>
 	<classpathentry kind="lib" path="libs/truffle/sdk/mxbuild/dists/graal-sdk.jar"/>
