@@ -1,5 +1,18 @@
 package som.matenodes;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.ValueProfile;
+
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
@@ -14,19 +27,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 public abstract class MateAbstractReflectiveDispatch extends Node {
 
@@ -76,6 +76,15 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
         @Cached("createIndirectCall()") final IndirectCallNode callNode) {
       return callNode.call(SInvokable.getCallTarget(method, ExecutionLevel.Meta), this.computeArgumentsForMetaDispatch(frame, arguments));
     }
+
+    @Override
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
+      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], ((long) arguments[1]) + 1};
+    }
+  }
+
+  public abstract static class MateDispatchReturn extends
+    MateDispatchFieldRead {
 
     @Override
     protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
@@ -134,7 +143,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
     @Override
     protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
-      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], arguments[1], arguments[2]};
+      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], ((long) arguments[1]) + 1, arguments[2]};
     }
   }
 
