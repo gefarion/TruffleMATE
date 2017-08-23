@@ -79,6 +79,15 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
     @Override
     protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
+      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], ((long) arguments[1]) + 1};
+    }
+  }
+
+  public abstract static class MateDispatchReturn extends
+    MateDispatchFieldRead {
+
+    @Override
+    protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], arguments[1]};
     }
   }
@@ -135,7 +144,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
     @Override
     protected Object[] computeArgumentsForMetaDispatch(final VirtualFrame frame, final Object[] arguments) {
-      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], arguments[1], arguments[2]};
+      return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0], ((long) arguments[1]) + 1, arguments[2]};
     }
   }
 

@@ -9,6 +9,7 @@
 	<property name="graal.dir" 	 value="${lib.dir}/truffle/compiler" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="junit.version" value="4.12" />
+	<property name="jvmci8" value="${lib.dir}/truffle/java-jvmci-8/"/>
 
     <property name="checkstyle.version" value="7.8.1" />
 

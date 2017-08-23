@@ -19,6 +19,7 @@ import som.matenodes.MateAbstractSemanticNodesFactory.MateGlobalSemanticCheckNod
 import som.matenodes.MateAbstractSemanticNodesFactory.MateObjectSemanticInObjCheckNodeGen;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticCheckNodeGen;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticsBaselevelNodeGen;
+import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticsBaselevelNodeUnoptNodeGen;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticsMetalevelNodeGen;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
@@ -250,9 +251,15 @@ public abstract class MateAbstractSemanticNodes extends Node {
                   execute(frame, arguments);
     }
 
-    @Specialization(guards = "executeBase(frame)", assumptions = "getMateActivatedAssumption()")
+    @Specialization(guards = "executeBase(frame)", assumptions = "getOptimizedIHAssumption()")
     protected DynamicObject executeSemanticChecks(final VirtualFrame frame, final Object[] arguments) {
       return replace(MateSemanticsBaselevelNodeGen.create(environment, object, global)).
+                  execute(frame, arguments);
+    }
+
+    @Specialization(guards = "executeBase(frame)", assumptions = "getMateActivatedAssumption()")
+    protected DynamicObject executeSemanticUnoptimizedChecks(final VirtualFrame frame, final Object[] arguments) {
+      return replace(MateSemanticsBaselevelNodeUnoptNodeGen.create(environment.reflectiveOperation)).
                   execute(frame, arguments);
     }
 
@@ -265,12 +272,16 @@ public abstract class MateAbstractSemanticNodes extends Node {
       return SArguments.getExecutionLevel(frame) == ExecutionLevel.Base;
     }
 
-    public static Assumption getMateDeactivatedAssumption() {
-      return Universe.getCurrent().getMateDeactivatedAssumption();
+    public static Assumption[] getMateDeactivatedAssumption() {
+      return new Assumption[]{Universe.getCurrent().getMateDeactivatedAssumption()};
     }
 
-    public static Assumption getMateActivatedAssumption() {
-      return Universe.getCurrent().getMateActivatedAssumption();
+    public static Assumption[] getMateActivatedAssumption() {
+      return new Assumption[]{Universe.getCurrent().getMateActivatedAssumption()};
+    }
+
+    public static Assumption[] getOptimizedIHAssumption() {
+      return new Assumption[]{Universe.getCurrent().getMateActivatedAssumption(), Universe.getCurrent().getOptimizedIHAssumption()};
     }
 
     @Override
@@ -337,6 +348,35 @@ public abstract class MateAbstractSemanticNodes extends Node {
 
     public static Assumption getGlobalSemanticsActivatedAssumption() {
       return Universe.getCurrent().getGlobalSemanticsActivatedAssumption();
+    }
+  }
+
+  public abstract static class MateSemanticsBaselevelNodeUnopt extends MateAbstractSemanticsLevelNode {
+    ReflectiveOp reflectiveOperation;
+
+    public MateSemanticsBaselevelNodeUnopt(final ReflectiveOp reflectiveOperation) {
+      super();
+      this.reflectiveOperation = reflectiveOperation;
+    }
+
+    @Specialization
+    protected DynamicObject executeGeneric(final VirtualFrame frame,
+        final Object[] arguments) {
+      if (SArguments.getExecutionLevel(frame) == ExecutionLevel.Base & arguments[0] instanceof DynamicObject) {
+        DynamicObject env = SArguments.getEnvironment(frame);
+        DynamicObject method = null;
+        if (env != Nil.nilObject) {
+           method = SMateEnvironment.methodImplementing(env, reflectiveOperation);
+        }
+        if (method == null & SReflectiveObject.isSReflectiveObject(((DynamicObject) arguments[0]))) {
+          env = SReflectiveObject.getEnvironment(((DynamicObject) arguments[0]));
+          if (env != Nil.nilObject) {
+            method = SMateEnvironment.methodImplementing(env, reflectiveOperation);
+          }
+        }
+        return method;
+      }
+      return null;
     }
   }
 }

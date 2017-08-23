@@ -112,10 +112,16 @@ public class Universe {
     globalSemanticsActivated = null;
     globalSemantics = null;
     validUniverse = this.getTruffleRuntime().createAssumption();
+    optimizedIH = this.getTruffleRuntime().createAssumption();
 
     if (options.vmReflectionActivated) {
       activatedMate();
     }
+
+    if (options.unoptimizedIH) {
+      unoptimizedIH();
+    }
+
 
     if (ObjectMemory.last == null) {
       objectMemory = new ObjectMemory(structuralProbe);
@@ -467,6 +473,10 @@ public class Universe {
     return this.globalSemanticsActivated;
   }
 
+  public Assumption getOptimizedIHAssumption() {
+    return this.optimizedIH;
+  }
+
   public Assumption getValidUniverseAssumption() {
     return this.validUniverse;
   }
@@ -501,6 +511,10 @@ public class Universe {
       this.getMateDeactivatedAssumption().invalidate();
     }
     mateActivated = this.getTruffleRuntime().createAssumption();
+  }
+
+  public void unoptimizedIH() {
+    optimizedIH.invalidate();
   }
 
   public void deactivateMate() {
@@ -607,6 +621,7 @@ public class Universe {
   @CompilationFinal private Assumption mateDeactivated;
   @CompilationFinal private Assumption globalSemanticsActivated;
   @CompilationFinal private Assumption globalSemanticsDeactivated;
+  @CompilationFinal private Assumption optimizedIH;
   @CompilationFinal private DynamicObject globalSemantics;
   @CompilationFinal private Assumption validUniverse;
   @CompilationFinal private Map<DynamicObject, List<ObjectType>> objectTypes = new HashMap<DynamicObject, List<ObjectType>>();

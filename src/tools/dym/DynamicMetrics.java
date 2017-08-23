@@ -8,24 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.instrumentation.EventContext;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.Instrumenter;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.instrumentation.TruffleInstrument;
-import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
@@ -80,6 +62,24 @@ import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
 import tools.language.StructuralProbe;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.instrumentation.EventContext;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.TruffleInstrument;
+import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
+
 
 /**
  * DynamicMetric is a Truffle instrumentation tool to measure a wide range of
@@ -132,7 +132,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
   public static boolean isTaggedWith(final Node node, final Class<?> tag) {
     assert instrumenter != null : "Initialization order/dependencies?";
-    return instrumenter.queryTags(node).contains(tag);
+    return instrumenter.isTaggedWith(node, tag);
   }
 
   public DynamicMetrics() {
@@ -270,7 +270,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
   public static ExecutionEventNode findDirectParentEventNode(final EventContext ctx,
       final ExecutionEventNodeFactory factory) {
-    return DynamicMetrics.findParentEventNode(ctx, factory, 1);
+    return DynamicMetrics.findParentEventNode(ctx, factory, 2);
   }
 
   public static ExecutionEventNode findParentEventNode(final EventContext ctx,
@@ -284,8 +284,8 @@ public class DynamicMetrics extends TruffleInstrument {
         if (eventNode != null) {
           return eventNode;
         }
-        level = level + 1;
       }
+      level = level + 1;
     }
     return null;
   }

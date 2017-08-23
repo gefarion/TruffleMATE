@@ -53,6 +53,12 @@ public abstract class TypeProfileNode extends Node {
     cnt.inc();
   }
 
+  @Specialization
+  public void doChar(final char obj,
+      @Cached("create(obj)") final ProfileCounter cnt) {
+    cnt.inc();
+  }
+
   @Specialization(guards = "obj")
   public void doTrue(final boolean obj,
       @Cached("create(obj)") final ProfileCounter cnt) {

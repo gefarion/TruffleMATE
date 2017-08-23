@@ -1,4 +1,8 @@
 #!/usr/bin/env python2.7
+
+#For fast running, include -A in the arguments list
+#For debugging compilation, include -w and - B and in the arguments list
+
 import argparse
 import sys
 import os
@@ -10,17 +14,6 @@ OLD_GRAAL   = os.getenv('OLD_GRAAL',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
 JAVA_BIN  = '/bin/java'
-
-if sys.argv[0].endswith('oficial'):
-    GRAAL_LOCATION = BASE_DIR + '/../graalvm-0.22'
-    JAVA_LOCATION = GRAAL_LOCATION
-else:
-    GRAAL_LOCATION = BASE_DIR + '/libs/truffle/compiler'
-    JAVA_LOCATION = GRAAL_LOCATION + '/../java-jvmci-8/'
-#    os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
-    if not GRAAL_FLAGS:
-        GRAAL_FLAGS = '-Djvmci.class.path.append=' + GRAAL_LOCATION + '/mxbuild/dists/graal.jar'
-
     
 parser = argparse.ArgumentParser(
     description='Helper script to run TruffleMate with/without Graal')
@@ -100,6 +93,8 @@ tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
 
 parser.add_argument('--mate', help='run som with mate nodes',
                     dest='mate', action='store_true', default=False)
+parser.add_argument('--unoptimizedIH', help='enable mate nodes',
+                    dest='unoptimizedIH', action='store_true', default=False)
 parser.add_argument('-activateMate', help='enable mate nodes',
                     dest='mateActivated', action='store_true', default=False)
 
@@ -117,6 +112,9 @@ parser.add_argument('-D', help="define a Java property",
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to TruffleMate')
 
+parser.add_argument('--oficial', help='run the graal precompiled binaries',
+                    dest='oficial', action='store_true', default=False)
+
 args, unknown = parser.parse_known_args()
 
 JAVA_ARGS = ['-d64']
@@ -124,15 +122,24 @@ JAVA_ARGS = ['-d64']
 if args.java_interpreter or args.dynamic_metrics:
     args.interpreter = True
 
+if args.oficial:
+    GRAAL_LOCATION = BASE_DIR + '/graal'
+    JAVA_LOCATION = GRAAL_LOCATION
+else:
+    GRAAL_LOCATION = BASE_DIR + '/libs/truffle/compiler'
+    JAVA_LOCATION = GRAAL_LOCATION + '/../java-jvmci-8/'
+#    os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
+    if not GRAAL_FLAGS:
+        GRAAL_FLAGS = '-Djvmci.class.path.append=' + GRAAL_LOCATION + '/mxbuild/dists/graal.jar'
+
 if GRAAL_HOME:
     graal_home = GRAAL_HOME
 else:
-    if os.path.isdir(GRAAL_LOCATION):
-        graal_home = GRAAL_LOCATION
+	graal_home = GRAAL_LOCATION
 
-if not graal_home:
-    print "Graal couldn't be found. Please set GRAAL_HOME"
-    sys.exit(1)
+if not os.path.isdir(graal_home):
+	print "Graal couldn't be found. Please set GRAAL_HOME"
+	sys.exit(1)
 
 java_bin = JAVA_LOCATION + JAVA_BIN
 
@@ -162,13 +169,6 @@ else:
    TWEAK_INLINING = []               
 
 # Handle executable names
-if sys.argv[0].endswith('fast'):
-    args.assert_ = False
-    args.no_trace = True
-if sys.argv[0].endswith('debug'):
-    args.perf_warnings = True
-    args.background_compilation = False
-
 if not args.interpreter and GRAAL_FLAGS:
     flags = shlex.split(str.strip(GRAAL_FLAGS))
 else:
@@ -250,6 +250,8 @@ if args.mate:
     mate_args += ['--mate']
 if args.mateActivated:
     mate_args += ['-activateMate']
+    if args.unoptimizedIH:
+    	mate_args += ['--unoptimizedIH']
 
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]

@@ -12,3 +12,4 @@ metrics/*
 /tests/dym/results
 
 dynamic-metrics\.json
+graal

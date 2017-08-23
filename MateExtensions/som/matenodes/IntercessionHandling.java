@@ -17,6 +17,7 @@ import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarR
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchLocalVarWriteNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimFieldReadNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchPrimFieldWriteNodeGen;
+import som.matenodes.MateAbstractReflectiveDispatchFactory.MateDispatchReturnNodeGen;
 import som.matenodes.MateAbstractSemanticNodes.MateAbstractSemanticsLevelNode;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticCheckNodeGen;
 import som.vm.Universe;
@@ -82,7 +83,7 @@ public abstract class IntercessionHandling extends Node {
           reflectiveDispatch = MateDispatchLocalVarWriteNodeGen.create();
           break;
         case ExecutorReturn:
-          reflectiveDispatch = MateDispatchFieldReadNodeGen.create();
+          reflectiveDispatch = MateDispatchReturnNodeGen.create();
           break;
         default:
           Universe.errorExit("Unexepected operation");

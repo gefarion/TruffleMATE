@@ -3,6 +3,7 @@ package som.primitives;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vm.constants.Globals;
@@ -50,13 +51,13 @@ public final class SystemPrims {
     }
 
     /*This may be the best to do for all system primitives since the universe may change.
-     * It is mandatory for this primitive because the classpath changes, for instance, between test classes 
+     * It is mandatory for this primitive because the classpath changes, for instance, between test classes
      */
     public static Universe currentUniverse() {
       return Universe.getCurrent();
     }
 
-    public static Assumption getAssumption(Universe universe) {
+    public static Assumption getAssumption(final Universe universe) {
       return universe.getValidUniverseAssumption();
     }
   }
@@ -145,7 +146,7 @@ public final class SystemPrims {
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
   @Primitive(klass = "System", selector = "time", eagerSpecializable = false)
-  public abstract static class TimePrim extends UnaryExpressionNode {
+  public abstract static class TimePrim extends UnaryBasicOperation {
     public TimePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
@@ -159,7 +160,7 @@ public final class SystemPrims {
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
   @Primitive(klass = "System", selector = "ticks", eagerSpecializable = false)
-  public abstract static class TicksPrim extends UnaryExpressionNode {
+  public abstract static class TicksPrim extends UnaryBasicOperation {
     public TicksPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
     }
