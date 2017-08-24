@@ -145,8 +145,7 @@ java_bin = JAVA_LOCATION + JAVA_BIN
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
-             + GRAAL_LOCATION + '/sdk/mxbuild/dists/graal-sdk.jar:'
-#             + BASE_DIR + '/libs/truffle/sdk/mxbuild/dists/graal-sdk.jar:'
+             + BASE_DIR + '/libs/truffle/sdk/mxbuild/dists/graal-sdk.jar:'
              + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-api.jar:'
              + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-debug.jar:')
 #             + BASE_DIR + '/../graalvm-0.22/jdk/jre/lib/jvmci/jvmci-api.jar')
