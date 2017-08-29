@@ -21,15 +21,15 @@
  */
 package som.interpreter;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SOMNode;
-
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 
 
 public final class Method extends Invokable {
@@ -113,7 +113,9 @@ public final class Method extends Invokable {
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    Node copy = cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    ((Invokable) copy).uninitializedBody = (ExpressionNode) uninitializedBody.deepCopy();
+    return copy;
   }
 
   public boolean isBlock() {
