@@ -113,7 +113,9 @@ public final class Method extends Invokable {
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    Node copy = cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    ((Invokable) copy).uninitializedBody = (ExpressionNode) uninitializedBody.deepCopy();
+    return copy;
   }
 
   public boolean isBlock() {
