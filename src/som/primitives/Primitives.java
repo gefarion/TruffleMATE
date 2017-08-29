@@ -334,9 +334,6 @@ public class Primitives {
         for (som.primitives.Primitive prim : prims) {
           @SuppressWarnings("rawtypes")
           Class<? extends Specializer> spezCls = prim.specializer();
-          if (specializers.containsKey(prim)) {
-            int i = 1;
-          }
           assert !specializers.containsKey(prim);
 
           Specializer<? extends ExpressionNode> spez = instantiateSpecializer(primFact, prim, spezCls);
