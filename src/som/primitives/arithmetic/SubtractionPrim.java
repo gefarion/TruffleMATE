@@ -2,11 +2,11 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.primitives.Primitive;
-import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
@@ -19,7 +19,7 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
 
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
-    return ExactMath.subtractExact(left, right);
+    return Math.subtractExact(left, right);
   }
 
   @Specialization

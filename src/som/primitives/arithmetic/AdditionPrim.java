@@ -2,16 +2,15 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.primitives.Primitive;
-import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.primitives.Primitive;
+import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 
 
 @GenerateNodeFactory
@@ -25,7 +24,7 @@ public abstract class AdditionPrim extends ArithmeticPrim {
 
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {
-    return ExactMath.addExact(left, argument);
+    return Math.addExact(left, argument);
   }
 
   @Specialization
