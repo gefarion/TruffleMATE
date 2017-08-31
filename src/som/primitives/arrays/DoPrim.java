@@ -1,18 +1,5 @@
 package som.primitives.arrays;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.BlockPrims.ValuePrimitiveNode;
-import som.primitives.Primitive;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
-import som.vmobjects.SArray.PartiallyEmptyArray;
-import som.vmobjects.SBlock;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -24,28 +11,33 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.Invokable;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.Primitive;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.ArrayType;
+import som.vmobjects.SArray.PartiallyEmptyArray;
+import som.vmobjects.SBlock;
+
 
 @GenerateNodeFactory
 @Primitive(klass = "Array", selector = "do:",
            receiverType = SArray.class, disabled = true)
 @ImportStatic(ArrayType.class)
-public abstract class DoPrim extends BinaryExpressionNode
-  implements ValuePrimitiveNode {
-  @Child private AbstractDispatchNode block;
+public abstract class DoPrim extends BinaryExpressionNode {
+  @Child private BlockDispatchNode block;
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   public DoPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
-    block = new UninitializedValuePrimDispatchNode(this.sourceSection);
-  }
-
-  @Override
-  public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-    block = insert(node);
+    block = BlockDispatchNodeGen.create();
   }
 
   private void execBlock(final VirtualFrame frame, final SBlock block, final Object arg) {
-    this.block.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {block, arg});
+    this.block.activateBlock(frame, new Object[] {block, arg});
   }
 
   @Specialization(guards = "isEmptyType(arr)")

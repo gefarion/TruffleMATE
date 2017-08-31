@@ -8,17 +8,14 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VmSettings;
 import som.interpreter.SArguments;
 import som.interpreter.SomException;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -33,10 +30,6 @@ import tools.dym.Tags.OpClosureApplication;
 
 
 public abstract class BlockPrims {
-
-  public interface ValuePrimitiveNode {
-    void adoptNewDispatchListHead(AbstractDispatchNode node);
-  }
 
   @GenerateNodeFactory
   @Primitive(klass = "Block", selector = "restart", eagerSpecializable = false)
@@ -58,9 +51,8 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Block1", selector = "value",
              receiverType = {SBlock.class, Boolean.class})
-  public abstract static class ValueNonePrim extends UnaryExpressionNode
-      implements ValuePrimitiveNode {
-    @Child private AbstractDispatchNode dispatchNode;
+  public abstract static class ValueNonePrim extends UnaryExpressionNode {
+    @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
     public ValueNonePrim(final boolean eagWrap) {
       super(eagWrap, Universe.emptySource.createUnavailableSection());
@@ -68,86 +60,36 @@ public abstract class BlockPrims {
 
     public ValueNonePrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
-      dispatchNode = new UninitializedValuePrimDispatchNode(this.sourceSection);
     }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return dispatchNode.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {receiver});
+      return dispatchNode.activateBlock(frame, new Object[] {receiver});
     }
 
     @Specialization
     public final boolean doBoolean(final boolean receiver) {
       return receiver;
     }
-
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      dispatchNode = insert(node);
-    }
-
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchNode.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
-    }
-
-    @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == OpClosureApplication.class) {
-        return true;
-      } else {
-        return super.isTaggedWith(tag);
-      }
-    }
   }
 
   @GenerateNodeFactory
   @Primitive(klass = "Block2", selector = "value:", receiverType = {SBlock.class})
-  public abstract static class ValueOnePrim extends BinaryExpressionNode
-      implements ValuePrimitiveNode  {
-    @Child private AbstractDispatchNode dispatchNode;
+  public abstract static class ValueOnePrim extends BinaryExpressionNode {
+    @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
     public ValueOnePrim(final boolean eagWrap) {
-      this(eagWrap, null);
+      this(eagWrap, Universe.emptySource.createUnavailableSection());
     }
 
     public ValueOnePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
-      dispatchNode = new UninitializedValuePrimDispatchNode(this.sourceSection);
     }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver,
         final Object arg) {
-      return dispatchNode.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {receiver, arg});
-    }
-
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      dispatchNode = insert(node);
-    }
-
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchNode.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
+      return dispatchNode.activateBlock(frame, new Object[] {receiver, arg});
     }
 
     @Override
@@ -163,9 +105,8 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @Primitive(klass = "Block3", selector = "value:with:",
       receiverType = {SBlock.class})
-  public abstract static class ValueTwoPrim extends TernaryExpressionNode
-      implements ValuePrimitiveNode {
-    @Child private AbstractDispatchNode dispatchNode;
+  public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+    @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
     public ValueTwoPrim(final boolean eagerlyWrapped) {
       this(eagerlyWrapped, null);
@@ -173,32 +114,12 @@ public abstract class BlockPrims {
 
     public ValueTwoPrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
-      dispatchNode = new UninitializedValuePrimDispatchNode(this.sourceSection);
     }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2) {
-      return dispatchNode.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {receiver, arg1, arg2});
-    }
-
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      dispatchNode = insert(node);
-    }
-
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchNode.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
+      return dispatchNode.activateBlock(frame, new Object[] {receiver, arg1, arg2});
     }
 
     @Override
@@ -213,10 +134,9 @@ public abstract class BlockPrims {
 
   @GenerateNodeFactory
   @Primitive(klass = "Block4", selector = "value:with:with:",
-  receiverType = {SBlock.class})
-  public abstract static class ValueThreePrim extends QuaternaryExpressionNode
-      implements ValuePrimitiveNode {
-    @Child private AbstractDispatchNode dispatchNode;
+      receiverType = {SBlock.class})
+  public abstract static class ValueThreePrim extends QuaternaryExpressionNode {
+    @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
     public ValueThreePrim(final boolean eagerlyWrapped) {
       this(eagerlyWrapped, null);
@@ -224,32 +144,12 @@ public abstract class BlockPrims {
 
     public ValueThreePrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
-      dispatchNode = new UninitializedValuePrimDispatchNode(this.sourceSection);
     }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2, final Object arg3) {
-      return dispatchNode.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {receiver, arg1, arg2, arg3});
-    }
-
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      dispatchNode = insert(node);
-    }
-
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchNode.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
+      return dispatchNode.activateBlock(frame, new Object[] {receiver, arg1, arg2, arg3});
     }
 
     @Override

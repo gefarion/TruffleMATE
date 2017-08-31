@@ -18,7 +18,7 @@ import som.vmobjects.SInvokable.SMethod;
 
 
 public abstract class BlockDispatchNode extends Node {
-
+  public static final int INLINE_CACHE_SIZE = 4;
   public abstract Object executeDispatch(VirtualFrame frame, Object[] arguments);
 
   protected static final boolean isSameMethod(final Object[] arguments,
@@ -41,7 +41,7 @@ public abstract class BlockDispatchNode extends Node {
         SInvokable.getCallTarget(getMethod(arguments), SArguments.getExecutionLevel(frame)));
   }
 
-  @Specialization(guards = "isSameMethod(arguments, cached)")
+  @Specialization(guards = "isSameMethod(arguments, cached)", limit = "INLINE_CACHE_SIZE")
   public Object activateBlock(final VirtualFrame frame, final Object[] arguments,
       @Cached("getMethod(arguments)") final DynamicObject cached,
       @Cached("createCallNode(arguments, frame)") final DirectCallNode call) {

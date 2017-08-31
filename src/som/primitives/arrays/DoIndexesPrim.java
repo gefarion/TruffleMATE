@@ -1,17 +1,5 @@
 package som.primitives.arrays;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.BlockPrims.ValuePrimitiveNode;
-import som.primitives.LengthPrim;
-import som.primitives.LengthPrimFactory;
-import som.primitives.Primitive;
-import som.vmobjects.SArray;
-import som.vmobjects.SBlock;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -21,18 +9,27 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.Invokable;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.LengthPrim;
+import som.primitives.LengthPrimFactory;
+import som.primitives.Primitive;
+import som.vmobjects.SArray;
+import som.vmobjects.SBlock;
+
 
 @GenerateNodeFactory
 @Primitive(klass = "Array", selector = "doIndexes:",
            receiverType = SArray.class, disabled = true)
-public abstract class DoIndexesPrim extends BinaryExpressionNode
-    implements ValuePrimitiveNode {
-  @Child private AbstractDispatchNode block;
+public abstract class DoIndexesPrim extends BinaryExpressionNode {
+  @Child private BlockDispatchNode block;
   @Child private LengthPrim length;
 
   public DoIndexesPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
-    block = new UninitializedValuePrimDispatchNode(this.sourceSection);
+    block = BlockDispatchNodeGen.create();
     length = LengthPrimFactory.create(false, null, null);
   }
 
@@ -47,11 +44,11 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode
   private void loop(final VirtualFrame frame, final SBlock block, final int length) {
     try {
       if (SArray.FIRST_IDX < length) {
-        this.block.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {
+        this.block.activateBlock(frame, new Object[] {
             block, (long) SArray.FIRST_IDX + 1}); // +1 because it is going to the smalltalk level
       }
       for (long i = 1; i < length; i++) {
-        this.block.executeDispatch(frame, SArguments.getEnvironment(frame), SArguments.getExecutionLevel(frame), new Object[] {
+        this.block.activateBlock(frame, new Object[] {
             block, i + 1}); // +1 because it is going to the smalltalk level
       }
     } finally {
@@ -71,10 +68,5 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode
     if (current != null) {
       ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
     }
-  }
-
-  @Override
-  public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-    block = insert(node);
   }
 }
