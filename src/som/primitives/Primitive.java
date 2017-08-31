@@ -16,7 +16,7 @@ import som.primitives.Primitives.Specializer;
 @Repeatable(Primitive.Container.class)
 public @interface Primitive {
 
-  /** Name of the selector, for which the primitive is to be installed. */
+  /** Name of the class for which the primitive is to be installed. */
   String klass() default "";
 
   /** Selector. */

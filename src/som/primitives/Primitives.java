@@ -373,6 +373,7 @@ public class Primitives {
     allFactories.addAll(CompilationPrimsFactory.getFactories());
     allFactories.addAll(ContextPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
+    allFactories.addAll(ExceptionsPrimsFactory.getFactories());
     allFactories.addAll(FilePluginPrimsFactory.getFactories());
     allFactories.addAll(IntegerPrimsFactory.getFactories());
     allFactories.addAll(MatePrimsFactory.getFactories());

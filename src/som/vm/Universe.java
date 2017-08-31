@@ -199,8 +199,6 @@ public class Universe {
 
   public Object execute(final String className, final String selector) {
     DynamicObject clazz = loadClass(symbolFor(className));
-
-    // Lookup the initialize invokable on the system class
     DynamicObject initialize = SClass.lookupInvokable(SObject.getSOMClass(clazz),
         symbolFor(selector));
     return SInvokable.invoke(initialize, MateClasses.STANDARD_ENVIRONMENT, ExecutionLevel.Base, clazz);
