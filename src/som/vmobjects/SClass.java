@@ -292,4 +292,18 @@ public final class SClass {
     DynamicObject init = lookupInvokable(clazz, Universe.getCurrent().symbolFor("initialize"));
     SInvokable.invoke(init, Nil.nilObject, ExecutionLevel.Base, new Object[]{clazz});
   }
+
+  /**
+   * Checks whether the classes are the same, including superclass hierarchy
+   * and ignoring class identity, i.e., relying on class groups/factories, too.
+   */
+  public static boolean isKindOf(final DynamicObject clazz, final DynamicObject otherClass) {
+    if (otherClass == clazz) {
+      return true;
+    }
+    if (clazz == Nil.nilObject) {
+      return false;
+    }
+    return SClass.isKindOf(SClass.getSuperClass(clazz), otherClass);
+  }
 }

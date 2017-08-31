@@ -110,7 +110,15 @@ public class BasicInterpreterTests {
 
         {"ObjectFieldAccess", "test",                                 4, Long.class },
 
-        {"LocalVarAccess", "test",                                    1, Long.class }
+        {"LocalVarAccess", "test",                                    1, Long.class },
+
+        {"Exceptions", "testSignalOnDo", 4, Long.class},
+        {"Exceptions", "testSignalOnDoMethod", 5, Long.class},
+        {"Exceptions", "testNestedSignalOnDo", 22, Long.class},
+        {"Exceptions", "testSignalOnDoMethod", 5, Long.class},
+        {"Exceptions", "testCustomExceptionSignalOnDo", 343, Long.class},
+        {"Exceptions", "testEnsure", 444, Long.class},
+        {"Exceptions", "testEnsureWithSignal", 66, Long.class}
 
     });
   }
@@ -180,6 +188,7 @@ public class BasicInterpreterTests {
       return new ArrayList<URL>(
           urls = Arrays.asList(
               new File("Smalltalk").toURI().toURL(),
+              new File("Smalltalk/Exceptions").toURI().toURL(),
               new File("TestSuite/BasicInterpreterTests").toURI().toURL()));
     } catch (MalformedURLException e) {
       Universe.errorExit("Classpath was provided in incorrect format");
