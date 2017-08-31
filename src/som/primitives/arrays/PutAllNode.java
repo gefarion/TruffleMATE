@@ -1,20 +1,5 @@
 package som.primitives.arrays;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.BlockPrims.ValuePrimitiveNode;
-import som.primitives.LengthPrim;
-import som.primitives.Primitive;
-import som.vm.constants.MateClasses;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
-import som.vmobjects.SBlock;
-import som.primitives.LengthPrimFactory;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -27,24 +12,30 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.Invokable;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.LengthPrim;
+import som.primitives.LengthPrimFactory;
+import som.primitives.Primitive;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.ArrayType;
+import som.vmobjects.SBlock;
+
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
 @Primitive(klass = "Array", selector = "putAll:", disabled = true,
            extraChild = LengthPrimFactory.class)
 @NodeChild(value = "length", type = LengthPrim.class, executeWith = "receiver")
-public abstract class PutAllNode extends BinaryExpressionNode
-  implements ValuePrimitiveNode  {
-  @Child private AbstractDispatchNode block;
+public abstract class PutAllNode extends BinaryExpressionNode {
+  @Child private BlockDispatchNode block;
 
   public PutAllNode(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
-    block = new UninitializedValuePrimDispatchNode(this.sourceSection);
-  }
-
-  @Override
-  public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-    block = insert(node);
+    block = BlockDispatchNodeGen.create();
   }
 
   protected static final boolean valueIsNil(final DynamicObject value) {
@@ -75,28 +66,28 @@ public abstract class PutAllNode extends BinaryExpressionNode
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final Object[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = this.block.executeDispatch(frame, MateClasses.STANDARD_ENVIRONMENT, SArguments.getExecutionLevel(frame), new Object[] {block});
+      storage[i] = this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final long[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (long) this.block.executeDispatch(frame, MateClasses.STANDARD_ENVIRONMENT, SArguments.getExecutionLevel(frame), new Object[] {block});
+      storage[i] = (long) this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final double[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (double) this.block.executeDispatch(frame, MateClasses.STANDARD_ENVIRONMENT, SArguments.getExecutionLevel(frame), new Object[] {block});
+      storage[i] = (double) this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final boolean[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (boolean) this.block.executeDispatch(frame, MateClasses.STANDARD_ENVIRONMENT, SArguments.getExecutionLevel(frame), new Object[] {block});
+      storage[i] = (boolean) this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
@@ -108,7 +99,7 @@ public abstract class PutAllNode extends BinaryExpressionNode
     }
     // TODO: this version does not handle the case that a subsequent value is not of the expected type...
     try {
-      Object result = this.block.executeDispatch(frame, MateClasses.STANDARD_ENVIRONMENT, SArguments.getExecutionLevel(frame), new Object[] {block});
+      Object result = this.block.activateBlock(frame, new Object[] {block});
       if (result instanceof Long) {
         long[] newStorage = new long[(int) length];
         newStorage[0] = (long) result;
