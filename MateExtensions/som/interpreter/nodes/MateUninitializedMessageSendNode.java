@@ -3,7 +3,6 @@ package som.interpreter.nodes;
 import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.UninitializedMessageSendNode;
 import som.matenodes.IntercessionHandling;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class MateUninitializedMessageSendNode extends
