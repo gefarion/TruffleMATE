@@ -1,5 +1,13 @@
 package som.primitives;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -11,14 +19,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class SystemPrims {
@@ -213,4 +213,18 @@ public final class SystemPrims {
   }
   private static long startTime;
   private static long startMicroTime;
+
+  @GenerateNodeFactory
+  @Primitive(klass = "System", selector = "inTruffle", eagerSpecializable = false)
+  public abstract static class InTrufflePrim extends UnaryExpressionNode {
+
+    public InTrufflePrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+
+    @Specialization
+    public final Object doPrim(final DynamicObject receiver) {
+      return true;
+    }
+  }
 }
