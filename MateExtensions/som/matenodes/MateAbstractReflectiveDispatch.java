@@ -103,6 +103,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
   public abstract static class MateDispatchLocalVarRead extends
       MateDispatchFieldRead {
+
     final DynamicObject context;
 
     /*
