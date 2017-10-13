@@ -1,5 +1,18 @@
 package som.primitives;
 
+import som.interpreter.FrameOnStackMarker;
+import som.interpreter.Invokable;
+import som.interpreter.MateVisitors;
+import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.Universe;
+import som.vmobjects.MockJavaObject;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleRuntime;
@@ -15,19 +28,6 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
-
-import som.interpreter.FrameOnStackMarker;
-import som.interpreter.Invokable;
-import som.interpreter.MateVisitors;
-import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
-import som.vmobjects.MockJavaObject;
 
 
 public class ContextPrims {
