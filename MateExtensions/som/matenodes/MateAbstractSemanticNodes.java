@@ -368,8 +368,8 @@ public abstract class MateAbstractSemanticNodes extends Node {
         if (env != Nil.nilObject) {
            method = SMateEnvironment.methodImplementing(env, reflectiveOperation);
         }
-        if (method == null & SReflectiveObject.isSReflectiveObject(((DynamicObject) arguments[0]))) {
-          env = SReflectiveObject.getEnvironment(((DynamicObject) arguments[0]));
+        if (method == null & SReflectiveObjectEnvInObj.isSReflectiveObject(((DynamicObject) arguments[0]))) {
+          env = SReflectiveObjectEnvInObj.getEnvironment(((DynamicObject) arguments[0]));
           if (env != Nil.nilObject) {
             method = SMateEnvironment.methodImplementing(env, reflectiveOperation);
           }
