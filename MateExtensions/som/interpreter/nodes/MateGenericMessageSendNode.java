@@ -1,13 +1,13 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.MateNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.matenodes.IntercessionHandling;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public class MateGenericMessageSendNode extends GenericMessageSendNode
@@ -31,7 +31,17 @@ public class MateGenericMessageSendNode extends GenericMessageSendNode
     Object[] arguments = evaluateArguments(frame);
     Object value = ih.doMateSemantics(frame, arguments);
     if (value == null) {
-      value = doPreEvaluated(frame, arguments);
+      value = super.doPreEvaluated(frame, arguments);
+    }
+    return value;
+  }
+
+  @Override
+  public Object doPreEvaluated(final VirtualFrame frame,
+      final Object[] arguments) {
+    Object value = ih.doMateSemantics(frame, arguments);
+    if (value == null) {
+      value = super.doPreEvaluated(frame, arguments);
     }
     return value;
   }

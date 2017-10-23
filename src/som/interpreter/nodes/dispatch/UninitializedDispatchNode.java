@@ -1,23 +1,22 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
-
-public final class UninitializedDispatchNode extends AbstractDispatchNode {
+public class UninitializedDispatchNode extends AbstractDispatchNode {
   protected final SSymbol selector;
 
   public UninitializedDispatchNode(final SourceSection source, final SSymbol selector) {
@@ -40,19 +39,12 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
     if (chainDepth < INLINE_CACHE_SIZE) {
       DynamicObject rcvrClass = Types.getClassOf(rcvr);
       DynamicObject method = SClass.lookupInvokable(rcvrClass, selector);
-      CallTarget callTarget;
-      if (method != null) {
-        callTarget = SInvokable.getCallTarget(method, SArguments.getExecutionLevel(frame));
-      } else {
-        callTarget = null;
-      }
-
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(this.sourceSection, selector);
       DispatchGuard guard = DispatchGuard.create(rcvr);
       AbstractCachedDispatchNode node;
       if (method != null) {
         boolean shouldSplit = selector.getString().equals("new") ? true : false;
-        node = new CachedDispatchNode(guard, callTarget, newChainEnd, shouldSplit);
+        node = this.cacheNode(guard, method, newChainEnd, shouldSplit, SArguments.getExecutionLevel(frame));
       } else {
         node = new CachedDnuNode(rcvrClass, guard, selector, newChainEnd, SArguments.getExecutionLevel(frame));
       }
@@ -82,5 +74,14 @@ public final class UninitializedDispatchNode extends AbstractDispatchNode {
   @Override
   public int lengthOfDispatchChain() {
     return 0;
+  }
+
+  protected CachedDispatchNode cacheNode(final DispatchGuard guard, final DynamicObject methodToCall,
+      final UninitializedDispatchNode newChainEnd, final Boolean shouldSplit, final ExecutionLevel level) {
+    return new CachedDispatchNode(guard, methodToCall, newChainEnd, shouldSplit, level);
+  }
+
+  protected UninitializedDispatchNode uninitializedNode(final SourceSection section, final SSymbol selector) {
+    return new UninitializedDispatchNode(this.sourceSection, selector);
   }
 }

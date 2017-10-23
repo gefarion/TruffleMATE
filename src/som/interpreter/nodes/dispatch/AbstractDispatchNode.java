@@ -11,6 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.instrumentation.DispatchNodeWrapper;
 import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SInvokable;
 
 
 @Instrumentable(factory = DispatchNodeWrapper.class)
@@ -45,10 +46,16 @@ public abstract class AbstractDispatchNode extends Node implements DispatchChain
     @Child protected DirectCallNode       cachedMethod;
     @Child protected AbstractDispatchNode nextInCache;
 
-    public AbstractCachedDispatchNode(final CallTarget methodCallTarget,
-        final AbstractDispatchNode nextInCache) {
+    public AbstractCachedDispatchNode(final DynamicObject methodToCall,
+        final AbstractDispatchNode nextInCache, final ExecutionLevel level) {
       super(nextInCache.sourceSection);
-      DirectCallNode cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
+      CallTarget callTarget;
+      if (methodToCall != null) {
+        callTarget = SInvokable.getCallTarget(methodToCall, level);
+      } else {
+        callTarget = null;
+      }
+      DirectCallNode cachedMethod = Truffle.getRuntime().createDirectCallNode(callTarget);
       this.cachedMethod = cachedMethod;
       this.nextInCache  = nextInCache;
       this.adoptChildren();

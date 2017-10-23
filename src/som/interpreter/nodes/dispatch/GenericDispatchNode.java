@@ -1,13 +1,5 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.SArguments;
-import som.interpreter.Types;
-import som.vm.constants.ExecutionLevel;
-import som.vmobjects.SArray;
-import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -15,6 +7,15 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.SArguments;
+import som.interpreter.Types;
+import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SArray;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SSymbol;
 
 public final class GenericDispatchNode extends AbstractDispatchNode {
   @Child private IndirectCallNode call;
@@ -46,7 +47,7 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
       dnu.enter();
       SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
       args = new Object[] {environment, exLevel, arguments[SArguments.RCVR_ARGUMENTS_OFFSET], selector, argumentsArray};
-      target = CachedDnuNode.getDnuCallTarget(rcvrClass, exLevel);
+      target = SMethod.getCallTarget(CachedDnuNode.getDnuMethod(rcvrClass), exLevel);
     }
     return call.call(target, args);
   }
