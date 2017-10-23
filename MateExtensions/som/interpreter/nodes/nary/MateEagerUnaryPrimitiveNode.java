@@ -1,12 +1,12 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.matenodes.IntercessionHandling;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class MateEagerUnaryPrimitiveNode extends EagerUnaryPrimitiveNode {
@@ -17,7 +17,7 @@ public class MateEagerUnaryPrimitiveNode extends EagerUnaryPrimitiveNode {
       final UnaryExpressionNode primitive) {
     super(selector, receiver, primitive);
     messageSend = IntercessionHandling.createForMessageLookup(this.getSelector());
-    primitiveActivation = IntercessionHandling.createForOperation(this.getPrimitive().reflectiveOperation());
+    primitiveActivation = IntercessionHandling.createForMethodActivation(selector);
     this.adoptChildren();
   }
 
@@ -38,11 +38,12 @@ public class MateEagerUnaryPrimitiveNode extends EagerUnaryPrimitiveNode {
 
   @Override
   public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-    Object value = primitiveActivation.doMateSemantics(frame, new Object[]{receiver});
-    if (value == null) {
-     value = super.executeEvaluated(frame, receiver);
+    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver});
+    if (realArgs == null) {
+      return super.executeEvaluated(frame, receiver);
+    } else {
+      return super.executeEvaluated(frame, realArgs[2]);
     }
-    return value;
   }
 
   @Override
