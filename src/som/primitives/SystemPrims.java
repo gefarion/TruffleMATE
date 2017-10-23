@@ -14,6 +14,7 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
+import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
@@ -227,4 +228,19 @@ public final class SystemPrims {
       return true;
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "System", selector = "baseExecutionLevel", eagerSpecializable = false)
+  public abstract static class BaseExecutionLevelPrim extends UnaryExpressionNode {
+
+    public BaseExecutionLevelPrim(final boolean eagWrap, final SourceSection source) {
+      super(false, source);
+    }
+
+    @Specialization
+    public final ExecutionLevel doPrim(final DynamicObject receiver) {
+      return ExecutionLevel.Base;
+    }
+  }
+
 }
