@@ -1,26 +1,24 @@
 package som.interpreter.nodes.dispatch;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+import com.oracle.truffle.api.object.DynamicObject;
+
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
-import com.oracle.truffle.api.object.DynamicObject;
 
 public final class CachedDnuNode extends AbstractCachedDispatchNode {
   private final SSymbol selector;
   private final DispatchGuard guard;
 
   public CachedDnuNode(final DynamicObject rcvrClass, final DispatchGuard guard,
-      final SSymbol selector, final AbstractDispatchNode nextInCache, ExecutionLevel level) {
-    super(getDnuCallTarget(rcvrClass, level), nextInCache);
+      final SSymbol selector, final AbstractDispatchNode nextInCache, final ExecutionLevel level) {
+    super(getDnuMethod(rcvrClass), nextInCache, level);
     this.selector = selector;
     this.guard = guard;
   }
@@ -42,9 +40,8 @@ public final class CachedDnuNode extends AbstractCachedDispatchNode {
     }
   }
 
-  public static CallTarget getDnuCallTarget(final DynamicObject rcvrClass, ExecutionLevel level) {
-    return SInvokable.getCallTarget(SClass.lookupInvokable(rcvrClass,
-          Universe.getCurrent().symbolFor("doesNotUnderstand:arguments:")), level);
+  public static DynamicObject getDnuMethod(final DynamicObject rcvrClass) {
+    return SClass.lookupInvokable(rcvrClass, Universe.getCurrent().symbolFor("doesNotUnderstand:arguments:"));
   }
 
   protected Object performDnu(final VirtualFrame frame,

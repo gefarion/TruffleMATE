@@ -16,7 +16,6 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
-import som.interpreter.nodes.MateMethodActivationNode;
 import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vm.constants.ExecutionLevel;
@@ -25,6 +24,7 @@ import som.vmobjects.MockJavaObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -52,15 +52,11 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     return NodeCost.NONE;
   }
 
-  public abstract static class MateAbstractStandardDispatch extends
-      MateAbstractReflectiveDispatch {
-
-    public abstract Object executeDispatch(VirtualFrame frame,
-        DynamicObject method, Object subject, Object[] arguments);
-  }
+  public abstract Object executeDispatch(VirtualFrame frame,
+      DynamicObject method, Object subject, Object[] arguments);
 
   public abstract static class MateDispatchFieldRead extends
-      MateAbstractStandardDispatch {
+      MateAbstractReflectiveDispatch {
 
     @Specialization(guards = "cachedMethod==method", limit = "INLINE_CACHE_SIZE")
     public Object doMateNode(final VirtualFrame frame, final DynamicObject method,
@@ -157,24 +153,30 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
   }
 
   public abstract static class MateDispatchMessageLookup extends
-      MateAbstractStandardDispatch {
+      MateAbstractReflectiveDispatch {
 
     private final SSymbol    selector;
-    @Child MateMethodActivationNode activationNode;
+    @Child IntercessionHandling ih;
 
     public MateDispatchMessageLookup(final SSymbol sel) {
       selector = sel;
-      activationNode = new MateMethodActivationNode();
+      ih = IntercessionHandling.createForMethodActivation(selector);
     }
 
     @Specialization(guards = {"cachedMethod==method"})
     public Object doMateNode(final VirtualFrame frame, final DynamicObject method,
         final DynamicObject subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod) {
+        @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod,
+        @Cached("createIndirectCall()") final IndirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
       DynamicObject actualMethod = this.reflectiveLookup(frame, reflectiveMethod, subject, lookupSinceFor(subject));
-      return activationNode.doActivation(frame, actualMethod, arguments);
+      //return activationNode.doActivation(frame, actualMethod, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(SMethod.getCallTarget(actualMethod, ExecutionLevel.Base), realArgs);
     }
 
     public DynamicObject reflectiveLookup(final VirtualFrame frame, final DirectCallNode reflectiveMethod,
@@ -189,6 +191,10 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
     protected SSymbol getSelector() {
       return selector;
+    }
+
+    public static IndirectCallNode createIndirectCall() {
+      return IndirectCallNode.create();
     }
   }
 
@@ -218,63 +224,98 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     public Object doMateLongNodeCached(final VirtualFrame frame, final DynamicObject method,
         final long subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, integerClass)") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, integerClass)") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateStringNodeCached(final VirtualFrame frame, final DynamicObject method,
         final String subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, stringClass)") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, stringClass)") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateDoubleNodeCached(final VirtualFrame frame, final DynamicObject method,
         final double subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, doubleClass)") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, doubleClass)") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateBooleanNodeCached(final VirtualFrame frame, final DynamicObject method,
         final boolean subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, booleanClass)") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, booleanClass)") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateSSymbolNodeCached(final VirtualFrame frame, final DynamicObject method,
         final SSymbol subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateSArrayNodeCached(final VirtualFrame frame, final DynamicObject method,
         final SArray subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod==method"}, insertBefore = "doMateNode")
     public Object doMateSArrayNodeCached(final VirtualFrame frame, final DynamicObject method,
         final SBlock subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult) {
+        @Cached("lookupResultFixedType(frame, method, subject, arguments, subject.getSOMClass())") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
     @Specialization(guards = {"cachedMethod == method", "shapeOfReceiver(arguments) == cachedShape"},
@@ -283,17 +324,23 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
         final DynamicObject subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
         @Cached("shapeOfReceiver(arguments)") final Shape cachedShape,
-        @Cached("lookupResult(frame, method, subject, arguments)") final DynamicObject lookupResult) {
+        @Cached("lookupResult(frame, method, subject, arguments)") final DynamicObject lookupResult,
+        @Cached("createDirectCall(lookupResult)") final DirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
-      return activationNode.doActivation(frame, lookupResult, arguments);
+      Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+      if (realArgs == null) {
+        realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
+      }
+      return cachedCall.call(realArgs);
     }
 
-    @Specialization(guards = {"cachedMethod==method"}, contains = {"doMateNodeCached"}, insertBefore = "doMateNode")
+    @Specialization(guards = {"cachedMethod==method"}, replaces = {"doMateNodeCached"}, insertBefore = "doMateNode")
     public Object doMegaMorphic(final VirtualFrame frame, final DynamicObject method,
         final DynamicObject subject, final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod) {
-      return super.doMateNode(frame, method, subject, arguments, cachedMethod, reflectiveMethod);
+        @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod,
+        @Cached("createIndirectCall()") final IndirectCallNode indirect) {
+      return super.doMateNode(frame, method, subject, arguments, cachedMethod, reflectiveMethod, indirect);
     }
 
     protected Shape shapeOfReceiver(final Object[] arguments) {
@@ -308,6 +355,12 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
     public DynamicObject lookupResultFixedType(final VirtualFrame frame, final DynamicObject method,
         final Object receiver, final Object[] arguments, final DynamicObject sinceClass) {
         return this.reflectiveLookup(frame, this.createDispatch(method), receiver, sinceClass);
+    }
+
+    public static DirectCallNode createDirectCall(final DynamicObject methodToActivate) {
+      DirectCallNode node = DirectCallNode.create(SInvokable.getCallTarget(methodToActivate, ExecutionLevel.Base));
+      node.forceInlining();
+      return node;
     }
   }
 
@@ -327,27 +380,29 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
 
   public abstract static class MateActivationDispatch extends
       MateAbstractReflectiveDispatch {
+    private final SSymbol selector;
 
-    public abstract Object executeDispatch(VirtualFrame frame,
-        DynamicObject method, DynamicObject methodToActivate, Object[] arguments);
+    public MateActivationDispatch(final SSymbol sel) {
+      selector = sel;
+    }
 
-    @Specialization(guards = {"cachedMethod==method", "methodToActivate == cachedMethodToActivate"}, limit = "INLINE_CACHE_SIZE")
-    public Object doMetaLevel(final VirtualFrame frame,
-        final DynamicObject method, final DynamicObject methodToActivate,
+    @Specialization(guards = {"cachedMethod==method"}, limit = "INLINE_CACHE_SIZE")
+    public Object[] doMetaLevel(final VirtualFrame frame,
+        final DynamicObject method, final Object subject,
         final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        @Cached("methodToActivate") final DynamicObject cachedMethodToActivate,
-        @Cached("createDirectCall(methodToActivate)") final DirectCallNode callNode,
+        //@Cached("methodToActivate") final DynamicObject cachedMethodToActivate,
+        //@Cached("createDirectCall(methodToActivate)") final DirectCallNode callNode,
         @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod,
         @Cached("classProfile()") final ValueProfile profile) {
       // The MOP receives the standard ST message Send stack (rcvr, method, arguments) and returns its own
-      Object[] args = {Nil.nilObject, ExecutionLevel.Meta, arguments[0], methodToActivate,
+      Object[] args = {Nil.nilObject, ExecutionLevel.Meta, arguments[0], selector,
           SArray.create(SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments))};
-      SArray realArguments = (SArray) reflectiveMethod.call(args);
-      return callNode.call(realArguments.toJavaArray(profile));
+      return ((SArray) reflectiveMethod.call(args)).toJavaArray(profile);
+      //return callNode.call(realArguments.toJavaArray(profile));
     }
 
-    @Specialization(guards = {"cachedMethod==method"}, replaces = "doMetaLevel")
+    /*@Specialization(guards = {"cachedMethod==method"}, replaces = "doMetaLevel")
     public Object doMegamorphicMetaLevel(final VirtualFrame frame,
         final DynamicObject method, final DynamicObject methodToActivate,
         final Object[] arguments,
@@ -359,13 +414,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
           SArray.create(SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments))};
       SArray realArguments = (SArray) reflectiveMethod.call(args);
       return callNode.call(SInvokable.getCallTarget(methodToActivate, ExecutionLevel.Base), realArguments.toJavaArray(profile));
-    }
-  }
-
-  public static DirectCallNode createDirectCall(final DynamicObject methodToActivate) {
-    DirectCallNode node = DirectCallNode.create(SInvokable.getCallTarget(methodToActivate, ExecutionLevel.Base));
-    node.forceInlining();
-    return node;
+    }*/
   }
 
   public static IndirectCallNode createIndirectCall() {

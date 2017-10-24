@@ -22,8 +22,8 @@ import tools.dym.Tags.ControlFlowCondition;
 import tools.dym.Tags.OpComparison;
 
 
-@Primitive(selector = "or:", noWrapper = true, specializer = OrSplzr.class)
-@Primitive(selector = "||",  noWrapper = true, specializer = OrSplzr.class)
+@Primitive(selector = "or:",  specializer = OrSplzr.class)
+@Primitive(selector = "||",   specializer = OrSplzr.class)
 @GenerateNodeFactory
 public abstract class OrMessageNode extends BinaryExpressionNode {
   private final DynamicObject blockMethod;

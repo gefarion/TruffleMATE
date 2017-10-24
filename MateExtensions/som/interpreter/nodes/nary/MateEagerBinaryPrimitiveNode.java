@@ -1,12 +1,12 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.matenodes.IntercessionHandling;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode {
@@ -40,11 +40,12 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode {
   @Override
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument1) {
-    Object value = primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
-    if (value == null) {
-     value = super.executeEvaluated(frame, receiver, argument1);
+    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
+    if (realArgs == null) {
+      return super.executeEvaluated(frame, receiver, argument1);
+    } else {
+      return super.executeEvaluated(frame, realArgs[2], realArgs[3]);
     }
-    return value;
   }
 
   @Override

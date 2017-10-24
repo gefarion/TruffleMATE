@@ -1,9 +1,12 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.SArguments;
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
+import som.interpreter.nodes.dispatch.MateUninitializedDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerQuaternaryPrimitiveNode;
@@ -18,9 +21,6 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public class MateMessageSpecializationsFactory extends
@@ -69,6 +69,6 @@ public class MateMessageSpecializationsFactory extends
   public GenericMessageSendNode genericMessageFor(final SSymbol selector,
       final ExpressionNode[] argumentNodes, final SourceSection source) {
     return new MateGenericMessageSendNode(selector, argumentNodes,
-        new UninitializedDispatchNode(source, selector), source);
+        new MateUninitializedDispatchNode(source, selector), source);
   }
 }

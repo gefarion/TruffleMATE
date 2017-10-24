@@ -4,32 +4,21 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.profiles.ConditionProfile;
 
-import som.VmSettings;
-import som.instrumentation.InstrumentableDirectCallNode;
 import som.interpreter.SArguments;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
-import som.vm.Universe;
+import som.matenodes.IntercessionHandling;
 import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SInvokable.SMethod;
 
+public class MateCachedDispatchNode extends CachedDispatchNode {
+  @Child IntercessionHandling ih;
+  final DynamicObject method;
 
-public class CachedDispatchNode extends AbstractCachedDispatchNode {
-  final ConditionProfile morphicness = ConditionProfile.createBinaryProfile();
-  protected final DispatchGuard guard;
-
-  public CachedDispatchNode(final DispatchGuard guard, final DynamicObject methodToCall,
+  public MateCachedDispatchNode(final DispatchGuard guard, final DynamicObject methodToCall,
       final AbstractDispatchNode nextInCache, final boolean shouldSplit, final ExecutionLevel level) {
-    super(methodToCall, nextInCache, level);
-    this.guard = guard;
-    if (VmSettings.DYNAMIC_METRICS) {
-      this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod,
-          nextInCache.getSourceSection()));
-      Universe.getCurrent().insertInstrumentationWrapper(cachedMethod);
-    }
-    if (shouldSplit) {
-      cachedMethod.cloneCallTarget();
-    }
+    super(guard, methodToCall, nextInCache, shouldSplit, level);
+    method = methodToCall;
+    ih = IntercessionHandling.createForMethodActivation(SMethod.getSignature(method));
   }
 
   @Override
@@ -38,7 +27,11 @@ public class CachedDispatchNode extends AbstractCachedDispatchNode {
     Object rcvr = arguments[0];
     try {
       if (morphicness.profile(guard.entryMatches(rcvr))) {
-        return cachedMethod.call(SArguments.createSArguments(environment, exLevel, arguments));
+        Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
+        if (realArgs == null) {
+          realArgs = SArguments.createSArguments(environment, exLevel, arguments);
+        }
+        return cachedMethod.call(realArgs);
       } else {
         return nextInCache.executeDispatch(frame, environment, exLevel, arguments);
       }
@@ -48,4 +41,10 @@ public class CachedDispatchNode extends AbstractCachedDispatchNode {
           executeDispatch(frame, environment, exLevel, arguments);
     }
   }
+
+  /*public Object executeBasicDispatch(final VirtualFrame frame,
+      final DynamicObject environment, final ExecutionLevel exLevel, final Object[] arguments) {
+    return super.executeDispatch(frame, environment, exLevel, arguments);
+  }*/
+
 }

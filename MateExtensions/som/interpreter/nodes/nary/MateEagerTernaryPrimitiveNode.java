@@ -1,12 +1,12 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.matenodes.IntercessionHandling;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class MateEagerTernaryPrimitiveNode extends EagerTernaryPrimitiveNode {
@@ -17,7 +17,7 @@ public class MateEagerTernaryPrimitiveNode extends EagerTernaryPrimitiveNode {
       final TernaryExpressionNode primitive) {
     super(selector, receiver, argument1, argument2, primitive);
     messageSend = IntercessionHandling.createForMessageLookup(this.getSelector());
-    primitiveActivation = IntercessionHandling.createForOperation(this.getPrimitive().reflectiveOperation());
+    primitiveActivation = IntercessionHandling.createForMethodActivation(selector);
     this.adoptChildren();
   }
 
@@ -41,11 +41,12 @@ public class MateEagerTernaryPrimitiveNode extends EagerTernaryPrimitiveNode {
   @Override
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument1, final Object argument2) {
-    Object value = primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1, argument2});
-    if (value == null) {
-     value = super.executeEvaluated(frame, receiver, argument1, argument2);
+    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1, argument2});
+    if (realArgs == null) {
+      return super.executeEvaluated(frame, receiver, argument1, argument2);
+    } else {
+      return super.executeEvaluated(frame, realArgs[2], realArgs[3], realArgs[4]);
     }
-    return value;
   }
 
   @Override
