@@ -98,7 +98,7 @@
 	
 	<target name="graal" >
         <exec executable="../../mx/mx" dir="${graal.dir}">
-        	<env key="JAVA_HOME" value="../../../java-jvmci-8/"/>
+        	<env key="JAVA_HOME" value="../java-jvmci-8/"/>
         	<arg value="build"/>
         </exec>
 	</target>

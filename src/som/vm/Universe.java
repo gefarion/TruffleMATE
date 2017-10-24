@@ -229,6 +229,7 @@ public class Universe {
 
   public void mateifyMethod(final DynamicObject method) {
     this.mateifyNode(InvokableLayoutImpl.INSTANCE.getInvokable(method));
+
   }
 
   public Node mateifyNode(final Node node) {

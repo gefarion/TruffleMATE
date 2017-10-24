@@ -34,7 +34,7 @@ import som.vm.constants.Nil;
 public class SReflectiveObjectEnvInObj extends SObject {
   @Layout
   public interface SReflectiveObjectEnvInObjLayout extends SObjectLayout {
-    //DynamicObject createSReflectiveObjectEnvInObj(DynamicObjectFactory factory, DynamicObject environment);
+    // DynamicObject createSReflectiveObjectEnvInObj(DynamicObjectFactory factory, DynamicObject environment);
     DynamicObjectFactory createSReflectiveObjectEnvInObjShape(DynamicObject klass);
     DynamicObject getEnvironment(DynamicObject object);
     void setEnvironmentUnsafe(DynamicObject object, DynamicObject value);
@@ -43,7 +43,7 @@ public class SReflectiveObjectEnvInObj extends SObject {
     Object[] build(DynamicObject environment);
   }
 
-  //Only needed for system initialization
+  // Only needed for system initialization
   public static final DynamicObjectFactory SREFLECTIVE_OBJECT_ENVINOBJ_FACTORY =
       SReflectiveObjectEnvInObjLayoutImpl.INSTANCE.createSReflectiveObjectEnvInObjShape(Nil.nilObject);
 

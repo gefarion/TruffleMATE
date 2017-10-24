@@ -42,8 +42,8 @@ import som.vmobjects.SReflectiveObjectEnvInObj.SReflectiveObjectEnvInObjLayout;
 
 public final class SClass {
   @Layout
+  // public interface SClassLayout extends SReflectiveObjectEnvInObjLayout {
   public interface SClassLayout extends SReflectiveObjectEnvInObjLayout {
-    // public interface SClassLayout extends SReflectiveObjectLayout {
     DynamicObject createSClass(DynamicObjectFactory factory, DynamicObject environment, SSymbol name, DynamicObject superclass, SArray instanceFields, SArray instanceInvokables, @SuppressWarnings("rawtypes") HashMap invokablesTable, DynamicObjectFactory instancesFactory);
     DynamicObjectFactory createSClassShape(DynamicObject klass);
     // DynamicObjectFactory createSClassShape(DynamicObject klass, DynamicObject environment);
@@ -73,9 +73,8 @@ public final class SClass {
 
   }
 
+  @TruffleBoundary
   public static DynamicObject createSClass(final DynamicObject klass, final SSymbol name, final DynamicObject superclass, final SArray instanceFields, final SArray instanceInvokables, final HashMap<SSymbol, DynamicObject> invokablesTable, final DynamicObjectFactory instancesFactory) {
-    // DynamicObject resultClass = SClassLayoutImpl.INSTANCE.createSClass(SClassLayoutImpl.INSTANCE.createSClassShape(klass, Nil.nilObject),
-    // name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
     DynamicObject resultClass = SClassLayoutImpl.INSTANCE.createSClass(SClassLayoutImpl.INSTANCE.createSClassShape(klass),
         Nil.nilObject, name, superclass, instanceFields, instanceInvokables, invokablesTable, instancesFactory);
     setInstancesFactory(resultClass, Universe.getCurrent().createObjectShapeFactoryForClass(resultClass));

@@ -44,12 +44,8 @@ public class MateTests extends SomTests {
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
         {"BasicOperations"},
-        /* Immutability and Layout use heavility the environment in the shape for optimizations.
-         * In case it is necessary we can provide alternatives for this functionality with this
-         * setting too
-         */
-        // {"Immutability"},
-        // {"Layout"},
+        {"Immutability"},
+        {"Layout"},
         {"Compiler"},
       });
   }

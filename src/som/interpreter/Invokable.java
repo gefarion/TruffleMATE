@@ -1,5 +1,11 @@
 package som.interpreter;
 
+import som.compiler.MethodGenerationContext;
+import som.compiler.Variable.Local;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MateReturnNode;
+import som.vmobjects.SInvokable;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -10,12 +16,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
-
-import som.compiler.MethodGenerationContext;
-import som.compiler.Variable.Local;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MateReturnNode;
-import som.vmobjects.SInvokable;
 
 public abstract class Invokable extends RootNode implements ReflectiveNode {
 

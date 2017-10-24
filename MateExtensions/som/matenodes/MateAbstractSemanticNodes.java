@@ -30,7 +30,6 @@ import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SReflectiveObjectEnvInObj;
 
 public abstract class MateAbstractSemanticNodes extends Node {
-
   protected final ReflectiveOp reflectiveOperation;
 
   protected MateAbstractSemanticNodes(final ReflectiveOp operation) {
@@ -55,8 +54,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
     public abstract DynamicObject executeGeneric(VirtualFrame frame);
 
     @Specialization(assumptions = "getGlobalSemanticsActivatedAssumption()")
-    public DynamicObject doCheck(
-        final VirtualFrame frame,
+    public DynamicObject doCheck(final VirtualFrame frame,
         @Cached("getGlobalEnvironment()") final DynamicObject cachedEnvironment,
         @Cached("methodImplementingOperationOn(cachedEnvironment)") final DynamicObject reflectiveMethod) {
       return reflectiveMethod;
@@ -88,7 +86,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
     public DynamicObject doSemanticsInFrame(final VirtualFrame frame,
         @Cached("getEnvironment(frame)") final DynamicObject cachedEnvironment,
         @Cached("methodImplementingOperationOn(cachedEnvironment)") final DynamicObject reflectiveMethod) {
-      return reflectiveMethod;
+        return reflectiveMethod;
     }
 
     protected static DynamicObject getEnvironment(final VirtualFrame frame) {
@@ -117,7 +115,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
   }
 
   public abstract static class MateObjectSemanticInEnvCheckNode extends
-      MateObjectSemanticCheckNode {
+    MateObjectSemanticCheckNode {
 
     protected MateObjectSemanticInEnvCheckNode(final ReflectiveOp operation) {
       super(operation);
@@ -170,7 +168,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
   }
 
   public abstract static class MateObjectSemanticInObjCheckNode extends
-      MateObjectSemanticCheckNode {
+    MateObjectSemanticCheckNode {
 
     protected MateObjectSemanticInObjCheckNode(final ReflectiveOp operation) {
       super(operation);
@@ -230,9 +228,8 @@ public abstract class MateAbstractSemanticNodes extends Node {
           MateGlobalSemanticCheckNodeGen.create(operation));
     }
 
-    public MateSemanticCheckNode(final MateEnvironmentSemanticCheckNode env,
-        final MateObjectSemanticCheckNode obj,
-        final MateGlobalSemanticCheckNode globalCheck) {
+    protected MateSemanticCheckNode(final MateEnvironmentSemanticCheckNode env,
+        final MateObjectSemanticCheckNode obj, final MateGlobalSemanticCheckNode globalCheck) {
       super();
       environment = env;
       object = obj;
