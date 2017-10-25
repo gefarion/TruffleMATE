@@ -134,7 +134,6 @@ public abstract class MateAbstractSemanticNodes extends Node {
     public DynamicObject doMegamorphic(
         final VirtualFrame frame,
         final DynamicObject receiver) {
-      Universe.print("asdadsa");
       return environmentReflectiveMethod(SReflectiveObject.getEnvironment(receiver), this.reflectiveOperation);
     }
 
