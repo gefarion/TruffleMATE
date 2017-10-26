@@ -44,11 +44,11 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode {
   private void loop(final VirtualFrame frame, final SBlock block, final int length) {
     try {
       if (SArray.FIRST_IDX < length) {
-        this.block.activateBlock(frame, new Object[] {
+        this.block.executeDispatch(frame, new Object[] {
             block, (long) SArray.FIRST_IDX + 1}); // +1 because it is going to the smalltalk level
       }
       for (long i = 1; i < length; i++) {
-        this.block.activateBlock(frame, new Object[] {
+        this.block.executeDispatch(frame, new Object[] {
             block, i + 1}); // +1 because it is going to the smalltalk level
       }
     } finally {
