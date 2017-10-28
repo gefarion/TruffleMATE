@@ -159,7 +159,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
         @Cached("createIndirectCall()") final IndirectCallNode cachedCall) {
       // The MOP receives the class where the lookup must start (find: aSelector since: aClass)
       DynamicObject actualMethod = this.reflectiveLookup(frame, reflectiveMethod, subject, lookupSinceFor(subject));
-      //return activationNode.doActivation(frame, actualMethod, arguments);
+      // return activationNode.doActivation(frame, actualMethod, arguments);
       Object[] realArgs = (Object[]) ih.doMateSemantics(frame, arguments);
       if (realArgs == null) {
         realArgs = SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments);
@@ -379,15 +379,15 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
         final DynamicObject method, final Object subject,
         final Object[] arguments,
         @Cached("method") final DynamicObject cachedMethod,
-        //@Cached("methodToActivate") final DynamicObject cachedMethodToActivate,
-        //@Cached("createDirectCall(methodToActivate)") final DirectCallNode callNode,
+        // @Cached("methodToActivate") final DynamicObject cachedMethodToActivate,
+        // @Cached("createDirectCall(methodToActivate)") final DirectCallNode callNode,
         @Cached("createDispatch(method)") final DirectCallNode reflectiveMethod,
         @Cached("classProfile()") final ValueProfile profile) {
       // The MOP receives the standard ST message Send stack (rcvr, method, arguments) and returns its own
       Object[] args = {Nil.nilObject, ExecutionLevel.Meta, arguments[0], selector,
           SArray.create(SArguments.createSArguments(SArguments.getEnvironment(frame), ExecutionLevel.Base, arguments))};
       return ((SArray) reflectiveMethod.call(args)).toJavaArray(profile);
-      //return callNode.call(realArguments.toJavaArray(profile));
+      // return callNode.call(realArguments.toJavaArray(profile));
     }
 
     /*@Specialization(guards = {"cachedMethod==method"}, replaces = "doMetaLevel")
