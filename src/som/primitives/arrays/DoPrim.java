@@ -37,7 +37,7 @@ public abstract class DoPrim extends BinaryExpressionNode {
   }
 
   private void execBlock(final VirtualFrame frame, final SBlock block, final Object arg) {
-    this.block.activateBlock(frame, new Object[] {block, arg});
+    this.block.executeDispatch(frame, new Object[] {block, arg});
   }
 
   @Specialization(guards = "isEmptyType(arr)")

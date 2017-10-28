@@ -2,9 +2,9 @@ package som.interpreter.objectstorage;
 
 
 import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Introspectable;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
@@ -22,7 +22,7 @@ import som.vm.constants.Nil;
 
 
 public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
-  protected static final int LIMIT = 10;
+  protected static final int LIMIT = 5;
   protected final int fieldIndex;
 
   public static ReadFieldNode createRead(final int fieldIndex) {
@@ -89,15 +89,8 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "self.updateShape()")
-    public final Object updateShapeAndRead(final DynamicObject self) {
-      return executeRead(self); // restart execution of the whole node
-    }
-
-    @TruffleBoundary
-    @Specialization(contains = {"readSetField", "readUnsetField", "updateShapeAndRead"})
+    @Specialization(replaces = {"readSetField", "readUnsetField"})
     public final Object readFieldUncached(final DynamicObject receiver) {
-      // CompilerAsserts.neverPartOfCompilation("readFieldUncached");
       return receiver.get(fieldIndex, Nil.nilObject);
     }
   }
@@ -128,7 +121,7 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
       return value;
     }
 
-    @Specialization(guards = {"self.getShape() == oldShape", "oldLocation == null"},
+    /*@Specialization(guards = {"self.getShape() == oldShape", "oldLocation == null"},
         assumptions = {"locationAssignable", "oldShape.getValidAssumption()", "newShape.getValidAssumption()"},
         limit = "LIMIT")
     public final Object writeUnwrittenField(final DynamicObject self,
@@ -146,17 +139,19 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
         return executeWrite(self, value); // restart execution for the whole node
       }
       return value;
-    }
+    }*/
 
-    @Specialization(guards = "self.updateShape()")
-    public final Object updateObjectShapeAndRespecialize(
-        final DynamicObject self, final Object value) {
-      return executeWrite(self, value);
-    }
-
-    @Specialization(contains = {"writeFieldCached", "writeUnwrittenField", "updateObjectShapeAndRespecialize"})
-    public final Object writeUncached(final DynamicObject self, final Object value) {
+    @Specialization(guards = {"self.getShape() == oldShape", "oldLocation == null"}, limit = "LIMIT")
+    public final Object writeUncached(final DynamicObject self, final Object value,
+        @Cached("self.getShape()") final Shape oldShape,
+        @Cached("getLocation(self, value)") final Location oldLocation) {
       self.define(fieldIndex, value);
+      return value;
+    }
+
+    @Fallback
+    public final Object writeUncached(final DynamicObject self, final Object value) {
+      self.set(fieldIndex, value);
       return value;
     }
   }

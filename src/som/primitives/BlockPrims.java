@@ -64,7 +64,7 @@ public abstract class BlockPrims {
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return dispatchNode.activateBlock(frame, new Object[] {receiver});
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver});
     }
 
     @Specialization
@@ -89,7 +89,7 @@ public abstract class BlockPrims {
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver,
         final Object arg) {
-      return dispatchNode.activateBlock(frame, new Object[] {receiver, arg});
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg});
     }
 
     @Override
@@ -119,7 +119,7 @@ public abstract class BlockPrims {
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2) {
-      return dispatchNode.activateBlock(frame, new Object[] {receiver, arg1, arg2});
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg1, arg2});
     }
 
     @Override
@@ -149,7 +149,7 @@ public abstract class BlockPrims {
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2, final Object arg3) {
-      return dispatchNode.activateBlock(frame, new Object[] {receiver, arg1, arg2, arg3});
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg1, arg2, arg3});
     }
 
     @Override
