@@ -103,7 +103,8 @@ public abstract class MateAbstractSemanticNodes extends Node {
     public abstract DynamicObject executeGeneric(VirtualFrame frame,
         Object receiver);
 
-    @Specialization(guards = {"receiver.getShape() == cachedShape"}, limit = "3")
+    @Specialization(guards = {"receiver.getShape() == cachedShape"}, limit = "1",
+        assumptions = {"cachedShape.getValidAssumption()"})
     public DynamicObject doWarmup(
         final VirtualFrame frame,
         final DynamicObject receiver,
@@ -112,7 +113,8 @@ public abstract class MateAbstractSemanticNodes extends Node {
       return method;
     }
 
-    @Specialization(guards = {"receiver.getShape() == cachedShape"}, replaces = {"doWarmup"}, limit = "3")
+    @Specialization(guards = {"receiver.getShape() == cachedShape"}, replaces = {"doWarmup"}, limit = "3",
+        assumptions = {"cachedShape.getValidAssumption()"})
     public DynamicObject doMonomorhic(
         final VirtualFrame frame,
         final DynamicObject receiver,
@@ -121,7 +123,7 @@ public abstract class MateAbstractSemanticNodes extends Node {
       return method;
     }
 
-    @Specialization(guards = {"receiver.getShape().getObjectType() == cachedType"}, replaces = {"doWarmup"}, limit = "5")
+    @Specialization(guards = {"receiver.getShape().getObjectType() == cachedType"}, replaces = {"doMonomorhic"}, limit = "5")
     public DynamicObject doPolymorhic(
         final VirtualFrame frame,
         final DynamicObject receiver,
