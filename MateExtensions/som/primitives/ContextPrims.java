@@ -12,7 +12,6 @@ import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -21,8 +20,6 @@ import som.interpreter.Invokable;
 import som.interpreter.MateVisitors;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -96,9 +93,11 @@ public class ContextPrims {
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
         final String identifier,
         @Cached(value = "identifier") final String cachedIdentifier,
-        @Cached(value = "variableNodeForIdentifier(identifier, 1)") final LocalVariableReadNode readnode) {
-      VirtualFrame frame = (VirtualFrame) mockedFrame.getMockedObject();
-      return readnode.executeGeneric(frame);
+        @Cached(value = "findSlotForIdInLevel(identifier, 1)") final FrameSlot slot) {
+      MaterializedFrame frame = (MaterializedFrame) mockedFrame.getMockedObject();
+      // Todo: specialize on type
+      return frame.getValue(slot);
+      // return readnode.executeGeneric(frame);
     }
 
     protected static FrameSlot findSlotForIdInLevel(final String identifier, final int level) {
@@ -110,14 +109,14 @@ public class ContextPrims {
         currentLevel[0]++;
         return null;
       });
-      f.getFrame(FrameAccess.READ_WRITE);
+      f.getFrame(FrameAccess.READ_ONLY);
       return f.getCallNode().getRootNode().getFrameDescriptor().findFrameSlot(identifier);
     }
 
-    protected static LocalVariableReadNode variableNodeForIdentifier(final String identifier, final int level) {
+    /*protected static LocalVariableReadNode variableNodeForIdentifier(final String identifier, final int level) {
       FrameSlot slot = findSlotForIdInLevel(identifier, level);
       return LocalVariableReadNodeGen.create(slot, null);
-    }
+    }*/
   }
 
   @GenerateNodeFactory
@@ -137,7 +136,7 @@ public class ContextPrims {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         slot.setKind(FrameSlotKind.Long);
       }
-      frame.setObject(slot, value);
+      frame.setLong(slot, value);
       return value;
     }
 
