@@ -152,7 +152,8 @@ public abstract class MateAbstractSemanticNodes extends Node {
     public DynamicObject doMegamorphic(
         final VirtualFrame frame,
         final DynamicObject receiver) {
-      return environmentReflectiveMethod(SReflectiveObject.getEnvironment(receiver), this.reflectiveOperation);
+      return environmentReflectiveMethod(
+          SReflectiveObject.getEnvironment(receiver), this.reflectiveOperation);
     }
 
     @Specialization
