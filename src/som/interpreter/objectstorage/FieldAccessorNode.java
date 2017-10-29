@@ -120,6 +120,9 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
       } catch (IncompatibleLocationException | FinalLocationException e) {
         // invalidate assumption to make sure this specialization gets removed
         locationAssignable.invalidate();
+        // Invalidate shape to clean dispatch chains
+        self.getShape().getValidAssumption().invalidate();
+        // Generalization is handled by Shape#defineProperty as the field already exists
         return executeWithGeneralized(self, value, generalized); // restart execution for the whole node
       }
       return value;
@@ -138,8 +141,11 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
       try {
         newLocation.set(self, value, oldShape, newShape);
       } catch (IncompatibleLocationException e) {
-        // TODO Auto-generated catch block
+        // invalidate assumption to make sure this specialization gets removed
         locationAssignable.invalidate();
+        // Invalidate shape to clean dispatch chains
+        newShape.getValidAssumption().invalidate();
+        // Generalize so writing an int and then later a double generalizes to adding an Object field.
         return executeWithGeneralized(self, value, true); // restart execution for the whole node
       }
       return value;
