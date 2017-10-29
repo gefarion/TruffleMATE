@@ -56,7 +56,7 @@ public abstract class MateLocalVariableNode {
     public Object executeGeneric(final VirtualFrame frame) {
       // Todo: Rewrite this node like in message sends to avoid executing the local expression twice
       Object value = ih.doMateSemantics(frame, new Object[] {SArguments.rcvr(frame),
-          local.slot.getIdentifier(), local.getExp().executeGeneric(frame)});
+          local.slot.getIdentifier(), (long) 1});
       if (value == null) {
        value = local.executeGeneric(frame);
       }
