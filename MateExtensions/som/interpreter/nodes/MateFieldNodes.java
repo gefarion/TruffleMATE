@@ -2,6 +2,7 @@ package som.interpreter.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 
 import som.interpreter.MateNode;
@@ -39,6 +40,11 @@ public abstract class MateFieldNodes {
     public ExpressionNode asMateNode() {
       return null;
     }
+
+    @Override
+    public NodeCost getCost() {
+      return NodeCost.NONE;
+    }
   }
 
   public abstract static class MateFieldWriteNode extends FieldWriteNode
@@ -66,6 +72,11 @@ public abstract class MateFieldNodes {
     @Override
     public ExpressionNode asMateNode() {
       return null;
+    }
+
+    @Override
+    public NodeCost getCost() {
+      return NodeCost.NONE;
     }
   }
 }

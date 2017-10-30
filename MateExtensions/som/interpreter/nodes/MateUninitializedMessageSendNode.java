@@ -1,5 +1,7 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.nodes.NodeCost;
+
 import som.interpreter.nodes.MessageSendNode.UninitializedMessageSendNode;
 
 public class MateUninitializedMessageSendNode extends
@@ -18,5 +20,10 @@ public class MateUninitializedMessageSendNode extends
   @Override
   protected AbstractMessageSpecializationsFactory getFactory() {
     return MessageSendNode.mateSpecializationFactory;
+  }
+
+  @Override
+  public NodeCost getCost() {
+    return NodeCost.NONE;
   }
 }
