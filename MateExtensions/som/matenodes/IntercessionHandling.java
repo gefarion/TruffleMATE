@@ -2,6 +2,7 @@ package som.matenodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
@@ -55,6 +56,11 @@ public abstract class IntercessionHandling extends Node {
         final Object[] arguments) {
       return null;
     }
+  }
+
+  @Override
+  public NodeCost getCost() {
+    return NodeCost.NONE;
   }
 
   public static class MateIntercessionHandling extends IntercessionHandling {

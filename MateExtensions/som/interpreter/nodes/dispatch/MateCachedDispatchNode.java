@@ -3,6 +3,7 @@ package som.interpreter.nodes.dispatch;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 
 import som.interpreter.SArguments;
@@ -47,4 +48,8 @@ public class MateCachedDispatchNode extends CachedDispatchNode {
     return super.executeDispatch(frame, environment, exLevel, arguments);
   }*/
 
+  @Override
+  public NodeCost getCost() {
+    return NodeCost.NONE;
+  }
 }

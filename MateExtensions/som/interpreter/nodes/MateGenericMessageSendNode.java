@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.MateNode;
@@ -44,5 +45,10 @@ public class MateGenericMessageSendNode extends GenericMessageSendNode
       value = super.doPreEvaluated(frame, arguments);
     }
     return value;
+  }
+
+  @Override
+  public NodeCost getCost() {
+    return NodeCost.NONE;
   }
 }

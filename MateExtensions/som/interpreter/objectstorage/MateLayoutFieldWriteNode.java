@@ -1,6 +1,7 @@
 package som.interpreter.objectstorage;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 
 import som.interpreter.MateNode;
@@ -36,5 +37,10 @@ public final class MateLayoutFieldWriteNode extends WriteFieldNode
     assert (false);
     Universe.errorExit("Mate enters an unexpected method");
     return value;
+  }
+
+  @Override
+  public NodeCost getCost() {
+    return NodeCost.NONE;
   }
 }
