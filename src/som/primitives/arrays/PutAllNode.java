@@ -56,7 +56,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
     return rcvr;
   }
 
-  @Specialization(guards = {"valueIsNil(nil)"}, contains = {"doPutNilInEmptyArray"})
+  @Specialization(guards = {"valueIsNil(nil)"}, replaces = {"doPutNilInEmptyArray"})
   public SArray doPutNilInOtherArray(final SArray rcvr, final DynamicObject nil,
       final long length) {
     rcvr.transitionToEmpty(length);
@@ -66,28 +66,32 @@ public abstract class PutAllNode extends BinaryExpressionNode {
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final Object[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = this.block.executeDispatch(frame, new Object[] {block});
+      // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
+      storage[i] = this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final long[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (long) this.block.executeDispatch(frame, new Object[] {block});
+      // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
+      storage[i] = (long) this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final double[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (double) this.block.executeDispatch(frame, new Object[] {block});
+      // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
+      storage[i] = (double) this.block.activateBlock(frame, new Object[] {block});
     }
   }
 
   private void evalBlockForRemaining(final VirtualFrame frame,
       final SBlock block, final long length, final boolean[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (boolean) this.block.executeDispatch(frame, new Object[] {block});
+      // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
+      storage[i] = (boolean) this.block.activateBlock(frame, new Object[] {block});
     }
   }
 

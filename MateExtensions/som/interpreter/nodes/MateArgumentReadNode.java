@@ -76,6 +76,11 @@ public abstract class MateArgumentReadNode {
     public ExpressionNode asMateNode() {
       return null;
     }
+
+    @Override
+    public NodeCost getCost() {
+      return NodeCost.NONE;
+    }
   }
 
   public static final class MateLocalSuperReadNode extends LocalSuperReadNode implements
@@ -105,6 +110,11 @@ public abstract class MateArgumentReadNode {
     @Override
     public ExpressionNode asMateNode() {
       return null;
+    }
+
+    @Override
+    public NodeCost getCost() {
+      return NodeCost.NONE;
     }
   }
 
