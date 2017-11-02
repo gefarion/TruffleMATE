@@ -2,14 +2,14 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
-import som.vm.Universe;
-import som.vm.constants.Classes;
-import som.vm.constants.Nil;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ValueProfile;
+
+import som.vm.Universe;
+import som.vm.constants.Classes;
+import som.vm.constants.Nil;
 
 /**
  * SArrays are implemented using a Strategy-like approach.
@@ -101,7 +101,7 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
-  public Object[] toJavaArray(ValueProfile profile) {
+  public Object[] toJavaArray(final ValueProfile profile) {
     if (ArrayType.isEmptyType(this)) {
       this.transitionToObjectWithAll((int) this.storage, Nil.nilObject);
     }
@@ -412,7 +412,7 @@ public final class SArray extends SAbstractObject {
       return Classes.arrayClass;
     } else {
       Universe current = Universe.getCurrent();
-      return (DynamicObject) current.getGlobal(current.symbolFor("ByteArray"));
+      return current.getGlobal(current.symbolFor("ByteArray"));
     }
   }
 

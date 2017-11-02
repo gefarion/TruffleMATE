@@ -1,18 +1,20 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.StringAccess;
-
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public class StringPrims {
@@ -53,6 +55,31 @@ public class StringPrims {
       }
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(klass = "String", selector = "join:", receiverType = {String.class})
+  public abstract static class JoinPrim extends BinaryExpressionNode {
+    final ValueProfile profile = ValueProfile.createClassProfile();
+
+    public JoinPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    @Specialization
+    public final String doString(final String receiver, final SArray argument) {
+      return String.valueOf(argument.getCharStorage(profile));
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == StringAccess.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+  }
+
 
   @GenerateNodeFactory
   @Primitive(klass = "String", selector = "asSymbol")
