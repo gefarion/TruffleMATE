@@ -1,5 +1,11 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -11,12 +17,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SShape;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public final class MatePrims {
 
@@ -106,6 +106,7 @@ public final class MatePrims {
       return environment;
     }
 
+    @TruffleBoundary
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final DynamicObject environment) {
       SReflectiveObject.setEnvironment(receiver, environment);
