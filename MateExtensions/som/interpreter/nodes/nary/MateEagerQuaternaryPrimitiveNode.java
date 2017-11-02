@@ -42,7 +42,7 @@ public class MateEagerQuaternaryPrimitiveNode extends EagerQuaternaryPrimitiveNo
   @Override
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument1, final Object argument2, final Object argument3) {
-    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1, argument2});
+    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1, argument2, argument3});
     if (realArgs == null) {
       return super.executeEvaluated(frame, receiver, argument1, argument2, argument3);
     } else {
