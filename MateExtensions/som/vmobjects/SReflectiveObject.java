@@ -24,13 +24,14 @@
 
 package som.vmobjects;
 
-import som.vm.Universe;
-import som.vm.constants.Nil;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.ObjectType;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.object.dsl.Layout;
+
+import som.vm.Universe;
+import som.vm.constants.Nil;
 
 public class SReflectiveObject extends SObject {
   @Layout
@@ -43,6 +44,7 @@ public class SReflectiveObject extends SObject {
     void setEnvironment(DynamicObject object, DynamicObject value);
     boolean isSReflectiveObject(DynamicObject object);
     boolean isSReflectiveObject(ObjectType objectType);
+    @Override
     Object[] build();
   }
 
@@ -64,12 +66,12 @@ public class SReflectiveObject extends SObject {
   }
 
   public static final void setEnvironment(final DynamicObject obj, final DynamicObject value) {
-    ObjectType cachedType = Universe.getCurrent().getCachedObjectType(SObject.getSOMClass(obj), value);
-    if (cachedType != null) {
-      obj.setShapeAndGrow(obj.getShape(), obj.getShape().changeType(cachedType));
+    Shape cachedShape = Universe.getCurrent().getCachedShape(SObject.getSOMClass(obj), value);
+    if (cachedShape != null) {
+      obj.setShapeAndGrow(obj.getShape(), cachedShape);
     } else {
       SReflectiveObjectLayoutImpl.INSTANCE.setEnvironment(obj, value);
-      Universe.getCurrent().cacheNewObjectType(SObject.getSOMClass(obj), obj.getShape().getObjectType());
+      Universe.getCurrent().cacheNewShape(SObject.getSOMClass(obj), obj.getShape(), value);
     }
   }
 
@@ -77,7 +79,7 @@ public class SReflectiveObject extends SObject {
     return SReflectiveObjectLayoutImpl.INSTANCE.isSReflectiveObject(obj);
   }
 
-  public static boolean isSReflectiveObject(ObjectType type) {
+  public static boolean isSReflectiveObject(final ObjectType type) {
     return SReflectiveObjectLayoutImpl.INSTANCE.isSReflectiveObject(type);
   }
 

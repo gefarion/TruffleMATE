@@ -1,5 +1,13 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -11,14 +19,6 @@ import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 public final class ObjectPrims {
 
@@ -68,6 +68,12 @@ public final class ObjectPrims {
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final long idx, final Object val) {
       dispatch.executeDispatch(receiver, (int) idx - 1, val);
+      return val;
+    }
+
+    @Specialization
+    public final Object doSObject(final DynamicObject receiver, final String name, final Object val) {
+      receiver.define(name, val);
       return val;
     }
 

@@ -33,7 +33,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
-import com.oracle.truffle.api.object.ObjectType;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
@@ -83,7 +82,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectLayoutImpl;
 import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SReflectiveObjectLayoutImpl;
-import som.vmobjects.SReflectiveObjectLayoutImpl.SReflectiveObjectType;
 import som.vmobjects.SSymbol;
 import tools.debugger.Tags;
 import tools.dym.DynamicMetrics;
@@ -484,22 +482,26 @@ public class Universe {
     return this.globalSemantics;
   }
 
-  public void cacheNewObjectType(final DynamicObject klass, final ObjectType type) {
+  public void cacheNewShape(final DynamicObject klass, final Shape newShape, final DynamicObject environment) {
     if (objectTypes.containsKey(klass)) {
-      objectTypes.get(klass).add(type);
+      Map<DynamicObject, Shape> shapes = objectTypes.get(klass);
+      shapes.put(environment, newShape);
     } else {
-      ArrayList<ObjectType> list = new ArrayList<ObjectType>();
-      list.add(type);
-      objectTypes.put(klass, list);
+      HashMap<DynamicObject, Shape> map = new HashMap<DynamicObject, Shape>();
+      map.put(environment, newShape);
+      objectTypes.put(klass, map);
     }
   }
 
-  public ObjectType getCachedObjectType(final DynamicObject klass, final DynamicObject environment) {
+  public Shape getCachedShape(final DynamicObject klass, final DynamicObject environment) {
+    /* There is an important issue to workaround with this optimization whenever a shape for a class with the nil environment
+    is stored at the moment in which some of the fields of the object are uninitialized.
+    If later an environment is uninstalled in an object of this class with the field actually initialized, it will get a shape
+    with that field uninitialized and so at field reading it will receive nil. */
     if (objectTypes.containsKey(klass)) {
-      for (ObjectType type : objectTypes.get(klass)) {
-        if (((SReflectiveObjectType) type).getEnvironment() == environment) {
-          return type;
-        }
+      Map<DynamicObject, Shape> shapes = objectTypes.get(klass);
+      if (shapes.containsKey(environment)) {
+          return shapes.get(environment);
       }
     }
     return null;
@@ -623,5 +625,5 @@ public class Universe {
   @CompilationFinal private Assumption optimizedIH;
   @CompilationFinal private DynamicObject globalSemantics;
   @CompilationFinal private Assumption validUniverse;
-  @CompilationFinal private Map<DynamicObject, List<ObjectType>> objectTypes = new HashMap<DynamicObject, List<ObjectType>>();
+  @CompilationFinal private Map<DynamicObject, Map<DynamicObject, Shape>> objectTypes = new HashMap<DynamicObject, Map<DynamicObject, Shape>>();
 }

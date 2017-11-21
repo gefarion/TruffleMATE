@@ -25,13 +25,7 @@
 
 package som.vmobjects;
 
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
-import som.vm.constants.Classes;
-import som.vm.constants.ExecutionLevel;
-import som.vm.constants.Nil;
-import som.vmobjects.SReflectiveObject.SReflectiveObjectLayout;
-
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -39,6 +33,13 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.ObjectType;
 import com.oracle.truffle.api.object.dsl.Layout;
+
+import som.interpreter.Invokable;
+import som.interpreter.SArguments;
+import som.vm.constants.Classes;
+import som.vm.constants.ExecutionLevel;
+import som.vm.constants.Nil;
+import som.vmobjects.SReflectiveObject.SReflectiveObjectLayout;
 
 public class SInvokable {
 
@@ -65,6 +66,7 @@ public class SInvokable {
         invokableMeta, invokableMeta.createCallTarget(), Nil.nilObject);
   }
 
+  @TruffleBoundary
   public static final RootCallTarget getCallTarget(final DynamicObject invokable, final ExecutionLevel level) {
     if (level == ExecutionLevel.Meta) {
       return InvokableLayoutImpl.INSTANCE.getCallTargetMeta(invokable);

@@ -106,7 +106,6 @@ public final class MatePrims {
       return environment;
     }
 
-    @TruffleBoundary
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final DynamicObject environment) {
       SReflectiveObject.setEnvironment(receiver, environment);
