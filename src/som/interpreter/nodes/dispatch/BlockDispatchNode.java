@@ -49,13 +49,10 @@ public abstract class BlockDispatchNode extends Node {
         SArguments.getExecutionLevel(frame), arguments));
   }
 
-  @CompilationFinal protected IndirectCallNode indirect;
+  @CompilationFinal protected IndirectCallNode indirect = Truffle.getRuntime().createIndirectCallNode();
 
   @Fallback
   public Object activateBlock(final VirtualFrame frame, final Object[] arguments) {
-    if (indirect == null) {
-      indirect = Truffle.getRuntime().createIndirectCallNode();
-    }
     return indirect.call(
         SInvokable.getCallTarget(getMethod(arguments), SArguments.getExecutionLevel(frame)),
         SArguments.createSArguments(SArguments.getEnvironment(frame),

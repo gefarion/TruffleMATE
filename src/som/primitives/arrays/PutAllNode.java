@@ -31,11 +31,13 @@ import som.vmobjects.SBlock;
            extraChild = LengthPrimFactory.class)
 @NodeChild(value = "length", type = LengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode {
+  @Child private BlockDispatchNode blockFirstIteration;
   @Child private BlockDispatchNode block;
 
   public PutAllNode(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
     block = BlockDispatchNodeGen.create();
+    blockFirstIteration = BlockDispatchNodeGen.create();
   }
 
   protected static final boolean valueIsNil(final DynamicObject value) {
@@ -103,7 +105,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
     }
     // TODO: this version does not handle the case that a subsequent value is not of the expected type...
     try {
-      Object result = this.block.activateBlock(frame, new Object[] {block});
+      Object result = this.blockFirstIteration.executeDispatch(frame, new Object[] {block});
       if (result instanceof Long) {
         long[] newStorage = new long[(int) length];
         newStorage[0] = (long) result;
