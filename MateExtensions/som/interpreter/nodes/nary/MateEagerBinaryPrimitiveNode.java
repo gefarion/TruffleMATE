@@ -41,13 +41,7 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode {
   @Override
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument1) {
-    Object[] realArgs;
-    try {
-      realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
-    } catch (Exception e) {
-      int i = 1;
-      realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
-    }
+    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
     if (realArgs == null) {
       return super.executeEvaluated(frame, receiver, argument1);
     } else {
