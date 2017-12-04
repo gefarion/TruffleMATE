@@ -19,7 +19,6 @@ import som.matenodes.MateAbstractSemanticNodesFactory.MateGlobalSemanticCheckNod
 import som.matenodes.MateAbstractSemanticNodesFactory.MateObjectSemanticCheckNodeGen;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticCheckNodeGen;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticsBaselevelNodeGen;
-import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticsBaselevelNodeUnoptNodeGen;
 import som.matenodes.MateAbstractSemanticNodesFactory.MateSemanticsMetalevelNodeGen;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
@@ -206,12 +205,6 @@ public abstract class MateAbstractSemanticNodes extends Node {
                   execute(frame, arguments);
     }
 
-    @Specialization(guards = "executeBase(frame)", assumptions = "getMateActivatedAssumption()")
-    protected DynamicObject executeSemanticUnoptimizedChecks(final VirtualFrame frame, final Object[] arguments) {
-      return replace(MateSemanticsBaselevelNodeUnoptNodeGen.create(environment.reflectiveOperation)).
-                  execute(frame, arguments);
-    }
-
     @Specialization(assumptions = "getMateDeactivatedAssumption()")
     protected DynamicObject mateDeactivated(final VirtualFrame frame, final Object[] arguments) {
       return null;
@@ -273,10 +266,10 @@ public abstract class MateAbstractSemanticNodes extends Node {
     @Specialization(assumptions = "getGlobalSemanticsDeactivatedAssumption()")
     public DynamicObject executeLocalSemanticsCheck(final VirtualFrame frame,
         final Object[] arguments) {
-      DynamicObject value = environment.executeGeneric(frame);
+      DynamicObject value = object.executeGeneric(frame, arguments[0]);
       if (value == null) {
         executeObjectSemantics.enter();
-        return object.executeGeneric(frame, arguments[0]);
+        return environment.executeGeneric(frame);
       }
       return value;
     }
@@ -284,9 +277,9 @@ public abstract class MateAbstractSemanticNodes extends Node {
     @Specialization(assumptions = "getGlobalSemanticsActivatedAssumption()")
     public DynamicObject executeGlobalSemanticsCheck(final VirtualFrame frame,
         final Object[] arguments) {
-      DynamicObject value = global.executeGeneric(frame);
+      DynamicObject value = this.executeLocalSemanticsCheck(frame, arguments);
       if (value == null) {
-        return this.executeLocalSemanticsCheck(frame, arguments);
+        return global.executeGeneric(frame);
       }
       return value;
     }
@@ -297,35 +290,6 @@ public abstract class MateAbstractSemanticNodes extends Node {
 
     public static Assumption getGlobalSemanticsActivatedAssumption() {
       return Universe.getCurrent().getGlobalSemanticsActivatedAssumption();
-    }
-  }
-
-  public abstract static class MateSemanticsBaselevelNodeUnopt extends MateAbstractSemanticsLevelNode {
-    ReflectiveOp reflectiveOperation;
-
-    public MateSemanticsBaselevelNodeUnopt(final ReflectiveOp reflectiveOperation) {
-      super();
-      this.reflectiveOperation = reflectiveOperation;
-    }
-
-    @Specialization
-    protected DynamicObject executeGeneric(final VirtualFrame frame,
-        final Object[] arguments) {
-      if (SArguments.getExecutionLevel(frame) == ExecutionLevel.Base & arguments[0] instanceof DynamicObject) {
-        DynamicObject env = SArguments.getEnvironment(frame);
-        DynamicObject method = null;
-        if (env != Nil.nilObject) {
-           method = SMateEnvironment.methodImplementing(env, reflectiveOperation);
-        }
-        if (method == null & SReflectiveObject.isSReflectiveObject(((DynamicObject) arguments[0]))) {
-          env = SReflectiveObject.getEnvironment(((DynamicObject) arguments[0]));
-          if (env != Nil.nilObject) {
-            method = SMateEnvironment.methodImplementing(env, reflectiveOperation);
-          }
-        }
-        return method;
-      }
-      return null;
     }
   }
 }
