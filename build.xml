@@ -5,6 +5,7 @@
     <property name="src_gen.dir" value="src_gen"/>
     <property name="test.dir"    value="tests/java"/>
     <property name="lib.dir"     value="libs" />
+    <property name="sdk.build"   location="${lib.dir}/truffle/sdk/mxbuild/dists" />
     <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
 	<property name="graal.dir" 	 value="${lib.dir}/truffle/compiler" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
@@ -25,6 +26,7 @@
         <pathelement location="${lib.dir}/junit-${junit.version}.jar" />
         <pathelement location="${lib.dir}/hamcrest-core-1.3.jar" />
     	<pathelement location="${lib.dir}/gson-2.7.jar" />
+        <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
 		<pathelement location="${truffle.build}/truffle-debug.jar" />
