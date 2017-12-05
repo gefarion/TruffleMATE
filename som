@@ -127,7 +127,7 @@ if args.oficial:
     JAVA_LOCATION = GRAAL_LOCATION
 else:
     GRAAL_LOCATION = BASE_DIR + '/libs/truffle/compiler'
-    JAVA_LOCATION = GRAAL_LOCATION + '/../java-jvmci-8/'
+    JAVA_LOCATION = GRAAL_LOCATION + '/../../../java-jvmci-8/'
 #    os.environ['JAVA_HOME'] = BASE_DIR + "/../graalvm-0.22/jdk/"
     if not GRAAL_FLAGS:
         GRAAL_FLAGS = '-Djvmci.class.path.append=' + GRAAL_LOCATION + '/mxbuild/dists/graal.jar'
