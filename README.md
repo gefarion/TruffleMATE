@@ -11,10 +11,9 @@ Obtaining and Running TruffleMate
 
 To checkout the code:
 
-    git clone https://github.com/charig/TruffleMate.git directoryName
+    git clone -b papers/TSE2017 https://github.com/charig/TruffleMate.git directoryName
     cd directoryName
-    git checkout papers/TSE2017
-
+    
 Then, to build TruffleMate with Ant:
 
     ant jar or ant compile
