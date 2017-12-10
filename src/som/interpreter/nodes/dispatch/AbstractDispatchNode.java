@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -68,6 +69,11 @@ public abstract class AbstractDispatchNode extends Node implements DispatchChain
 
     public DirectCallNode getCallNode() {
       return cachedMethod;
+    }
+
+    @Override
+    public NodeCost getCost() {
+      return NodeCost.NONE;
     }
   }
 }
