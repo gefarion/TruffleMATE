@@ -70,10 +70,11 @@ public abstract class AbstractDispatchNode extends Node implements DispatchChain
     public DirectCallNode getCallNode() {
       return cachedMethod;
     }
-
-    @Override
-    public NodeCost getCost() {
-      return NodeCost.NONE;
-    }
   }
+
+  @Override
+  public NodeCost getCost() {
+    return NodeCost.NONE;
+  }
+
 }
