@@ -5,9 +5,12 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Shape;
 
+import som.vm.Universe;
+import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectLayoutImpl.SObjectType;
+import som.vmobjects.SReflectiveObject;
 
 
 public abstract class DispatchGuard {
@@ -23,11 +26,11 @@ public abstract class DispatchGuard {
     }
 
     if (obj instanceof DynamicObject) {
-      // if (Universe.getCurrent().vmReflectionEnabled() && SReflectiveObject.getEnvironment(((DynamicObject) obj)) != Nil.nilObject) {
+      if (Universe.getCurrent().vmReflectionEnabled() && SReflectiveObject.getEnvironment(((DynamicObject) obj)) != Nil.nilObject) {
         return new CheckSReflectiveObject(((DynamicObject) obj).getShape());
-      /*} else {
+      } else {
         return new CheckSObject(((DynamicObject) obj).getShape());
-      }*/
+      }
     }
 
     if (obj instanceof SBlock) {
