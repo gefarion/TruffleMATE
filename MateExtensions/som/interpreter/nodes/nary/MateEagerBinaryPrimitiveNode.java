@@ -18,7 +18,7 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode {
       final BinaryExpressionNode primitive) {
     super(selector, receiver, argument, primitive);
     messageSend = IntercessionHandling.createForMessageLookup(this.getSelector());
-    primitiveActivation = IntercessionHandling.createForOperation(this.getPrimitive().reflectiveOperation());
+    primitiveActivation = IntercessionHandling.createForMethodActivation(this.getSelector());
     this.adoptChildren();
   }
 
@@ -41,7 +41,8 @@ public class MateEagerBinaryPrimitiveNode extends EagerBinaryPrimitiveNode {
   @Override
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument1) {
-    Object[] realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
+    Object[] realArgs;
+      realArgs = (Object[]) primitiveActivation.doMateSemantics(frame, new Object[]{receiver, argument1});
     if (realArgs == null) {
       return super.executeEvaluated(frame, receiver, argument1);
     } else {

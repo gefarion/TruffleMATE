@@ -19,7 +19,6 @@ import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
-import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
@@ -336,7 +335,7 @@ public final class MessageSendNode {
 
     @Override
     public NodeCost getCost() {
-      return Cost.getCost(dispatchNode);
+      return dispatchNode.getCost();
     }
 
     @Override

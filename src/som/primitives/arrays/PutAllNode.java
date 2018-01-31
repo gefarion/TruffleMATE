@@ -31,11 +31,13 @@ import som.vmobjects.SBlock;
            extraChild = LengthPrimFactory.class)
 @NodeChild(value = "length", type = LengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode {
+  @Child private BlockDispatchNode blockFirstIteration;
   @Child private BlockDispatchNode block;
 
   public PutAllNode(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
     block = BlockDispatchNodeGen.create();
+    blockFirstIteration = BlockDispatchNodeGen.create();
   }
 
   protected static final boolean valueIsNil(final DynamicObject value) {
@@ -67,7 +69,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
       final SBlock block, final long length, final Object[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
-      storage[i] = this.block.activateBlock(frame, new Object[] {block});
+      storage[i] = this.block.executeDispatch(frame, new Object[] {block});
     }
   }
 
@@ -75,7 +77,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
       final SBlock block, final long length, final long[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
-      storage[i] = (long) this.block.activateBlock(frame, new Object[] {block});
+      storage[i] = (long) this.block.executeDispatch(frame, new Object[] {block});
     }
   }
 
@@ -83,7 +85,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
       final SBlock block, final long length, final double[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
-      storage[i] = (double) this.block.activateBlock(frame, new Object[] {block});
+      storage[i] = (double) this.block.executeDispatch(frame, new Object[] {block});
     }
   }
 
@@ -91,7 +93,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
       final SBlock block, final long length, final boolean[] storage) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       // The proper solution is to activate the block dispatch is described in somns: ArraySetAllStrategy.java
-      storage[i] = (boolean) this.block.activateBlock(frame, new Object[] {block});
+      storage[i] = (boolean) this.block.executeDispatch(frame, new Object[] {block});
     }
   }
 
@@ -103,7 +105,7 @@ public abstract class PutAllNode extends BinaryExpressionNode {
     }
     // TODO: this version does not handle the case that a subsequent value is not of the expected type...
     try {
-      Object result = this.block.executeDispatch(frame, new Object[] {block});
+      Object result = this.blockFirstIteration.executeDispatch(frame, new Object[] {block});
       if (result instanceof Long) {
         long[] newStorage = new long[(int) length];
         newStorage[0] = (long) result;

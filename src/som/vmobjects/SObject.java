@@ -24,15 +24,14 @@
 
 package som.vmobjects;
 
-import som.vm.NotYetImplementedException;
-import som.vm.constants.Nil;
-
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.ObjectType;
 import com.oracle.truffle.api.object.dsl.Layout;
+
+import som.vm.NotYetImplementedException;
+import som.vm.constants.Nil;
 
 
 public class SObject {
@@ -70,12 +69,10 @@ public class SObject {
     SObjectLayoutImpl.INSTANCE.setKlass(obj, value);
   }
 
-  @TruffleBoundary
   public static DynamicObject getSOMClass(final DynamicObject obj) {
     return SObjectLayoutImpl.INSTANCE.getKlass(obj);
   }
 
-  @TruffleBoundary
   public static DynamicObject getSOMClass(final ObjectType obj) {
     return SObjectLayoutImpl.INSTANCE.getKlass(obj);
   }

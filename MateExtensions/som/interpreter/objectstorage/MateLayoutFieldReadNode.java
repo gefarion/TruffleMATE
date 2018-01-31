@@ -1,7 +1,6 @@
 package som.interpreter.objectstorage;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 
 import som.interpreter.MateNode;
@@ -39,8 +38,10 @@ public final class MateLayoutFieldReadNode extends ReadFieldNode
     return null;
   }
 
-  @Override
+  /*
+   * This is blocking some optimizations. I still need to figure out why
+   * @Override
   public NodeCost getCost() {
     return NodeCost.NONE;
-  }
+  }*/
 }

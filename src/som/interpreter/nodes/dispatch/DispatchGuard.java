@@ -1,13 +1,13 @@
 package som.interpreter.nodes.dispatch;
 
-import som.vmobjects.SBlock;
-import som.vmobjects.SObject;
-import som.vmobjects.SObjectLayoutImpl.SObjectType;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Shape;
+
+import som.vmobjects.SBlock;
+import som.vmobjects.SObject;
+import som.vmobjects.SObjectLayoutImpl.SObjectType;
 
 
 public abstract class DispatchGuard {
@@ -23,7 +23,7 @@ public abstract class DispatchGuard {
     }
 
     if (obj instanceof DynamicObject) {
-      return new CheckSObject(((DynamicObject) obj).getShape());
+        return new CheckSReflectiveObject(((DynamicObject) obj).getShape());
     }
 
     if (obj instanceof SBlock) {
@@ -78,12 +78,29 @@ public abstract class DispatchGuard {
     }
   }
 
-  private static final class CheckSObject extends DispatchGuard {
-    private final Shape expected;
-    private final DynamicObject klass;
+  private static class CheckSObject extends DispatchGuard {
+    protected final Shape expected;
 
     CheckSObject(final Shape expected) {
       this.expected = expected;
+    }
+
+  @Override
+  public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    if (!expected.isValid()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new InvalidAssumptionException();
+    }
+    return obj instanceof DynamicObject &&
+        ((DynamicObject) obj).getShape() == expected;
+    }
+  }
+
+  private static final class CheckSReflectiveObject extends CheckSObject {
+    private final DynamicObject klass;
+
+    CheckSReflectiveObject(final Shape expected) {
+      super(expected);
       this.klass = ((SObjectType) (expected.getObjectType())).getKlass();
     }
 
@@ -95,9 +112,7 @@ public abstract class DispatchGuard {
     }
     return obj instanceof DynamicObject &&
         (
-            (((DynamicObject) obj).getShape() == expected)
-            || (SObject.getSOMClass((DynamicObject) obj) == klass)
-        );
+            (((DynamicObject) obj).getShape() == expected) || SObject.getSOMClass((DynamicObject) obj) == klass);
     }
   }
 

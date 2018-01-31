@@ -8,7 +8,6 @@ import com.oracle.truffle.api.profiles.BranchProfile;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ISuperReadNode;
-import som.interpreter.nodes.nary.EagerPrimitive;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateActivationDispatchNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchMessageLookupNodeGen;
 import som.matenodes.MateAbstractReflectiveDispatchFactory.MateCachedDispatchSuperMessageLookupNodeGen;
@@ -120,7 +119,7 @@ public abstract class IntercessionHandling extends Node {
     @Override
     public Object doMateSemantics(final VirtualFrame frame,
         final Object[] arguments) {
-      assert SArguments.getExecutionLevel(frame) == ExecutionLevel.Base || this.getParent() instanceof EagerPrimitive;
+      assert SArguments.getExecutionLevel(frame) == ExecutionLevel.Base;
       DynamicObject method = this.getMateNode().execute(frame, arguments);
       if (method != null) {
         semanticsRedefined.enter();
