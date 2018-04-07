@@ -2,7 +2,7 @@
 	path = core-lib
 	url = https://github.com/charig/SOM.git
 [submodule "libs/truffle"]
-	path = libs/truffle
+	path = libs/graal
 	url = https://github.com/charig/truffle.git
 [submodule "libs/mx"]
 	path = libs/mx
