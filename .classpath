@@ -1,20 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="tools/debugger/BinaryWebSocketHandler.java|tools/debugger/ClassHierarchyAdapterFactory.java|tools/debugger/FrontendConnector.java|tools/debugger/WebDebugger.java|tools/debugger/WebResourceHandler.java|tools/debugger/WebSocketHandler.java|tools/debugger/frontend/|tools/debugger/message/|tools/debugger/nodes/|tools/debugger/session/" kind="src" path="src"/>
-	<classpathentry kind="src" path="tests/java"/>
-	<classpathentry kind="src" path="MateExtensions"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="src" path="src_gen">
 		<attributes>
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/websocket/dist/websocket.jar"/>
-	<classpathentry kind="lib" path="libs/gson-2.7.jar"/>
-	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-api.jar" sourcepath="libs/truffle/truffle/mxbuild/dists/truffle-api.src.zip"/>
-	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-dsl-processor.jar"/>
-	<classpathentry kind="lib" path="libs/truffle/truffle/mxbuild/dists/truffle-tck.jar"/>
-	<classpathentry kind="lib" path="libs/truffle/sdk/mxbuild/dists/graal-sdk.jar"/>
-	<classpathentry kind="output" path="build/classes"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>
