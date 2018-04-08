@@ -13,3 +13,4 @@ metrics/*
 dynamic-metrics\.json
 graal
 *.DS_Store
+/bin/
