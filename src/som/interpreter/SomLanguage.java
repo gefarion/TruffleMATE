@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
@@ -161,12 +160,6 @@ public class SomLanguage extends TruffleLanguage<Universe> {
 
   @Override
   protected boolean isObjectOfLanguage(final Object object) {
-    throw new NotYetImplementedException();
-  }
-
-  @Override
-  protected Object evalInContext(final Source source, final Node node,
-      final MaterializedFrame mFrame) throws IOException {
     throw new NotYetImplementedException();
   }
 }

@@ -8,7 +8,6 @@ import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
-import tools.dym.DynamicMetrics;
 import tools.dym.profiles.ClosureApplicationProfile;
 
 
@@ -22,7 +21,7 @@ public class LateClosureTargetNode extends ExecutionEventNode {
   }
 
   private ExecutionEventNode specialize() {
-    ExecutionEventNode parent = DynamicMetrics.findParentEventNode(ctx, factory, 10);
+    ExecutionEventNode parent = ctx.findParentEventNode(factory);
     InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
 
     if (parent == null) {

@@ -8,6 +8,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.instrumentation.EventContext;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.TruffleInstrument;
+import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
@@ -61,24 +78,6 @@ import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
 import tools.language.StructuralProbe;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.instrumentation.EventContext;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.Instrumenter;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.instrumentation.TruffleInstrument;
-import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 /**
@@ -255,7 +254,7 @@ public class DynamicMetrics extends TruffleInstrument {
     filters.tagIs(PrimitiveArgument.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, factory);
+      ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
 
       if (parent == null) {
         return new LateReportResultNode(ctx, factory);
@@ -267,36 +266,13 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
-
-  public static ExecutionEventNode findDirectParentEventNode(final EventContext ctx,
-      final ExecutionEventNodeFactory factory) {
-    return DynamicMetrics.findParentEventNode(ctx, factory, 2);
-  }
-
-  public static ExecutionEventNode findParentEventNode(final EventContext ctx,
-      final ExecutionEventNodeFactory factory, final int maxDepth) {
-    Node parent = ctx.getInstrumentedNode().getParent();
-    ExecutionEventNode eventNode = null;
-    int level = 0;
-    while ((parent = parent.getParent()) != null && level < maxDepth) {
-      if (parent instanceof WrapperNode) {
-        eventNode = ((WrapperNode) parent).getProbeNode().findEventNode(factory);
-        if (eventNode != null) {
-          return eventNode;
-        }
-      }
-      level = level + 1;
-    }
-    return null;
-  }
-
   private void addReceiverInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory virtInvokeFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(VirtualInvokeReceiver.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, virtInvokeFactory);
+      ExecutionEventNode parent = ctx.findDirectParentEventNode(virtInvokeFactory);
 
       @SuppressWarnings("unchecked")
       CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
@@ -311,7 +287,7 @@ public class DynamicMetrics extends TruffleInstrument {
     filters.tagIs(CachedVirtualInvoke.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = DynamicMetrics.findParentEventNode(ctx, virtInvokeFactory, 10);
+      ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
       InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
 
       if (parent == null) {
@@ -332,7 +308,7 @@ public class DynamicMetrics extends TruffleInstrument {
     filters.tagIs(CachedClosureInvoke.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = DynamicMetrics.findParentEventNode(ctx, factory, 10);
+      ExecutionEventNode parent = ctx.findParentEventNode(factory);
       InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
 
       if (parent == null) {
@@ -425,9 +401,9 @@ public class DynamicMetrics extends TruffleInstrument {
     filters.tagIs(LoopBody.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = DynamicMetrics.findDirectParentEventNode(ctx, loopProfileFactory);
+      ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
       if (parent == null) {
-        parent = DynamicMetrics.findDirectParentEventNode(ctx, loopProfileFactory);
+        parent = ctx.findDirectParentEventNode(loopProfileFactory);
       }
       assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;

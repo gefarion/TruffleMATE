@@ -1,10 +1,6 @@
 package som.interpreter.nodes;
 
-import java.util.List;
-
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.dsl.Introspection;
-import com.oracle.truffle.api.dsl.Introspection.SpecializationInfo;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
@@ -18,14 +14,11 @@ import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExpressionWithReceiver;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-import som.primitives.CompilationPrims;
-import som.primitives.CompilationPrims.MateFilterNodesByClassPrim;
 import som.primitives.Primitives;
 import som.primitives.Primitives.Specializer;
 import som.vm.NotYetImplementedException;
@@ -345,18 +338,6 @@ public final class MessageSendNode {
       } else {
         return super.isTaggedWith(tag);
       }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public DynamicObject[] getSpecializations() {
-      java.util.List<Node> specializations =
-          MateFilterNodesByClassPrim.filterChildrenByClass(this, AbstractCachedDispatchNode.class);
-      SpecializationInfo specialization = new Introspection.SpecializationInfo("CachedDispatch", (byte) 0b01 /* active */, null,
-          (List<Object>) (List<?>) specializations);
-      DynamicObject[] stSpecializations = new DynamicObject[1];
-      stSpecializations[0] = CompilationPrims.translateSpecializationInfo(specialization);
-      return stSpecializations;
     }
   }
 
