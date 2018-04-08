@@ -26,7 +26,15 @@ import static som.vm.constants.MateClasses.shapeClass;
 import java.io.IOException;
 import java.util.HashMap;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectFactory;
+import com.oracle.truffle.api.source.Source;
+
 import som.compiler.Disassembler;
+import som.compiler.SourcecodeCompiler;
 import som.primitives.Primitives;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
@@ -36,13 +44,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectFactory;
-import com.oracle.truffle.api.source.Source;
 
 //This is a pseudo object memory because the objects are actually managed by the Truffle/Java memory manager
 public class ObjectMemory {
@@ -61,13 +62,16 @@ public class ObjectMemory {
 
   private final Primitives primitives;
 
-  protected ObjectMemory(final StructuralProbe probe) {
+  final SourcecodeCompiler compiler;
+
+  protected ObjectMemory(final SourcecodeCompiler compiler, final StructuralProbe probe) {
     last = this;
+    this.compiler = compiler;
     globals      = new HashMap<SSymbol, DynamicObject>();
     symbolTable  = new HashMap<>();
     blockClasses = new DynamicObject[5];
     structuralProbe = probe;
-    primitives = new Primitives(this);
+    primitives = new Primitives(this, compiler.getLanguage());
   }
 
   protected void initializeSystem() {
@@ -239,7 +243,7 @@ public class ObjectMemory {
   public DynamicObject loadClass(final Source source, final DynamicObject systemClass) {
     // Try loading the class from all different paths
     // Load the class from a file and return the loaded class
-    DynamicObject result = som.compiler.SourcecodeCompiler.compileClass(source,
+    DynamicObject result = compiler.compileClass(source,
         systemClass, this, structuralProbe);
     setGlobal(source.getName(), result);
     loadPrimitives(result);
@@ -281,7 +285,7 @@ public class ObjectMemory {
   @TruffleBoundary
   public DynamicObject loadShellClass(final String stmt) throws IOException {
     // Load the class from a stream and return the loaded class
-    DynamicObject result = som.compiler.SourcecodeCompiler.compileClass(stmt, null, this, structuralProbe);
+    DynamicObject result = compiler.compileClass(stmt, null, this, structuralProbe);
     if (Universe.getCurrent().printAST()) { Disassembler.dump(result); }
     return result;
   }

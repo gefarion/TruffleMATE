@@ -1,6 +1,5 @@
 package som.interpreter;
 
-import som.interpreter.nodes.ExpressionNode;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -10,14 +9,17 @@ import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 
+import som.interpreter.nodes.ExpressionNode;
+
 
 public final class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor,
       final ExpressionNode uninitialized,
-      DynamicObject method) {
-    super(null, frameDescriptor, primitive, uninitialized, method);
+      final DynamicObject method,
+      final SomLanguage language) {
+    super(null, frameDescriptor, primitive, uninitialized, method, language);
   }
 
   @Override
@@ -28,7 +30,7 @@ public final class Primitive extends Invokable {
         outerContext);
     ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
         inlinedContext);
-    return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody, this.belongsToMethod);
+    return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody, this.belongsToMethod, getLanguage(SomLanguage.class));
   }
 
   @Override

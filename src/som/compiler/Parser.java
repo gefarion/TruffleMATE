@@ -77,6 +77,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VmSettings;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -129,6 +130,8 @@ public class Parser {
   private static final List<Symbol> singleOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> binaryOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> keywordSelectorSyms = new ArrayList<Symbol>();
+
+  private final SomLanguage language;
 
   static {
     for (Symbol s : new Symbol[] {Not, And, Or, Star, Div, Mod, Plus, Equal,
@@ -219,7 +222,7 @@ public class Parser {
   }
 
   public Parser(final Reader reader, final long fileSize, final Source source,
-      final ObjectMemory memory, final StructuralProbe structuralProbe) {
+      final ObjectMemory memory, final StructuralProbe structuralProbe, final SomLanguage language) {
     this.objectMemory = memory;
     this.source   = source;
 
@@ -228,6 +231,7 @@ public class Parser {
     nextSym = NONE;
     getSymbolFromLexer();
     this.structuralProbe = structuralProbe;
+    this.language = language;
   }
 
   private SourceCoordinate getCoordinate() {
@@ -246,7 +250,7 @@ public class Parser {
 
     while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
-      MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+      MethodGenerationContext mgenc = new MethodGenerationContext(cgenc, language);
 
       ExpressionWithTagsNode methodBody = method(mgenc);
       DynamicObject method = mgenc.assemble(methodBody, lastMethodsSourceSection);
@@ -261,7 +265,7 @@ public class Parser {
       classFields(cgenc);
       while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
           || symIn(binaryOpSyms)) {
-        MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+        MethodGenerationContext mgenc = new MethodGenerationContext(cgenc, language);
 
         ExpressionWithTagsNode methodBody = method(mgenc);
         DynamicObject method = mgenc.assemble(methodBody, lastMethodsSourceSection);
@@ -615,7 +619,7 @@ public class Parser {
       }
       case NewBlock: {
         SourceCoordinate coord = getCoordinate();
-        MethodGenerationContext bgenc = new MethodGenerationContext(mgenc.getHolder(), mgenc);
+        MethodGenerationContext bgenc = new MethodGenerationContext(mgenc.getHolder(), mgenc, language);
 
         ExpressionWithTagsNode blockBody = nestedBlock(bgenc);
 

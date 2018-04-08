@@ -29,26 +29,34 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.Source;
+
 import som.compiler.Parser.ParseError;
+import som.interpreter.SomLanguage;
 import som.vm.ObjectMemory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
-
 public final class SourcecodeCompiler {
+  private final SomLanguage language;
+
+  public SourcecodeCompiler(final SomLanguage language) {
+    this.language = language;
+  }
+
+  public SomLanguage getLanguage() { return language; }
 
   @TruffleBoundary
-  public static DynamicObject compileClass(Source source, final DynamicObject systemClass,
+  public DynamicObject compileClass(final Source source, final DynamicObject systemClass,
       final ObjectMemory memory, final StructuralProbe structuralProbe) {
 
     Parser parser;
     try {
-      parser = new Parser(new FileReader(source.getPath()), new File(source.getPath()).length(), source, memory, structuralProbe);
+      parser = new Parser(new FileReader(source.getPath()), new File(source.getPath()).length(), source, memory, structuralProbe, language);
     } catch (IOException ex) {
       throw new IllegalStateException("File name " + ex.getMessage()
           + " does not exist ");
@@ -68,9 +76,9 @@ public final class SourcecodeCompiler {
   }
 
   @TruffleBoundary
-  public static DynamicObject compileClass(final String stmt,
+  public DynamicObject compileClass(final String stmt,
       final DynamicObject systemClass, final ObjectMemory memory, final StructuralProbe structuralProbe) {
-    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, memory, structuralProbe);
+    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, memory, structuralProbe, language);
 
     DynamicObject result = compile(parser, systemClass, memory, structuralProbe);
     return result;

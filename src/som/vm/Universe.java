@@ -62,6 +62,7 @@ import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 
 import som.VMOptions;
 import som.VmSettings;
+import som.compiler.SourcecodeCompiler;
 import som.interpreter.Invokable;
 import som.interpreter.MateifyVisitor;
 import som.interpreter.NodeVisitorUtil;
@@ -98,7 +99,7 @@ public class Universe {
     truffleRuntime = Truffle.getRuntime();
   }
 
-  public void initialize() {
+  public void initialize(final SomLanguage language) {
     if (current != null) {
       current.validUniverse.invalidate();
     }
@@ -125,7 +126,7 @@ public class Universe {
 
 
     if (ObjectMemory.last == null) {
-      objectMemory = new ObjectMemory(structuralProbe);
+      objectMemory = new ObjectMemory(new SourcecodeCompiler(language), structuralProbe);
       objectMemory.initializeSystem();
     } else {
       objectMemory = ObjectMemory.last;

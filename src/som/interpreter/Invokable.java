@@ -28,8 +28,8 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized,
-      final DynamicObject method) {
-    super(SomLanguage.class, sourceSection, frameDescriptor);
+      final DynamicObject method, final SomLanguage language) {
+    super(language, frameDescriptor);
     this.uninitializedBody = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
     this.belongsToMethod = method;

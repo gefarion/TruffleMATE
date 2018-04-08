@@ -36,10 +36,16 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope;
 import som.interpreter.Method;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -50,11 +56,6 @@ import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 
@@ -79,18 +80,20 @@ public final class MethodGenerationContext {
 
   private final List<DynamicObject> embeddedBlockMethods;
 
+  private final SomLanguage language;
 
-  public MethodGenerationContext(final ClassGenerationContext holderGenc) {
-    this(holderGenc, null, false);
+
+  public MethodGenerationContext(final ClassGenerationContext holderGenc, final SomLanguage language) {
+    this(holderGenc, null, false, language);
   }
 
   public MethodGenerationContext(final ClassGenerationContext holderGenc,
-      final MethodGenerationContext outerGenc) {
-    this(holderGenc, outerGenc, true);
+      final MethodGenerationContext outerGenc, final SomLanguage language) {
+    this(holderGenc, outerGenc, true, language);
   }
 
   private MethodGenerationContext(final ClassGenerationContext holderGenc,
-      final MethodGenerationContext outerGenc, final boolean isBlockMethod) {
+      final MethodGenerationContext outerGenc, final boolean isBlockMethod, final SomLanguage language) {
     this.holderGenc      = holderGenc;
     this.outerGenc       = outerGenc;
     this.blockMethod     = isBlockMethod;
@@ -102,6 +105,8 @@ public final class MethodGenerationContext {
     throwsNonLocalReturn            = false;
     needsToCatchNonLocalReturn      = false;
     embeddedBlockMethods = new ArrayList<DynamicObject>();
+
+    this.language = language;
   }
 
   public void addEmbeddedBlockMethod(final DynamicObject blockMethod) {
@@ -163,7 +168,7 @@ public final class MethodGenerationContext {
 
   public DynamicObject assemble(ExpressionWithTagsNode body, final SourceSection sourceSection) {
     if (primitive) {
-      return Primitives.constructEmptyPrimitive(signature);
+      return Primitives.constructEmptyPrimitive(signature,language);
     }
 
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
@@ -177,7 +182,7 @@ public final class MethodGenerationContext {
 
     Method truffleMethod =
         new Method(getSourceSectionForMethod(sourceSection),
-            body, currentScope, (ExpressionWithTagsNode) body.deepCopy(), null);
+            body, currentScope, (ExpressionWithTagsNode) body.deepCopy(), null, language);
 
     DynamicObject method = Universe.newMethod(signature, truffleMethod, false,
         embeddedBlockMethods.toArray(new DynamicObject[0]));

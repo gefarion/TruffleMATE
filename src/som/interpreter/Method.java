@@ -40,9 +40,10 @@ public final class Method extends Invokable {
                 final ExpressionNode expressions,
                 final LexicalScope currentLexicalScope,
                 final ExpressionNode uninitialized,
-                final DynamicObject method) {
+                final DynamicObject method,
+                final SomLanguage language) {
     super(sourceSection, currentLexicalScope.getFrameDescriptor(),
-        expressions, uninitialized, method);
+        expressions, uninitialized, method, language);
     this.currentLexicalScope = currentLexicalScope;
     currentLexicalScope.setMethod(this);
     expressions.markAsRootExpression();
@@ -64,7 +65,7 @@ public final class Method extends Invokable {
     ExpressionNode inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
     return new Method(getSourceSection(), inlinedBody,
-        inlinedCurrentScope, uninitializedBody, this.belongsToMethod);
+        inlinedCurrentScope, uninitializedBody, this.belongsToMethod, getLanguage(SomLanguage.class));
   }
 
   public Invokable cloneAndAdaptToEmbeddedOuterContext(
@@ -76,7 +77,7 @@ public final class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(getSourceSection(), adaptedBody,
-        currentAdaptedScope, uninitAdaptedBody, this.belongsToMethod);
+        currentAdaptedScope, uninitAdaptedBody, this.belongsToMethod, getLanguage(SomLanguage.class));
     return clone;
   }
 
@@ -89,7 +90,7 @@ public final class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(getSourceSection(),
-        adaptedBody, currentAdaptedScope, uninitAdaptedBody, this.belongsToMethod);
+        adaptedBody, currentAdaptedScope, uninitAdaptedBody, this.belongsToMethod, getLanguage(SomLanguage.class));
     return clone;
   }
 

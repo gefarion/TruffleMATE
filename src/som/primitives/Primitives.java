@@ -95,6 +95,8 @@ public class Primitives {
   private Map<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
   private Map<SSymbol, List<DynamicObject>> vmPrimitives;
 
+  private final SomLanguage language;
+
   @SuppressWarnings("unchecked")
   public Specializer<EagerlySpecializableNode> getEagerSpecializer(final SSymbol selector,
       final Object[] arguments, final ExpressionNode[] argumentNodes) {
@@ -112,9 +114,10 @@ public class Primitives {
     return vmPrimitives.get(classname);
   }
 
-  public Primitives(final ObjectMemory om) {
+  public Primitives(final ObjectMemory om, final SomLanguage language) {
     eagerPrimitives = new HashMap<>();
     vmPrimitives = new HashMap<>();
+    this.language = language;
     initialize(om);
   }
 
@@ -219,13 +222,13 @@ public class Primitives {
   }
 
   public static DynamicObject constructPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode> specializer) {
+      final Specializer<? extends ExpressionNode> specializer, final SomLanguage language) {
     CompilerAsserts.neverPartOfCompilation("constructPrimitive");
     int numArgs = signature.getNumberOfSignatureArguments();
 
     Source s = SomLanguage.getSyntheticSource("primitive", specializer.fact.getClass().getSimpleName());
 
-    MethodGenerationContext mgen = new MethodGenerationContext(null);
+    MethodGenerationContext mgen = new MethodGenerationContext(null, language);
     ExpressionWithTagsNode[] args = new ExpressionWithTagsNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
       args[i] = new LocalArgumentReadNode(i, s.createSection(1));
@@ -234,27 +237,27 @@ public class Primitives {
     ExpressionNode primNode = specializer.create(null, args, s.createSection(1), false, null);
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
-        (ExpressionNode) primNode.deepCopy(), null);
+        (ExpressionNode) primNode.deepCopy(), null, language);
     DynamicObject primitive = Universe.newMethod(signature, primMethodNode, true, new DynamicObject[0]);
     primMethodNode.setMethod(primitive);
     return primitive;
   }
 
-  public static DynamicObject constructEmptyPrimitive(final SSymbol signature) {
+  public static DynamicObject constructEmptyPrimitive(final SSymbol signature, final SomLanguage language) {
     CompilerAsserts.neverPartOfCompilation("constructEmptyPrimitive");
-    MethodGenerationContext mgen = new MethodGenerationContext(null);
+    MethodGenerationContext mgen = new MethodGenerationContext(null, language);
 
     ExpressionWithTagsNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
     Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
-        (ExpressionWithTagsNode) primNode.deepCopy(), null);
+        (ExpressionWithTagsNode) primNode.deepCopy(), null,language);
     DynamicObject method = Universe.newMethod(signature, primMethodNode, true, new DynamicObject[0]);
     primMethodNode.setMethod(method);
     return method;
   }
 
   public static DynamicObject installPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode> specializer, final DynamicObject holder) {
-    DynamicObject prim = constructPrimitive(signature, specializer);
+      final Specializer<? extends ExpressionNode> specializer, final DynamicObject holder, final SomLanguage language) {
+    DynamicObject prim = constructPrimitive(signature, specializer, language);
     SClass.addInstancePrimitive(holder, prim, false);
     return prim;
   }
@@ -289,7 +292,7 @@ public class Primitives {
             content = new ArrayList<DynamicObject>();
             vmPrimitives.put(klass, content);
           }
-          content.add(constructPrimitive(signature, specializer));
+          content.add(constructPrimitive(signature, specializer, language));
         }
 
         if ((!("".equals(prim.selector())) && prim.eagerSpecializable())) {
@@ -370,7 +373,6 @@ public class Primitives {
     allFactories.addAll(BlockPrimsFactory.getFactories());
     allFactories.addAll(CharacterPrimsFactory.getFactories());
     allFactories.addAll(ClassPrimsFactory.getFactories());
-    allFactories.addAll(CompilationPrimsFactory.getFactories());
     allFactories.addAll(ContextPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());

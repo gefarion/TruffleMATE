@@ -10,7 +10,6 @@ import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
@@ -114,7 +113,7 @@ public class SomLanguage extends TruffleLanguage<Universe> {
 
   @Override
   protected void initializeContext(final Universe context) throws Exception {
-    context.initialize();
+    context.initialize(this);
   }
 
 
@@ -135,8 +134,8 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   }
 
   @Override
-  protected CallTarget parse(final Source code, final Node context,
-      final String... argumentNames) throws IOException {
+  protected CallTarget parse(final ParsingRequest request) throws IOException {
+    Source code = request.getSource();
     if (code == START || (code.getLength() == 0 && code.getName().equals("START"))) {
       return createStartCallTarget();
     }
