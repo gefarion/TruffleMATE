@@ -1,13 +1,6 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
-import som.compiler.Variable.Local;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
-import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-import som.vm.constants.Nil;
-import tools.debugger.Tags.LocalVariableTag;
-import tools.dym.Tags.LocalVarRead;
-import tools.dym.Tags.LocalVarWrite;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -19,6 +12,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.compiler.Variable.Local;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.nodes.nary.ExpressionWithTagsNode;
+import som.vm.constants.Nil;
+import tools.debugger.Tags.LocalVariableTag;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
 
 
 public abstract class LocalVariableNode extends ExpressionWithTagsNode {
@@ -155,7 +156,7 @@ public abstract class LocalVariableNode extends ExpressionWithTagsNode {
       return expValue;
     }
 
-    @Specialization(contains = {"writeBoolean", "writeLong", "writeDouble"})
+    @Specialization(replaces = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       frame.setObject(slot, expValue);

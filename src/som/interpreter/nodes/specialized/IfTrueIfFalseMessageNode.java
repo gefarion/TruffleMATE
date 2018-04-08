@@ -1,12 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.SArguments;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.constants.ExecutionLevel;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -17,6 +10,13 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.primitives.Primitive;
+import som.vm.constants.ExecutionLevel;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 
 /**
  * This node implements the correct message semantics and uses sends to the
@@ -38,7 +38,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   @Child private IndirectCallNode call;
 
   public IfTrueIfFalseMessageNode(final boolean eagWrap, final SourceSection source,
-      final Object[] args, ExecutionLevel level) {
+      final Object[] args, final ExecutionLevel level) {
     super(false, source);
     if (args[1] instanceof SBlock) {
       SBlock trueBlock = (SBlock) args[1];
@@ -92,7 +92,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(contains = {"doIfTrueIfFalseWithInliningTwoBlocks"})
+  @Specialization(replaces = {"doIfTrueIfFalseWithInliningTwoBlocks"})
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
@@ -123,7 +123,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(contains = {"doIfTrueIfFalseWithInliningTrueValue"})
+  @Specialization(replaces = {"doIfTrueIfFalseWithInliningTrueValue"})
   public final Object doIfTrueIfFalseTrueValue(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final SBlock falseBlock) {
     if (condProf.profile(receiver)) {
@@ -134,7 +134,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(contains = {"doIfTrueIfFalseWithInliningFalseValue"})
+  @Specialization(replaces = {"doIfTrueIfFalseWithInliningFalseValue"})
   public final Object doIfTrueIfFalseFalseValue(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (condProf.profile(receiver)) {

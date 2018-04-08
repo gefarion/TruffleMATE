@@ -1,9 +1,6 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -13,6 +10,10 @@ import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.vm.constants.Nil;
 
 
 public abstract class NonLocalVariableNode extends ContextualNode {
@@ -85,7 +86,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Specialization(guards = {"isObject(frame)"},
-        contains = {"doBoolean", "doLong", "doDouble"},
+        replaces = {"doBoolean", "doLong", "doDouble"},
         rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getObject(slot);
@@ -126,7 +127,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return expValue;
     }
 
-    @Specialization(contains = {"writeBoolean", "writeLong", "writeDouble"})
+    @Specialization(replaces = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       determineContext(frame).setObject(slot, expValue);

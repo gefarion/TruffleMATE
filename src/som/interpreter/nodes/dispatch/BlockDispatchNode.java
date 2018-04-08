@@ -3,7 +3,6 @@ package som.interpreter.nodes.dispatch;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -51,7 +50,7 @@ public abstract class BlockDispatchNode extends Node {
 
   @CompilationFinal protected IndirectCallNode indirect = Truffle.getRuntime().createIndirectCallNode();
 
-  @Fallback
+  @Specialization()
   public Object activateBlock(final VirtualFrame frame, final Object[] arguments) {
     return indirect.call(
         SInvokable.getCallTarget(getMethod(arguments), SArguments.getExecutionLevel(frame)),
