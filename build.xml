@@ -3,22 +3,19 @@
     <property name="src.dir"     value="src"/>
     <property name="src.dirMate" value="MateExtensions"/>
     <property name="src_gen.dir" value="src_gen"/>
-    <property name="test.dir"    value="tests/java"/>
+    <property name="test.dir"    value="tests"/>
     <property name="lib.dir"     value="libs" />
-    <property name="sdk.build"   location="${lib.dir}/truffle/sdk/mxbuild/dists" />
+    <property name="sdk.build"   location="${lib.dir}/graal/sdk/mxbuild/dists" />
     <property name="truffle.dir" value="${lib.dir}/graal/truffle" />
 	<property name="graal.dir" 	 value="${lib.dir}/graal/compiler" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="junit.version" value="4.12" />
-	<property name="jvmci8" value="${lib.dir}/truffle/java-jvmci-8/"/>
-
     <property name="checkstyle.version" value="7.8.1" />
 
     <property environment="env"/>
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
-	<property name="checkstyle.version" value="6.17" />
 
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
@@ -34,6 +31,13 @@
 		<pathelement location="${lib.dir}/websocket/dist/websocket.jar" />		
     	<pathelement location="${lib.dir}/json/build/minimal-json.jar" />
     </path>
+	
+	<condition property="is.atLeastJava9" value="true" else="false">
+      <or>
+        <matches string="${java.version}" pattern="^9"/>
+        <matches string="${java.version}" pattern="^1[0-9]"/>
+      </or>
+    </condition>
 
     <target name="clean" description="Remove build directories and generated code">
         <delete dir="${build.dir}"/>
@@ -152,6 +156,7 @@
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
+          <compilerarg line="--release 8" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
