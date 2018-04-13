@@ -50,6 +50,11 @@ public class MateTests extends SomTests {
     String[] arg = {
         "--mate",
         "-activateMate",
+        "-cp",
+        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:" +
+        "Examples/Benchmarks:Examples/Benchmarks/Mate/Immutability/DelegationProxies:Examples/Benchmarks/Mate/Immutability/Handles:" +
+        "Examples/Benchmarks/Mate/Layout:" +
+        "TestSuite:TestSuite/Mate",
         "TestHarness",
         testName};
     return arg;
