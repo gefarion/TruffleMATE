@@ -48,9 +48,9 @@ public class UninitializedDispatchNode extends AbstractDispatchNode {
       } else {
         node = new CachedDnuNode(rcvrClass, guard, selector, newChainEnd, SArguments.getExecutionLevel(frame));
       }
-      Universe.getCurrent().insertInstrumentationWrapper(this);
+      Universe.insertInstrumentationWrapper(this);
       replace(node);
-      Universe.getCurrent().insertInstrumentationWrapper(node);
+      Universe.insertInstrumentationWrapper(node);
       return node;
     }
 
