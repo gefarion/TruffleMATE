@@ -1,19 +1,19 @@
 package som.instrumentation;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.NodeCost;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.PreevaluatedExpression;
 
 public final class FixedSizeExpressionWrapperFactory implements
     InstrumentableFactory<ExpressionNode> {
 
   @Override
   public com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode createWrapper(
-      ExpressionNode delegateNode, ProbeNode probeNode) {
+      final ExpressionNode delegateNode, final ProbeNode probeNode) {
     return new FixedSizeWrapper(delegateNode, probeNode);
   }
 
@@ -47,28 +47,56 @@ public final class FixedSizeExpressionWrapperFactory implements
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      try {
-        probeNode.onEnter(frame);
-        Object result = delegateNode.executeGeneric(frame);
-        probeNode.onReturnValue(frame, result);
-        return result;
-      } catch (Throwable t) {
-        probeNode.onReturnExceptional(frame, t);
-        throw t;
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probeNode.onEnter(null);
+          returnValue = delegateNode.executeGeneric(frame);
+          wasOnReturnExecuted = true;
+          probeNode.onReturnValue(null, returnValue);
+          return returnValue;
+        } catch (Throwable t) {
+          // TODO: is passing `null` here as virtual frame an issue?
+          Object result = probeNode.onReturnExceptionalOrUnwind(null, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
 
     @SuppressWarnings("unused")
     public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      try {
-        probeNode.onEnter(frame);
-        Object result = ((PreevaluatedExpression) delegateNode).doPreEvaluated(frame, args);
-        probeNode.onReturnValue(frame, result);
-        return result;
-      } catch (Throwable t) {
-        probeNode.onReturnExceptional(frame, t);
-        throw t;
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probeNode.onEnter(null);
+          returnValue = ((PreevaluatedExpression) delegateNode).doPreEvaluated(frame, args);
+          wasOnReturnExecuted = true;
+          probeNode.onReturnValue(null, returnValue);
+          return returnValue;
+        } catch (Throwable t) {
+          // TODO: is passing `null` here as virtual frame an issue?
+          Object result = probeNode.onReturnExceptionalOrUnwind(null, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
   }
 }

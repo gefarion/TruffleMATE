@@ -1,14 +1,14 @@
 package som.instrumentation;
 
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.vm.constants.ExecutionLevel;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.vm.constants.ExecutionLevel;
 
 
 // TODO: figure out why the code is not generated for this
@@ -61,16 +61,30 @@ public final class DispatchNodeWrapper implements
     }
 
     @Override
-    public Object executeDispatch(final VirtualFrame frame, DynamicObject environment, ExecutionLevel level, final Object[] arguments) {
-      try {
-        probeNode.onEnter(frame);
-        Object returnValue = delegateNode.executeDispatch(frame, environment, level, arguments);
-        probeNode.onReturnValue(frame, returnValue);
-        return returnValue;
-      } catch (Throwable t) {
-        probeNode.onReturnExceptional(frame, t);
-        throw t;
+    public Object executeDispatch(final VirtualFrame frame, final DynamicObject environment, final ExecutionLevel level, final Object[] arguments) {
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probeNode.onEnter(null);
+          returnValue = delegateNode.executeDispatch(frame, environment, level, arguments);
+          wasOnReturnExecuted = true;
+          probeNode.onReturnValue(null, returnValue);
+          return returnValue;
+        } catch (Throwable t) {
+          // TODO: is passing `null` here as virtual frame an issue?
+          Object result = probeNode.onReturnExceptionalOrUnwind(null, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
   }
 }
