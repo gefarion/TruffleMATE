@@ -1,15 +1,10 @@
-package som.tests;
+package truffle.tests;
 
 import java.io.File;
 import java.net.URL;
-import java.util.Arrays;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
-import som.interpreter.SomLanguage;
-import som.vm.Universe;
-import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
@@ -17,19 +12,19 @@ import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 import com.oracle.truffle.tck.TruffleTCK;
 
+import som.interpreter.SomLanguage;
+import som.vmobjects.SClass;
+
 
 public class TruffleMateTCK extends TruffleTCK {
 
   @Override
   protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws Exception {
-    Universe.addURLs2CP(Arrays.asList(
+    /*Universe.addURLs2CP(Arrays.asList(
         new File("Smalltalk").toURI().toURL(),
         new File("TestSuite/TruffleTCK").toURI().toURL()
-    ));
-    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String [] {""});
-    // preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
-    // preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, arguments);
-    // String fname = vm.resolveClassFilePath("TruffleMateTCK");  
+    ));*/
+    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String [] {"-cp Smalltalk:TestSuite/TruffleTCK"});
     URL filepath = getClass().getResource("TruffleMateTCK.som");
     Source source = Source.newBuilder(new File(filepath.getPath())).mimeType(
         mimeType()).name("TruffleMateTCK").build();

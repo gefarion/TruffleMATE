@@ -34,6 +34,7 @@ import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.source.Source;
 
 import som.compiler.Disassembler;
+import som.compiler.Parser.ParseError;
 import som.compiler.SourcecodeCompiler;
 import som.primitives.Primitives;
 import som.vm.constants.Globals;
@@ -74,7 +75,7 @@ public class ObjectMemory {
     primitives = new Primitives(this, compiler.getLanguage());
   }
 
-  protected void initializeSystem() {
+  protected void initializeSystem() throws ParseError {
     // Setup the fields that were not possible to setup before to avoid cyclic initialization dependencies during allocation
     DynamicObject nilObject = Nil.nilObject;
     SObject.setClass(nilObject, nilClass);
@@ -240,7 +241,7 @@ public class ObjectMemory {
    *  Used mainly for system initialization.
    */
   @TruffleBoundary
-  public DynamicObject loadClass(final Source source, final DynamicObject systemClass) {
+  public DynamicObject loadClass(final Source source, final DynamicObject systemClass) throws ParseError {
     // Try loading the class from all different paths
     // Load the class from a file and return the loaded class
     DynamicObject result = compiler.compileClass(source,
@@ -267,7 +268,7 @@ public class ObjectMemory {
     }
   }
 
-  private void loadBlockClass(final int numberOfArguments) {
+  private void loadBlockClass(final int numberOfArguments) throws ParseError {
     // Compute the name of the block class with the given number of
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
@@ -283,7 +284,7 @@ public class ObjectMemory {
   }
 
   @TruffleBoundary
-  public DynamicObject loadShellClass(final String stmt) throws IOException {
+  public DynamicObject loadShellClass(final String stmt) throws IOException, ParseError {
     // Load the class from a stream and return the loaded class
     DynamicObject result = compiler.compileClass(stmt, null, this, structuralProbe);
     if (Universe.getCurrent().printAST()) { Disassembler.dump(result); }

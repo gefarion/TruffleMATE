@@ -1,16 +1,13 @@
-package som.tests;
+package petitparser.tests;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import som.mateTests.MateTests;
+import mate.tests.MateTests;
+
 
 @RunWith(Parameterized.class)
 public class PetitParserTests extends MateTests {
@@ -42,20 +39,17 @@ public class PetitParserTests extends MateTests {
   }
 
   @Override
-  protected List<URL> getCP() throws MalformedURLException {
-    List<URL> urls = super.getCP();
-    urls.addAll(Arrays.asList(
-        new File("TestSuite").toURI().toURL(),
-        new File("Smalltalk/Mate").toURI().toURL(),
-        new File("Smalltalk/Mate/MOP").toURI().toURL(),
-        new File("Smalltalk/Collections/Streams").toURI().toURL(),
-        new File("TestSuite/PetitParser").toURI().toURL(),
-        new File("TestSuite/PetitParser/PetitSmalltalk").toURI().toURL(),
-        new File("Smalltalk/PetitParser").toURI().toURL(),
-        new File("Smalltalk/PetitParser/PetitSmalltalk").toURI().toURL(),
-        new File("Smalltalk/AST-Core").toURI().toURL(),
-        new File("Smalltalk/AST-Core/Parser").toURI().toURL()
-        ));
-    return urls;
+  protected String[] getArguments() {
+    String[] arg = {
+        "--mate",
+        "-activateMate",
+        "-cp",
+        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:Smalltalk/Collections/Streams:" +
+        "Smalltalk/PetitParser:Smalltalk/PetitParser/PetitSmalltalk:Smalltalk/AST-Core:Smalltalk/AST-Core/Parser:" +
+        "TestSuite:TestSuite/PetitParser:TestSuite/PetitParser/PetitSmalltalk:" +
+        " ",
+        "TestHarness",
+        testName};
+    return arg;
   }
 }

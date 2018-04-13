@@ -26,6 +26,7 @@ public class VMOptions {
   @CompilationFinal public boolean vmReflectionEnabled;
   @CompilationFinal public boolean vmReflectionActivated;
   @CompilationFinal public boolean unoptimizedIH;
+  @CompilationFinal public List<URL> classPath;
 
   public VMOptions(final String[] args) {
     vmReflectionEnabled = false;
@@ -129,7 +130,7 @@ public class VMOptions {
     StringTokenizer tokenizer = new StringTokenizer(cp, File.pathSeparator);
 
     // Get the default class path of the appropriate size
-    List<URL> classPath = new ArrayList<URL>(tokenizer.countTokens());
+    classPath = new ArrayList<URL>(tokenizer.countTokens());
 
     // Get the directories and put them into the class path array
     for (int i = 0; tokenizer.hasMoreTokens(); i++) {
@@ -139,6 +140,5 @@ public class VMOptions {
         Universe.errorExit("Classpath was not provided in proper format");
       }
     }
-    Universe.addURLs2CP(classPath);
   }
 }

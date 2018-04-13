@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Stefan Marr, stefan.marr@vub.ac.be
+ * Copyright (c) 2015 Guido Chari, gchari@dc.uba.ar
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,27 +19,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package som.mateTests;
+package mate.tests;
+
+import java.util.Arrays;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-import som.tests.BasicInterpreterTests;
+import som.tests.SomTests;
 
 @RunWith(Parameterized.class)
-public class MateBasicInterpreterTests extends BasicInterpreterTests{
+public class MateTests extends SomTests {
 
-  public MateBasicInterpreterTests(final String testClass, final String testSelector,
-      final Object expectedResult, final Class<?> resultType) {
-    super(testClass, testSelector, expectedResult, resultType);
+  public MateTests(final String testName) {
+    super(testName);
+  }
+
+  @Parameters
+  public static Iterable<Object[]> data() {
+    return Arrays.asList(new Object[][] {
+        {"BasicOperations"},
+        {"Immutability"},
+        {"Layout"},
+      });
   }
 
   @Override
-  protected String[] getVMArguments() {
-    return new String[] {
+  protected String[] getArguments() {
+    String[] arg = {
         "--mate",
         "-activateMate",
-        "-cp",
-        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:TestSuite/BasicInterpreterTests"};
+        "TestHarness",
+        testName};
+    return arg;
   }
 }

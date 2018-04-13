@@ -29,10 +29,7 @@ import static som.vm.constants.Classes.systemClass;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +59,7 @@ import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 
 import som.VMOptions;
 import som.VmSettings;
+import som.compiler.Parser.ParseError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.Invokable;
 import som.interpreter.MateifyVisitor;
@@ -127,7 +125,11 @@ public class Universe {
 
     if (ObjectMemory.last == null) {
       objectMemory = new ObjectMemory(new SourcecodeCompiler(language), structuralProbe);
-      objectMemory.initializeSystem();
+      try {
+        objectMemory.initializeSystem();
+      } catch (ParseError e) {
+        Universe.errorExit(e.getMessage());
+      }
     } else {
       objectMemory = ObjectMemory.last;
     }
@@ -172,10 +174,10 @@ public class Universe {
     }
     // instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
-    Debugger debugger = null;
+    /*Debugger debugger = null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       debugger = Debugger.find(engine);
-    }
+    }*/
 
     /*if (vmOptions.webDebuggerEnabled) {
       assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
@@ -316,7 +318,7 @@ public class Universe {
 
   @TruffleBoundary
   public Source getSourceForClassName(final SSymbol name) {
-    File file = new File(resolveClassFilePath(name.getString()));
+    File file = resolveClassFilePath(name.getString());
     try {
       return Source.newBuilder(file).mimeType(
           SomLanguage.MIME_TYPE).name(name.getString()).build();
@@ -332,7 +334,12 @@ public class Universe {
 
   @TruffleBoundary
   public DynamicObject loadClass(final Source source) {
-    return objectMemory.loadClass(source, null);
+    try {
+      return objectMemory.loadClass(source, null);
+    } catch (ParseError e) {
+      Universe.errorExit(e.getMessage());
+      return null;
+    }
   }
 
   @TruffleBoundary
@@ -360,7 +367,12 @@ public class Universe {
 
   @TruffleBoundary
   public DynamicObject loadShellClass(final String stmt) throws IOException {
-    return objectMemory.loadShellClass(stmt);
+    try {
+      return objectMemory.loadShellClass(stmt);
+    } catch (ParseError e) {
+      Universe.errorExit(e.getMessage());
+      return null;
+    }
   }
 
   public void setAvoidExit(final boolean value) {
@@ -525,17 +537,25 @@ public class Universe {
     mateDeactivated = this.getTruffleRuntime().createAssumption();
   }
 
-  public String resolveClassFilePath(final String className) throws IllegalStateException {
+  public File resolveClassFilePath(final String className) throws IllegalStateException {
+    File f;
     URL url = ClassLoader.getSystemResource(className + ".som");
     if (url != null) {
-      return url.getPath();
+      return new File(url.getPath());
+    } else {
+      for (URL cp : this.options.classPath){
+        f = new File(cp.getPath() + className + ".som");
+        if(f.exists() && !f.isDirectory()) {
+          return f;
+        }
+      }
     }
+
     throw new IllegalStateException(className
           + " class could not be loaded. "
           + "It is likely that the class path has not been initialized properly. "
           + "Please set system property 'system.class.path' or "
           + "pass the '-cp' command-line parameter.");
-
   }
 
   public DynamicObject getTrueObject()   { return objectMemory.getTrueObject(); }
@@ -585,18 +605,6 @@ public class Universe {
 
   public Object getExport(final String name) {
     return exports.get(name);
-  }
-
-  public static void addURLs2CP(final List<URL> urls) {
-    try {
-      Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-      method.setAccessible(true);
-      for (URL url : urls) {
-        method.invoke(ClassLoader.getSystemClassLoader(), url);
-      }
-    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      Universe.errorExit("Classpath was not provided in proper format");
-    }
   }
 
   private final TruffleRuntime                  truffleRuntime;

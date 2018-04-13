@@ -1,0 +1,45 @@
+/**
+ * Copyright (c) 2013 Stefan Marr, stefan.marr@vub.ac.be
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package mate.tests;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import som.tests.BasicInterpreterTests;
+
+@RunWith(Parameterized.class)
+public class MateBasicInterpreterTests extends BasicInterpreterTests {
+
+  public MateBasicInterpreterTests(final String testClass, final String testSelector,
+      final Object expectedResult, final Class<?> resultType) {
+    super(testClass, testSelector, expectedResult, resultType);
+  }
+
+  @Override
+  protected String[] getVMArguments() {
+    return new String[] {
+        "--mate",
+        "-activateMate",
+        "-cp",
+        "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler::Smalltalk/Exceptions:TestSuite/BasicInterpreterTests"};
+  }
+}
