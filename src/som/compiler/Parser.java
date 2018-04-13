@@ -65,7 +65,6 @@ import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 
-import java.io.Reader;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -164,9 +163,14 @@ public class Parser {
 
     ParseError(final String message, final Symbol expected, final Parser parser) {
       this.message = message;
-      this.sourceCoordinate = parser.getCoordinate();
       this.text             = parser.text;
-      this.rawBuffer        = parser.lexer.getRawBuffer();
+      if (parser.lexer == null) {
+        this.sourceCoordinate = new SourceCoordinate(0, 0, 0, 0);
+        this.rawBuffer = "";
+      } else {
+        this.sourceCoordinate = parser.getCoordinate();
+        this.rawBuffer = new String(parser.lexer.getCurrentLine());
+      }
       this.fileName         = parser.source.getName();
       this.expected         = expected;
       this.found            = parser.sym;
@@ -221,14 +225,19 @@ public class Parser {
     }
   }
 
-  public Parser(final Reader reader, final long fileSize, final Source source,
-      final ObjectMemory memory, final StructuralProbe structuralProbe, final SomLanguage language) {
+  public Parser(final String content, final long fileSize, final Source source,
+      final ObjectMemory memory, final StructuralProbe structuralProbe, final SomLanguage language) throws ParseError {
     this.objectMemory = memory;
     this.source   = source;
 
     sym = NONE;
-    lexer = new Lexer(reader, fileSize);
     nextSym = NONE;
+
+    if (fileSize == 0) {
+      throw new ParseError("Provided file is empty.", NONE, this);
+    }
+
+    lexer = new Lexer(content);
     getSymbolFromLexer();
     this.structuralProbe = structuralProbe;
     this.language = language;
@@ -366,10 +375,13 @@ public class Parser {
   private SourceSection getSource(final SourceCoordinate coord, final int extraChars) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     int line = coord.startLine == 0 ? 1 : coord.startLine;
-    int column = coord.startColumn;
+    int column = coord.startColumn == 0 ? 1 : coord.startColumn;
     while (source.getLineLength(line) < column) {
       line += 1;
       column = 1;
+    }
+    if (column < 1) {
+      int i = 1;
     }
     return source.createSection(line, column,
         lexer.getNumberOfCharactersRead() - coord.charIndex + extraChars);

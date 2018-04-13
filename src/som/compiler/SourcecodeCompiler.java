@@ -24,11 +24,6 @@
 
 package som.compiler;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringReader;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
@@ -52,15 +47,9 @@ public final class SourcecodeCompiler {
 
   @TruffleBoundary
   public DynamicObject compileClass(final Source source, final DynamicObject systemClass,
-      final ObjectMemory memory, final StructuralProbe structuralProbe) {
+      final ObjectMemory memory, final StructuralProbe structuralProbe) throws ParseError {
 
-    Parser parser;
-    try {
-      parser = new Parser(new FileReader(source.getPath()), new File(source.getPath()).length(), source, memory, structuralProbe, language);
-    } catch (IOException ex) {
-      throw new IllegalStateException("File name " + ex.getMessage()
-          + " does not exist ");
-    }
+    Parser parser = new Parser(source.getCharacters().toString(), source.getLength(), source, memory, structuralProbe, language);
 
     DynamicObject result = compile(parser, systemClass, memory, structuralProbe);
 
@@ -77,8 +66,8 @@ public final class SourcecodeCompiler {
 
   @TruffleBoundary
   public DynamicObject compileClass(final String stmt,
-      final DynamicObject systemClass, final ObjectMemory memory, final StructuralProbe structuralProbe) {
-    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, memory, structuralProbe, language);
+      final DynamicObject systemClass, final ObjectMemory memory, final StructuralProbe structuralProbe) throws ParseError {
+    Parser parser = new Parser(stmt, stmt.length(), null, memory, structuralProbe, language);
 
     DynamicObject result = compile(parser, systemClass, memory, structuralProbe);
     return result;
