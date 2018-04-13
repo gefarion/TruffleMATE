@@ -1,18 +1,19 @@
 package som.primitives;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitives.Specializer;
-import som.vm.constants.Classes;
-import tools.debugger.Tags.LiteralTag;
-import tools.dym.Tags.OpArithmetic;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.Primitives.Specializer;
+import som.vm.Universe;
+import som.vm.constants.Classes;
+import tools.debugger.Tags.LiteralTag;
+import tools.dym.Tags.OpArithmetic;
 
 
 public abstract class DoublePrims  {
@@ -62,7 +63,7 @@ public abstract class DoublePrims  {
   }
 
   public static class IsDoubleClass extends Specializer<ExpressionNode> {
-    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final Universe vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {

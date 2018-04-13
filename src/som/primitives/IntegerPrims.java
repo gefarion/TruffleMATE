@@ -14,6 +14,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.primitives.Primitives.Specializer;
 import som.primitives.arithmetic.ArithmeticPrim;
+import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
@@ -103,7 +104,7 @@ public abstract class IntegerPrims {
     }
 
     public static class IsIntegerClass extends Specializer<ExpressionNode> {
-      public IsIntegerClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
+      public IsIntegerClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final Universe vm) { super(prim, fact, vm); }
 
       @Override
       public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {

@@ -1,17 +1,18 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
-import som.vmobjects.SSymbol;
-import tools.dym.Tags.OpLength;
+import java.lang.reflect.Array;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.ArrayType;
+import som.vmobjects.SSymbol;
+import tools.dym.Tags.OpLength;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)

@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -95,7 +94,7 @@ public class Primitives {
   private Map<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
   private Map<SSymbol, List<DynamicObject>> vmPrimitives;
 
-  private final SomLanguage language;
+  private final Universe vm;
 
   @SuppressWarnings("unchecked")
   public Specializer<EagerlySpecializableNode> getEagerSpecializer(final SSymbol selector,
@@ -117,8 +116,8 @@ public class Primitives {
   public Primitives(final ObjectMemory om, final SomLanguage language) {
     eagerPrimitives = new HashMap<>();
     vmPrimitives = new HashMap<>();
-    this.language = language;
-    initialize(om);
+    this.vm = language.getVM();
+    initialize(om, language);
   }
 
   /**
@@ -132,9 +131,10 @@ public class Primitives {
     private final NodeFactory<? extends ExpressionNode> extraChildFactory;
 
     @SuppressWarnings("unchecked")
-    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact) {
+    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact, final Universe vm) {
       this.prim = prim;
       this.fact = fact;
+      this.vm = vm;
 
       if (prim.extraChild() == NoChild.class) {
         extraChildFactory = null;
@@ -147,11 +147,6 @@ public class Primitives {
           throw new RuntimeException(e);
         }
       }
-    }
-
-    public void initialize(final Universe vm) {
-      // assert vm != null;
-      this.vm = vm;
     }
 
     public boolean noWrapper() {
@@ -272,33 +267,33 @@ public class Primitives {
    * Setup the lookup data structures for vm primitive registration as well as
    * eager primitive replacement.
    */
-  private void initialize(final ObjectMemory om) {
-    /* I send new because I am not using primitives requiring context.
-     A refactoring for the polyglot engine initialization is still needed to pass
-     the context properly */
-    initializeSpecializers(null);
+  private void initialize(final ObjectMemory om, final SomLanguage language) {
+    List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
 
-    for (Entry<NodeFactory<? extends ExpressionNode>, som.primitives.Primitive[]> e : primitives.entrySet()) {
-      for (som.primitives.Primitive prim : e.getValue()) {
-        Specializer<? extends ExpressionNode> specializer = getSpecializer(prim, e.getKey());
-        String classname = prim.klass();
-        if (!("".equals(classname))) {
-          SSymbol klass = om.symbolFor(classname);
-          SSymbol signature = om.symbolFor(prim.selector());
-          List<DynamicObject> content;
-          if (vmPrimitives.containsKey(klass)) {
-            content = vmPrimitives.get(klass);
-          } else {
-            content = new ArrayList<DynamicObject>();
-            vmPrimitives.put(klass, content);
+    for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
+      som.primitives.Primitive[] prims = getPrimitiveAnnotation(primFact);
+      if (prims != null) {
+        for (som.primitives.Primitive prim : prims) {
+          Specializer<? extends ExpressionNode> specializer = getSpecializer(prim, primFact);
+          String classname = prim.klass();
+          if (!("".equals(classname))) {
+            SSymbol klass = om.symbolFor(classname);
+            SSymbol signature = om.symbolFor(prim.selector());
+            List<DynamicObject> content;
+            if (vmPrimitives.containsKey(klass)) {
+              content = vmPrimitives.get(klass);
+            } else {
+              content = new ArrayList<DynamicObject>();
+              vmPrimitives.put(klass, content);
+            }
+            content.add(constructPrimitive(signature, specializer, language));
           }
-          content.add(constructPrimitive(signature, specializer, language));
-        }
 
-        if ((!("".equals(prim.selector())) && prim.eagerSpecializable())) {
-          SSymbol msgSel = om.symbolFor(prim.selector());
-          assert !eagerPrimitives.containsKey(msgSel) : "clash of selectors and eager specialization";
-          eagerPrimitives.put(msgSel, specializer);
+          if ((!("".equals(prim.selector())) && prim.eagerSpecializable())) {
+            SSymbol msgSel = om.symbolFor(prim.selector());
+            assert !eagerPrimitives.containsKey(msgSel) : "clash of selectors and eager specialization";
+            eagerPrimitives.put(msgSel, specializer);
+          }
         }
       }
     }
@@ -308,8 +303,8 @@ public class Primitives {
   private <T> Specializer<T> getSpecializer(final som.primitives.Primitive prim, final NodeFactory<T> factory) {
     try {
       return prim.specializer().
-          getConstructor(som.primitives.Primitive.class, NodeFactory.class).
-          newInstance(prim, factory);
+          getConstructor(som.primitives.Primitive.class, NodeFactory.class, Universe.class).
+          newInstance(prim, factory, vm);
     } catch (InstantiationException | IllegalAccessException |
         IllegalArgumentException | InvocationTargetException |
         NoSuchMethodException | SecurityException e) {
@@ -317,10 +312,10 @@ public class Primitives {
     }
   }
 
-  private static final Map<NodeFactory<? extends ExpressionNode>, som.primitives.Primitive[]> primitives;
-  private static final Map<som.primitives.Primitive, Specializer<? extends ExpressionNode>> specializers;
+  //private static final Map<NodeFactory<? extends ExpressionNode>, som.primitives.Primitive[]> primitives;
+  //private static final Map<som.primitives.Primitive, Specializer<? extends ExpressionNode>> specializers;
 
-  static {
+  /*static {
     primitives = new HashMap<>();
     specializers = new HashMap<>();
 
@@ -350,7 +345,7 @@ public class Primitives {
     for (Specializer<?> spez : specializers.values()) {
       spez.initialize(vm);
     }
-  }
+  }*/
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private static Specializer<? extends ExpressionNode> instantiateSpecializer(

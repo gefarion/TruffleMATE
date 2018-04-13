@@ -11,6 +11,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitives.Specializer;
 import som.primitives.arrays.NewPrim;
+import som.vm.Universe;
 import som.vm.constants.Classes;
 import tools.dym.Tags.StringAccess;
 
@@ -32,7 +33,7 @@ public class CharacterPrims {
     }
 
     public static class IsCharacterClass extends Specializer<NewPrim> {
-      public IsCharacterClass(final Primitive prim, final NodeFactory<NewPrim> fact) { super(prim, fact); }
+      public IsCharacterClass(final Primitive prim, final NodeFactory<NewPrim> fact, final Universe vm) { super(prim, fact, vm); }
 
       @Override
       public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

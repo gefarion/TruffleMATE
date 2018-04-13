@@ -67,7 +67,7 @@ public abstract class MethodPrims {
 
     @Specialization
     public final String doSMethod(final DynamicObject receiver) {
-      return SInvokable.getInvokable(receiver).getSourceSection().getCode();
+      return SInvokable.getInvokable(receiver).getSourceSection().getCharacters().toString();
     }
   }
 }

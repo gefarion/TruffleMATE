@@ -203,7 +203,7 @@ public final class SystemPrims {
 
     @Specialization
     public final DynamicObject doSObject(final DynamicObject receiver) {
-      assert (SClass.getName(receiver).equals("system"));
+      assert (SClass.getName(receiver).getString().equals("system"));
       return Universe.getCurrent().getSystemObject();
     }
   }

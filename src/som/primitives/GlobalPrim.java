@@ -1,5 +1,12 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadWithoutErrorNode;
@@ -13,19 +20,12 @@ import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 @ImportStatic(SystemPrims.class)
 @Primitive(klass = "System", selector = "global:",
            specializer = GlobalPrim.IsSystemObject.class)
 public abstract class GlobalPrim extends BinarySystemNode {
-  protected GlobalPrim(boolean eagWrap, final SourceSection source) {
+  protected GlobalPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
   }
 
@@ -37,7 +37,7 @@ public abstract class GlobalPrim extends BinarySystemNode {
   }
 
   public static class IsSystemObject extends Specializer<ExpressionNode> {
-    public IsSystemObject(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
+    public IsSystemObject(final Primitive prim, final NodeFactory<ExpressionNode> fact, final Universe vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {

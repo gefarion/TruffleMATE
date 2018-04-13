@@ -15,6 +15,7 @@ import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNode.OrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
 import som.primitives.Primitive;
+import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -31,8 +32,8 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
 
   public static final class OrSplzr extends AndOrSplzr {
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public OrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> fact) {
-      super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance());
+    public OrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> fact, final Universe vm) {
+      super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance(), vm);
     }
   }
 

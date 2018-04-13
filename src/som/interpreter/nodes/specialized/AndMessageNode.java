@@ -18,6 +18,7 @@ import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
 import som.primitives.Primitive;
 import som.primitives.Primitives.Specializer;
+import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -36,13 +37,13 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     protected final NodeFactory<BinaryExpressionNode> boolFact;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public AndOrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> fact) {
-      this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance());
+    public AndOrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> fact, final Universe vm) {
+      this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance(), vm);
     }
 
     protected AndOrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> msgFact,
-        final NodeFactory<BinaryExpressionNode> boolFact) {
-      super(prim, msgFact);
+        final NodeFactory<BinaryExpressionNode> boolFact, final Universe vm) {
+      super(prim, msgFact, vm);
       this.boolFact = boolFact;
     }
 

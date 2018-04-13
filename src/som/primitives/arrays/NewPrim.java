@@ -10,6 +10,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.Primitive;
 import som.primitives.Primitives.Specializer;
+import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
@@ -24,7 +25,7 @@ public abstract class NewPrim extends BinaryExpressionNode {
   }
 
   public static class IsArrayClass extends Specializer<NewPrim> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact) { super(prim, fact); }
+    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final Universe vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

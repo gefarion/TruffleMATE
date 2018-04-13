@@ -22,6 +22,7 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
 import som.primitives.Primitive;
 import som.primitives.Primitives.Specializer;
+import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -32,7 +33,7 @@ import som.vmobjects.SInvokable;
            requiresExecutionLevel = true)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   public static class ToDoSplzr extends Specializer<IntToDoMessageNode> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact) { super(prim, fact); }
+    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact, final Universe vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args,
