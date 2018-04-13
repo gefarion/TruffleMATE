@@ -97,6 +97,7 @@ import tools.language.StructuralProbe;
  *  - There is an assertion error while outputting data. Analyze what is happening
  */
 
+@SuppressWarnings("deprecation")
 @Registration(id = DynamicMetrics.ID)
 public class DynamicMetrics extends TruffleInstrument {
 

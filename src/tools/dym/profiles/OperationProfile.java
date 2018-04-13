@@ -8,8 +8,6 @@ import java.util.Set;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
-import com.sun.istack.internal.NotNull;
-
 
 public final class OperationProfile extends Counter {
 
@@ -19,8 +17,7 @@ public final class OperationProfile extends Counter {
   protected final int numSubexpressions;
   protected final Map<Arguments, Integer> argumentTypes;
 
-  public OperationProfile(final SourceSection source,
-      @NotNull final String operation, final Set<Class<?>> tags, final int numSubexpressions) {
+  public OperationProfile(final SourceSection source, final String operation, final Set<Class<?>> tags, final int numSubexpressions) {
     super(source);
     this.numSubexpressions = numSubexpressions;
     this.operation         = operation;
