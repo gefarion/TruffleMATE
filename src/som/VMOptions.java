@@ -32,6 +32,7 @@ public class VMOptions {
     vmReflectionEnabled = false;
     printAST = false;
     unoptimizedIH = false;
+    classPath = new ArrayList<URL>();
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
@@ -128,9 +129,6 @@ public class VMOptions {
   public void setupClassPath(final String cp) {
     // Create a new tokenizer to split up the string of directories
     StringTokenizer tokenizer = new StringTokenizer(cp, File.pathSeparator);
-
-    // Get the default class path of the appropriate size
-    classPath = new ArrayList<URL>(tokenizer.countTokens());
 
     // Get the directories and put them into the class path array
     for (int i = 0; tokenizer.hasMoreTokens(); i++) {
