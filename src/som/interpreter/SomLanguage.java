@@ -3,6 +3,7 @@ package som.interpreter;
 import java.io.IOException;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -76,6 +77,8 @@ public class SomLanguage extends TruffleLanguage<Universe> {
   public static final String FILE_EXTENSION = "som";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
+  @CompilationFinal private Universe vm;
+
   public SomLanguage() {
     super();
   }
@@ -98,6 +101,10 @@ public class SomLanguage extends TruffleLanguage<Universe> {
     public DynamicObject execute(final VirtualFrame frame) {
       return klass;
     }
+  }
+
+  public Universe getVM() {
+    return vm;
   }
 
   @Override

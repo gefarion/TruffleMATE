@@ -45,7 +45,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
   public ExpressionNode inline(final MethodGenerationContext mgenc,
       final Local[] locals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
-        locals, getSourceSection().getCharIndex());
+        locals, 0); //getSourceSection().getCharIndex()
   }
 
   @Override
