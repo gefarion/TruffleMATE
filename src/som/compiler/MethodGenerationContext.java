@@ -168,7 +168,7 @@ public final class MethodGenerationContext {
 
   public DynamicObject assemble(ExpressionWithTagsNode body, final SourceSection sourceSection) {
     if (primitive) {
-      return Primitives.constructEmptyPrimitive(signature,language);
+      return Primitives.constructEmptyPrimitive(signature, language);
     }
 
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());

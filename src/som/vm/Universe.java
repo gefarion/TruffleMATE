@@ -543,9 +543,9 @@ public class Universe {
     if (url != null) {
       return new File(url.getPath());
     } else {
-      for (URL cp : this.options.classPath){
+      for (URL cp : this.options.classPath) {
         f = new File(cp.getPath() + className + ".som");
-        if(f.exists() && !f.isDirectory()) {
+        if (f.exists() && !f.isDirectory()) {
           return f;
         }
       }

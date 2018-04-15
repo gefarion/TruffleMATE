@@ -244,7 +244,7 @@ public class Primitives {
 
     ExpressionWithTagsNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
     Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
-        (ExpressionWithTagsNode) primNode.deepCopy(), null,language);
+        (ExpressionWithTagsNode) primNode.deepCopy(), null, language);
     DynamicObject method = Universe.newMethod(signature, primMethodNode, true, new DynamicObject[0]);
     primMethodNode.setMethod(method);
     return method;
@@ -312,8 +312,8 @@ public class Primitives {
     }
   }
 
-  //private static final Map<NodeFactory<? extends ExpressionNode>, som.primitives.Primitive[]> primitives;
-  //private static final Map<som.primitives.Primitive, Specializer<? extends ExpressionNode>> specializers;
+  // private static final Map<NodeFactory<? extends ExpressionNode>, som.primitives.Primitive[]> primitives;
+  // private static final Map<som.primitives.Primitive, Specializer<? extends ExpressionNode>> specializers;
 
   /*static {
     primitives = new HashMap<>();
