@@ -109,46 +109,29 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
 
     @Specialization(guards = {"self.getShape() == cachedShape", "location != null"},
         assumptions = {"locationAssignable", "cachedShape.getValidAssumption()"},
-        limit = "LIMIT")
+        limit = "LIMIT", rewriteOn = {IncompatibleLocationException.class, FinalLocationException.class})
     public final Object writeFieldCached(final DynamicObject self,
         final Object value, final boolean generalized,
         @Cached("self.getShape()") final Shape cachedShape,
         @Cached("getLocation(self, value)") final Location location,
-        @Cached("createAssumption()") final Assumption locationAssignable) {
-      try {
-        location.set(self, value);
-      } catch (IncompatibleLocationException | FinalLocationException e) {
-        // invalidate assumption to make sure this specialization gets removed
-        locationAssignable.invalidate();
-        // Invalidate shape to clean dispatch chains
-        self.getShape().getValidAssumption().invalidate();
-        // Generalization is handled by Shape#defineProperty as the field already exists
-        return executeWithGeneralized(self, value, generalized); // restart execution for the whole node
-      }
+        @Cached("createAssumption()") final Assumption locationAssignable) throws IncompatibleLocationException, FinalLocationException {
+      location.set(self, value);
       return value;
     }
 
     @Specialization(guards = {"self.getShape() == oldShape", "oldLocation == null"},
         assumptions = {"locationAssignable", "oldShape.getValidAssumption()", "newShape.getValidAssumption()"},
-        limit = "LIMIT")
+        limit = "LIMIT",
+        rewriteOn = IncompatibleLocationException.class)
     public final Object writeUnwrittenField(final DynamicObject self,
         final Object value, final boolean generalized,
         @Cached("self.getShape()") final Shape oldShape,
         @Cached("getLocation(self, value)") final Location oldLocation,
         @Cached("defineProperty(oldShape, value, generalized)") final Shape newShape,
         @Cached("newShape.getProperty(fieldIndex).getLocation()") final Location newLocation,
-        @Cached("createAssumption()") final Assumption locationAssignable) {
-      try {
+        @Cached("createAssumption()") final Assumption locationAssignable) throws IncompatibleLocationException {
         newLocation.set(self, value, oldShape, newShape);
-      } catch (IncompatibleLocationException e) {
-        // invalidate assumption to make sure this specialization gets removed
-        locationAssignable.invalidate();
-        // Invalidate shape to clean dispatch chains
-        newShape.getValidAssumption().invalidate();
-        // Generalize so writing an int and then later a double generalizes to adding an Object field.
-        return executeWithGeneralized(self, value, true); // restart execution for the whole node
-      }
-      return value;
+        return value;
     }
 
     /*@Specialization(guards = {"self.getShape() == oldShape", "oldLocation == null"}, limit = "LIMIT")
@@ -159,13 +142,13 @@ public abstract class FieldAccessorNode extends Node implements ReflectiveNode {
       return value;
     }*/
 
-    @Specialization(guards = "updateShape(object)")
+    /*@Specialization(guards = "updateShape(object)")
     public Object updateShapeAndWrite(final DynamicObject object, final Object value, final boolean generalize) {
         return executeWithGeneralized(object, value, generalize);
-    }
+    }*/
 
     @TruffleBoundary
-    @Specialization(replaces = {"writeFieldCached", "writeUnwrittenField", "updateShapeAndWrite"})
+    @Specialization(replaces = {"writeFieldCached", "writeUnwrittenField"})
     public final Object writeUncached(final DynamicObject self, final Object value, final boolean generalize) {
       self.define(fieldIndex, value);
       return value;
