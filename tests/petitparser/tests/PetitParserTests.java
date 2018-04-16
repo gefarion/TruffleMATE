@@ -46,6 +46,7 @@ public class PetitParserTests extends MateTests {
         "-cp",
         "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:Smalltalk/Collections/Streams:" +
         "Smalltalk/PetitParser:Smalltalk/PetitParser/PetitSmalltalk:Smalltalk/AST-Core:Smalltalk/AST-Core/Parser:" +
+        "Smalltalk/Exceptions:" +
         "TestSuite:TestSuite/PetitParser:TestSuite/PetitParser/PetitSmalltalk:" +
         " ",
         "TestHarness",
