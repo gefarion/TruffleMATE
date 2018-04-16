@@ -24,6 +24,8 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
   @CompilationFinal protected ExpressionNode uninitializedBody;
   @CompilationFinal protected DynamicObject belongsToMethod;
 
+  private final SourceSection sourceSection;
+
   public Invokable(final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
@@ -33,6 +35,7 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
     this.uninitializedBody = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
     this.belongsToMethod = method;
+    this.sourceSection = sourceSection;
   }
 
   @Override
@@ -74,6 +77,11 @@ public abstract class Invokable extends RootNode implements ReflectiveNode {
     } else {
       return super.isTaggedWith(tag);
     }
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   @Override
