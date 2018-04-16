@@ -13,6 +13,7 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
 import som.interpreter.SArguments;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.vm.Universe;
 import som.vm.constants.Classes;
@@ -117,7 +118,7 @@ public abstract class MateAbstractReflectiveDispatch extends Node {
       return new Object[]{SArguments.getEnvironment(frame), ExecutionLevel.Meta, arguments[0],
           arguments[1],
           new MockJavaObject(frame.materialize(), context),
-          arguments[2]};
+          ((ExpressionNode) arguments[2]).executeGeneric(frame)};
     }
   }
 
