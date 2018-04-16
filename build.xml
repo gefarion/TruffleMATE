@@ -1,4 +1,7 @@
-<project name="som" basedir="." default="compile">
+<project name="som" basedir="." default="compile"
+	xmlns:unless="ant:unless"
+	xmlns:if="ant:if"
+	xmlns:jacoco="antlib:org.jacoco.ant">
 
     <property name="src.dir"     value="src"/>
     <property name="src.dirMate" value="MateExtensions"/>
@@ -10,7 +13,7 @@
 	<property name="graal.dir" 	 value="${lib.dir}/graal/compiler" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="junit.version" value="4.12" />
-    <property name="checkstyle.version" value="7.8.1" />
+    <property name="checkstyle.version" value="8.8" />
 
     <property environment="env"/>
 
@@ -129,13 +132,12 @@
 		    dest="${lib.dir}/gson-2.7.jar" />
     </target>
 
-    <target name="checkstyle-jar">
-        <mkdir dir="${lib.dir}" />
+	<target name="checkstyle-jar">
         <get src="http://tenet.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
             usetimestamp="true"
             dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
     </target>
-    
+
     <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
         <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
         <checkstyle config=".checkstyle_checks.xml">
@@ -156,7 +158,7 @@
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
-          <compilerarg line="--release 8" />
+       	  <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />

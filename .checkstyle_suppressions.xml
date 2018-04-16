@@ -7,4 +7,5 @@
   <suppress files="[\\]tests/dym[\\]" checks=".*"/>
   <suppress files=".*\.csv" checks=".*"/>
   <suppress files=".*\.bz2" checks=".*"/>
+  <suppress files=".*\.DS_Store" checks=".*"/>
 </suppressions>
