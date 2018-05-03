@@ -7,11 +7,13 @@ import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.instrumentation.SuperReadWrapperFactory;
+import som.instrumentation.SuperReadWrapper;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
@@ -28,8 +30,7 @@ import tools.dym.Tags.LocalArgRead;
 
 public abstract class ArgumentReadNode {
 
-  @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
-  public static class LocalArgumentReadNode extends ExpressionWithTagsNode {
+  public static class LocalArgumentReadNode extends ExpressionWithTagsNode implements InstrumentableNode {
     protected final int argumentIndex;
 
     public LocalArgumentReadNode(final int argumentIndex, final SourceSection source) {
@@ -62,13 +63,13 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == tools.debugger.Tags.KeywordTag.class && SArguments.RCVR_IDX == argumentIndex) {
         return true;
       } else if (tag == LocalArgRead.class || tag == ArgumentTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
@@ -132,18 +133,17 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class && SArguments.RCVR_IDX == argumentIndex) {
         return true;
       } else if (tag == ArgumentTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
 
-  @Instrumentable(factory = SuperReadWrapperFactory.class)
   public static class LocalSuperReadNode extends LocalArgumentReadNode
       implements ISuperReadNode {
 
@@ -155,6 +155,11 @@ public abstract class ArgumentReadNode {
       super(SArguments.RCVR_ARGUMENTS_OFFSET, source);
       this.holderClass = holderClass;
       this.classSide   = classSide;
+    }
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probeNode) {
+      return new SuperReadWrapper(this, probeNode);
     }
 
     @Override
@@ -173,16 +178,15 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
 
-  @Instrumentable(factory = SuperReadWrapperFactory.class)
   public static class NonLocalSuperReadNode extends
       NonLocalArgumentReadNode implements ISuperReadNode {
 
@@ -195,6 +199,11 @@ public abstract class ArgumentReadNode {
       super(0, contextLevel, source);
       this.holderClass = holderClass;
       this.classSide   = classSide;
+    }
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probeNode) {
+      return new SuperReadWrapper(this, probeNode);
     }
 
     @Override
@@ -224,11 +233,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
@@ -256,11 +265,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }

@@ -21,16 +21,16 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.dsl.TypeSystemReference;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.ReflectiveNode;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
-
-import com.oracle.truffle.api.dsl.TypeSystemReference;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node implements ReflectiveNode {

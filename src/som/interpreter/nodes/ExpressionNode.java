@@ -23,6 +23,14 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.TypesGen;
 import som.vm.constants.ReflectiveOp;
 import som.vmobjects.SAbstractObject;
@@ -30,14 +38,8 @@ import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
-@Instrumentable(factory = ExpressionNodeWrapper.class)
-public abstract class ExpressionNode extends SOMNode {
+@GenerateWrapper
+public abstract class ExpressionNode extends SOMNode implements InstrumentableNode {
 
   public ExpressionNode(final SourceSection sourceSection) {
     super(sourceSection);
@@ -55,6 +57,16 @@ public abstract class ExpressionNode extends SOMNode {
   public boolean isMarkedAsRootExpression() { throw new UnsupportedOperationException(); }
 
   public abstract Object executeGeneric(VirtualFrame frame);
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probeNode) {
+    return new ExpressionNodeWrapper(this, this, probeNode);
+  }
+
+  @Override
+  public final boolean isInstrumentable() {
+    return true;
+  }
 
   @Override
   public ExpressionNode getFirstMethodBodyNode() { return this; }

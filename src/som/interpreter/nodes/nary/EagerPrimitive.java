@@ -1,7 +1,7 @@
 package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
@@ -98,9 +98,9 @@ public abstract class EagerPrimitive extends ExpressionNode
   protected abstract ExpressionNode getPrimitive();
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     assert !(this.getPrimitive() instanceof WrapperNode);
-    return ((EagerlySpecializableNode) this.getPrimitive()).isTaggedWithIgnoringEagerness(tag);
+    return ((EagerlySpecializableNode) this.getPrimitive()).hasTagIgnoringEagerness(tag);
   }
 
 }

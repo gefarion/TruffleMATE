@@ -1,18 +1,18 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
 import tools.dym.Tags.ControlFlowCondition;
 import tools.dym.Tags.LoopBody;
 import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvokeReceiver;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class ExpressionWithTagsNode extends ExpressionNode {
 
@@ -110,7 +110,7 @@ public abstract class ExpressionWithTagsNode extends ExpressionNode {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     if (tag == StatementTag.class) {
       return true;
     } else if (tag == RootTag.class) {
@@ -124,7 +124,7 @@ public abstract class ExpressionWithTagsNode extends ExpressionNode {
     } else if (tag == VirtualInvokeReceiver.class) {
       return isTagged(VIRTUAL_INVOKE_RECEIVER);
     } else {
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
   }
 

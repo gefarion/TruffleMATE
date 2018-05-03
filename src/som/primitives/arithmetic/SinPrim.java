@@ -1,12 +1,13 @@
 package som.primitives.arithmetic;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.primitives.Primitive;
 import tools.dym.Tags.OpArithmetic;
-
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -23,11 +24,11 @@ public abstract class SinPrim extends UnaryBasicOperation {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == OpArithmetic.class) { // TODO: is this good enough?
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 }

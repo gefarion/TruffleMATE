@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -23,11 +24,11 @@ public abstract class ArithmeticPrim extends BinaryExpressionNode {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == OpArithmetic.class || tag == BasicPrimitiveOperation.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 }

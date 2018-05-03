@@ -1,22 +1,21 @@
 package som.interpreter.nodes.nary;
 
-import som.instrumentation.FixedSizeExpressionWrapperFactory;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.instrumentation.FixedSizeExpressionWrapper;
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 @NodeChildren({
   @NodeChild(value = "receiver", type = ExpressionNode.class),
   @NodeChild(value = "argument", type = ExpressionNode.class)})
-@Instrumentable(factory = FixedSizeExpressionWrapperFactory.class)
 public abstract class BinaryExpressionNode extends EagerlySpecializableNode
     implements ExpressionWithReceiver, PreevaluatedExpression {
 
@@ -29,6 +28,11 @@ public abstract class BinaryExpressionNode extends EagerlySpecializableNode
 
   public abstract Object executeEvaluated(VirtualFrame frame,
       Object receiver, Object argument);
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probeNode) {
+    return new FixedSizeExpressionWrapper(this, probeNode);
+  }
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame,

@@ -380,9 +380,6 @@ public class Parser {
       line += 1;
       column = 1;
     }
-    if (column < 1) {
-      int i = 1;
-    }
     return source.createSection(line, column,
         lexer.getNumberOfCharactersRead() - coord.charIndex + extraChars);
   }

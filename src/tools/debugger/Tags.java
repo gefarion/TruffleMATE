@@ -21,11 +21,14 @@
  */
 package tools.debugger;
 
+import javax.swing.text.Highlighter.Highlight;
+
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class Tags {
-  private Tags() { }
+public abstract class Tags extends Tag {
+  protected Tags() { }
 
   public static Class<?>[] getAll() {
     return new Class<?>[] {KeywordTag.class, LiteralTag.class, CommentTag.class,
@@ -39,6 +42,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Keyword")
   public final class KeywordTag extends Tags {
     private KeywordTag() { }
   }
@@ -46,6 +50,7 @@ public abstract class Tags {
   /**
    * Marks literal values.
    */
+  @Tag.Identifier("Literal")
   public final class LiteralTag extends Tags {
     private LiteralTag() { }
   }
@@ -55,6 +60,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Comment")
   public final class CommentTag extends Tags {
     private CommentTag() { }
   }
@@ -65,6 +71,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Identifier")
   public final class IdentifierTag extends Tags {
     private IdentifierTag() { }
   }
@@ -74,6 +81,7 @@ public abstract class Tags {
    * Formal arguments that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Argument")
   public final class ArgumentTag extends Tags {
     private ArgumentTag() { }
   }
@@ -83,6 +91,7 @@ public abstract class Tags {
    * Variable declarations that are not part of the AST should be reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Local Variable")
   public final class LocalVariableTag extends Tags {
     private LocalVariableTag() { }
   }
@@ -92,6 +101,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Statement")
   public final class StatementSeparatorTag extends Tags {
     private StatementSeparatorTag() { }
   }
@@ -101,6 +111,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Delimiter Open")
   public final class DelimiterOpeningTag extends Tags {
     private DelimiterOpeningTag() { }
   }
@@ -110,6 +121,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
    */
+  @Tag.Identifier("Delimiter Close")
   public final class DelimiterClosingTag extends Tags {
     private DelimiterClosingTag() { }
   }

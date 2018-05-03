@@ -2,8 +2,9 @@ package som.interpreter.nodes;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -122,11 +123,11 @@ public final class MessageSendNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == CallTag.class) {
         return true;
       }
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
 
     public DynamicObject[] getSpecializations() {
@@ -205,13 +206,17 @@ public final class MessageSendNode {
     }
   }
 
-  @Instrumentable(factory = MessageSendNodeWrapper.class)
   public static class UninitializedMessageSendNode
       extends AbstractUninitializedMessageSendNode implements PreevaluatedExpression{
 
     protected UninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments, final SourceSection source) {
       super(selector, arguments, source);
+    }
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probeNode) {
+      return new MessageSendNodeWrapper(this, probeNode);
     }
 
     @Override
@@ -291,7 +296,6 @@ public final class MessageSendNode {
     }
   }
 
-  @Instrumentable(factory = MessageSendNodeWrapper.class)
   public static class GenericMessageSendNode
       extends AbstractMessageSendNode {
 
@@ -303,6 +307,11 @@ public final class MessageSendNode {
       super(selector, arguments, source);
       this.dispatchNode = dispatchNode;
       this.adoptChildren();
+    }
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probeNode) {
+      return new MessageSendNodeWrapper(this, probeNode);
     }
 
     @Override
@@ -332,11 +341,11 @@ public final class MessageSendNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == VirtualInvoke.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
