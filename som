@@ -147,7 +147,7 @@ if not java_bin:
   if graal_home and os.path.isdir(graal_home + '/bin'):
     java_bin = graal_home + '/bin/java'	          
 
-if java_bin is graal_home or not os.path.isfile(java_bin):
+if not java_bin or java_bin is graal_home or not os.path.isfile(java_bin):
   java_bin = "java"
 
 JAVA_MAJOR_VERSION = None
