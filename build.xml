@@ -4,6 +4,7 @@
 	xmlns:jacoco="antlib:org.jacoco.ant">
 
     <property name="src.dir"     value="src"/>
+	<property name="java8"       value="../../../java8"/>
     <property name="src.dirMate" value="MateExtensions"/>
     <property name="src_gen.dir" value="src_gen"/>
     <property name="test.dir"    value="tests"/>
@@ -102,13 +103,16 @@
     <target name="truffle-libs" >
         <exec executable="../../mx/mx" dir="${truffle.dir}">
             <arg value="build"/>
+        	<arg value="--no-native"/>
+        	<env key="EXTRA_JAVA_HOMES" value="${java8}"/>
         </exec>
     </target>
 	
 	<target name="graal" >
         <exec executable="../../mx/mx" dir="${graal.dir}">
-        	<env key="JAVA_HOME" value="../java-jvmci-8/"/>
+        	<env key="EXTRA_JAVA_HOMES" value="${java8}"/>
         	<arg value="build"/>
+        	<arg value="--no-native"/>
         </exec>
     </target>
 	
@@ -145,28 +149,29 @@
           <formatter type="plain"/>
         </checkstyle>
     </target>
-
-    <target name="compile" depends="libs" description="Compile TruffleSOM">
+	
+	<target name="compile" depends="libs" description="Compile TruffleSOM">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
         <javac includeantruntime="false" destdir="${classes.dir}" debug="true">
           <src path="${src.dir}"/>
-        	<exclude name="**/tools/debugger/**"/>
           <src path="${src.dirMate}"/>
           <classpath refid="project.classpath" />
-          <compilerarg line="-s ${src_gen.dir}" />
+          <compilerarg line="-sourcepath ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
-       	  <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
+          <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
-          <compilerarg line="-s ${src_gen.dir}" />
+          <compilerarg line="-sourcepath ${src_gen.dir}" />
           <compilerarg line="-Xlint:all" />
+          <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${test.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
+          <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
     </target>
 
@@ -187,7 +192,7 @@
             </batchtest>
             <formatter type="brief" usefile="false"/>
         </junit>
+    	<fail message="Test failure detected, check test results." if="test.failed" />
     </target>
-    <target name="tests" depends="test" />
-
+    <target name="tests" depends="test"/>
 </project>
