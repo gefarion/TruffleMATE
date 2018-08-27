@@ -8,16 +8,16 @@ import com.oracle.truffle.api.interop.Resolve;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
+
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
-import som.interpreter.SomLanguage;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Nil;
 
 
-@MessageResolution(receiverType = DynamicObject.class, language = SomLanguage.class)
+@MessageResolution(receiverType = DynamicObject.class)
 public class DynamicObjectInteropMessageResolution {
 
   @Resolve(message = "INVOKE")

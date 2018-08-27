@@ -12,7 +12,7 @@ public class SFile {
   private FileInputStream inputStream;
   private long position;
 
-  public SFile(File fileParam, boolean writable) {
+  public SFile(final File fileParam, final boolean writable) {
     file = fileParam;
     if (writable) {
       setInputStream(null);
@@ -40,7 +40,7 @@ public class SFile {
     return outputStream;
   }
 
-  public void setOutputStream(FileOutputStream outputStream) {
+  public void setOutputStream(final FileOutputStream outputStream) {
     this.outputStream = outputStream;
   }
 
@@ -48,7 +48,7 @@ public class SFile {
     return inputStream;
   }
 
-  public void setInputStream(FileInputStream inputStream) {
+  public void setInputStream(final FileInputStream inputStream) {
     this.inputStream = inputStream;
   }
 
@@ -56,7 +56,7 @@ public class SFile {
     return position;
   }
 
-  public void setPosition(long position) {
+  public void setPosition(final long position) {
     try {
       this.getInputStream().getChannel().position(position);
       this.position = position;
@@ -67,6 +67,15 @@ public class SFile {
 
   public File getFile() {
     return file;
+  }
+
+  public void close() throws IOException {
+    if (getOutputStream() != null) {
+      getOutputStream().close();
+    }
+    if (getInputStream() != null) {
+      getInputStream().close();
+    }
   }
 
 }

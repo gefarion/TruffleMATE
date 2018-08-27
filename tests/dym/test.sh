@@ -68,3 +68,4 @@ then
   ## update the archive
   tar cjf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH expected-results
 fi
+

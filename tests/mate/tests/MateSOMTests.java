@@ -18,8 +18,9 @@ public class MateSOMTests extends SomTests {
     List<Object[]> somTests = ((List<Object[]>) SomTests.data());
     List<Object[]> mateTests = new ArrayList<Object[]>();
     mateTests.addAll(somTests);
-    mateTests.add(new String[]{"Files"});
     mateTests.add(new String[]{"BasicOperations"});
+    mateTests.add(new String[]{"Files"});
+
     return mateTests;
   }
 

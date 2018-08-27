@@ -39,7 +39,7 @@ public class UninitializedDispatchNode extends AbstractDispatchNode {
     if (chainDepth < INLINE_CACHE_SIZE) {
       DynamicObject rcvrClass = Types.getClassOf(rcvr);
       DynamicObject method = SClass.lookupInvokable(rcvrClass, selector);
-      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(this.sourceSection, selector);
+      UninitializedDispatchNode newChainEnd = this.uninitializedNode(this.sourceSection, selector);
       DispatchGuard guard = DispatchGuard.create(rcvr);
       AbstractCachedDispatchNode node;
       if (method != null) {

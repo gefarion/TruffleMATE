@@ -3,7 +3,6 @@ package som.interpreter;
 import java.io.IOException;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -53,7 +52,7 @@ import tools.dym.Tags.UnspecifiedInvoke;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
-@TruffleLanguage.Registration(name = "TruffleMate", version = "0.1.0", mimeType = SomLanguage.MIME_TYPE)
+@TruffleLanguage.Registration(name = SomLanguage.LANG_NAME, id = SomLanguage.LANG_NAME, version = "0.1.0", characterMimeTypes = SomLanguage.MIME_TYPE)
  @ProvidedTags({RootTag.class, StatementTag.class, CallTag.class,
   KeywordTag.class, LiteralTag.class,
   CommentTag.class, IdentifierTag.class, ArgumentTag.class,
@@ -72,12 +71,11 @@ import tools.dym.Tags.VirtualInvokeReceiver;
 })
 public class SomLanguage extends TruffleLanguage<Universe> {
 
+  public static final String LANG_NAME = "SomST";
   public static final String MIME_TYPE = "application/x-mate-som";
   public static final String CMD_ARGS  = "command-line-arguments";
   public static final String FILE_EXTENSION = "som";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
-
-  @CompilationFinal private Universe vm;
 
   public SomLanguage() {
     super();
@@ -103,19 +101,13 @@ public class SomLanguage extends TruffleLanguage<Universe> {
     }
   }
 
-  public Universe getVM() {
-    return vm;
-  }
-
   @Override
   protected Universe createContext(final Env env) {
-    Universe vm;
     try {
-      vm = new Universe(env);
+      return new Universe(env);
     } catch (IOException e) {
       throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);
     }
-    return vm;
   }
 
   @Override

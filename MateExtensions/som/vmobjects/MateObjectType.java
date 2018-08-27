@@ -22,11 +22,7 @@ public class MateObjectType extends ObjectType {
     "\nclass:" + SClass.getName(SObject.getSOMClass(object));
   }
 
-  public static class MateReflectiveObjectType extends SObjectLayoutImpl.SObjectType {
-    public MateReflectiveObjectType(final DynamicObject klass) {
-      super(klass);
-    }
-
+  public static class MateReflectiveObjectType extends MateObjectType {
     @Override
     @TruffleBoundary
     public String toString(final DynamicObject object) {

@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -76,9 +77,19 @@ public class SomTests {
     this.testName = testName;
   }
 
+  @Before
+  public void initialize() {
+    // Initialize the VM only the first time
+    if (Universe.getCurrent() == null) {
+      Universe.createVM(getArguments());
+    } else {
+      Universe.getCurrent().updateArguments(getArguments());
+    }
+  }
+
   @Test
   public void testSomeTest() throws IOException, URISyntaxException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-    Universe vm = Universe.getInitializedVM(getArguments());
+    Universe vm = Universe.getCurrent();
     vm.setAvoidExit(true);
     vm.execute();
     assertEquals(0, vm.lastExitCode());

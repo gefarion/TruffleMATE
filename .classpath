@@ -5,12 +5,11 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" path="tests"/>
+	<classpathentry excluding="**/TruffleMateTCK.java" kind="src" path="tests"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="MateExtensions"/>
-	<classpathentry kind="lib" path="libs/graal/sdk/mxbuild/dists/graal-sdk.jar"/>
+	<classpathentry kind="lib" path="libs/graal/sdk/mxbuild/dists/graal-sdk.jar" sourcepath="libs/graal/sdk/mxbuild/dists/graal-sdk.src.zip"/>
 	<classpathentry kind="lib" path="libs/graal/truffle/mxbuild/dists/truffle-api.jar" sourcepath="libs/graal/truffle/mxbuild/dists/truffle-api.src.zip"/>
-	<classpathentry kind="lib" path="libs/graal/truffle/mxbuild/dists/truffle-tck.jar" sourcepath="libs/graal/truffle/mxbuild/dists/truffle-tck.src.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>

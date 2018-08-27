@@ -35,10 +35,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.graalvm.polyglot.Context;
+
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.InstrumentInfo;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage.Env;
 import com.oracle.truffle.api.TruffleRuntime;
@@ -53,9 +56,6 @@ import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.object.ObjectType;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 
 import som.VMOptions;
 import som.VmSettings;
@@ -95,109 +95,75 @@ public class Universe {
   public Universe(final Env environment) throws IOException {
     env = environment;
     truffleRuntime = Truffle.getRuntime();
-  }
-
-  public void initialize(final SomLanguage language) {
-    if (current != null) {
-      current.validUniverse.invalidate();
-    }
-    current = this;
-
-    avoidExit    = false;
-    lastExitCode = 0;
-    options = new VMOptions((String[]) env.getConfig().get(SomLanguage.CMD_ARGS));
+    options = new VMOptions(environment.getApplicationArguments());
     mateDeactivated = this.getTruffleRuntime().createAssumption();
-    mateActivated = null;
     globalSemanticsDeactivated = this.getTruffleRuntime().createAssumption();
-    globalSemanticsActivated = null;
-    globalSemantics = null;
     validUniverse = this.getTruffleRuntime().createAssumption();
     optimizedIH = this.getTruffleRuntime().createAssumption();
+    current = this;
+  }
 
+  public void updateArguments(final String[] arguments) {
+    options = new VMOptions(arguments);
+    initializeGeneralConfigurations();
+    validUniverse.invalidate();
+    validUniverse = this.getTruffleRuntime().createAssumption();
+  }
+
+  private void initializeGeneralConfigurations() {
+    avoidExit    = false;
+    lastExitCode = 0;
     if (options.vmReflectionActivated) {
       activatedMate();
     }
-
     if (options.unoptimizedIH) {
       unoptimizedIH();
-    }
-
-
-    if (ObjectMemory.last == null) {
-      objectMemory = new ObjectMemory(new SourcecodeCompiler(language), structuralProbe);
-      try {
-        objectMemory.initializeSystem();
-      } catch (ParseError e) {
-        Universe.errorExit(e.getMessage());
-      }
-    } else {
-      objectMemory = ObjectMemory.last;
     }
     if (options.showUsage) {
       VMOptions.printUsageAndExit();
     }
   }
 
-  public static Universe getInitializedVM(final String[] arguments) {
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, arguments);
-    PolyglotEngine engine = builder.build();
-    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
+  public void initialize(final SomLanguage language) {
+    initializeGeneralConfigurations();
+    initializeIntruments();
 
-    // Trigger initialization
-    assert null == engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
-    return Universe.getCurrent();
-  }
-
-  public static void main(final String[] args) {
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
-
-    VMOptions vmOptions = new VMOptions(args);
-    if (vmOptions.debuggerEnabled) {
-      // startDebugger(builder);
-    } else {
-      startExecution(builder, vmOptions);
+    objectMemory = new ObjectMemory(new SourcecodeCompiler(language), structuralProbe);
+    try {
+      objectMemory.initializeSystem();
+    } catch (ParseError e) {
+      Universe.errorExit(e.getMessage());
     }
   }
 
-  private static void startExecution(final Builder builder,
-      final VMOptions vmOptions) {
-    engine = builder.build();
+  private void initializeIntruments() {
+    Map<String, InstrumentInfo> instruments = env.getInstruments();
 
-    Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
-    Instrument profiler = instruments.get("profiler");
-    if (vmOptions.profilingEnabled && profiler == null) {
+    InstrumentInfo profilerInfo = instruments.get("profiler");
+    if (options.profilingEnabled && profilerInfo  == null) {
       errorPrintln("Truffle profiler not available. Might be a class path issue");
-    } else if (profiler != null) {
-      profiler.setEnabled(vmOptions.profilingEnabled);
+    } else if (profilerInfo != null) {
+      // profiler.setEnabled(vmOptions.profilingEnabled);
     }
-    // instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
-    /*Debugger debugger = null;
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      debugger = Debugger.find(engine);
-    }*/
-
-    /*if (vmOptions.webDebuggerEnabled) {
-      assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
-      Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
-      webDebuggerInst.setEnabled(true);
-
-      webDebugger = webDebuggerInst.lookup(WebDebugger.class);
-      webDebugger.startServer(debugger);
-    }*/
-
-    if (vmOptions.dynamicMetricsEnabled) {
+    if (options.dynamicMetricsEnabled) {
       assert VmSettings.DYNAMIC_METRICS;
-      Instrument dynM = instruments.get(DynamicMetrics.ID);
-      dynM.setEnabled(true);
-      structuralProbe = dynM.lookup(StructuralProbe.class);
-      assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
+      InstrumentInfo dynMetric = instruments.get(DynamicMetrics.ID);
+      // dynM.setEnabled(true);
+      // structuralProbe = dynM.lookup(StructuralProbe.class);
+      // assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
     }
+  }
 
-    engine.eval(SomLanguage.START);
-    engine.dispose();
+  public static void createVM(final String[] arguments) {
+    context = Context.newBuilder(SomLanguage.LANG_NAME).arguments(SomLanguage.LANG_NAME, arguments).build();
+    context.initialize(SomLanguage.LANG_NAME);
+  }
+
+  public static void main(final String[] arguments) {
+    createVM(arguments);
+    // context.eval(SomLanguage.START);
+    context.close();
     System.exit(Universe.getCurrent().lastExitCode);
   }
 
@@ -411,10 +377,6 @@ public class Universe {
     return current;
   }
 
-  public static void setCurrent(final Universe universe) {
-    current = universe;
-  }
-
   public DynamicObjectFactory getInstancesFactory() {
     if (options.vmReflectionEnabled) {
       return SReflectiveObject.SREFLECTIVE_OBJECT_FACTORY;
@@ -523,7 +485,9 @@ public class Universe {
     if (this.getMateDeactivatedAssumption().isValid()) {
       this.getMateDeactivatedAssumption().invalidate();
     }
-    mateActivated = this.getTruffleRuntime().createAssumption();
+    if (mateActivated == null || !this.getMateActivatedAssumption().isValid()) {
+      mateActivated = this.getTruffleRuntime().createAssumption();
+    }
   }
 
   public void unoptimizedIH() {
@@ -616,7 +580,7 @@ public class Universe {
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
-  @CompilationFinal public static PolyglotEngine engine;
+  @CompilationFinal public static Context context;
   @CompilationFinal ObjectMemory objectMemory;
   @CompilationFinal private static StructuralProbe structuralProbe;
   // @CompilationFinal private static WebDebugger webDebugger;

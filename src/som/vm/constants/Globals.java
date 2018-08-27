@@ -1,8 +1,8 @@
 package som.vm.constants;
 
-import som.vm.Universe;
-
 import com.oracle.truffle.api.object.DynamicObject;
+
+import som.vm.Universe;
 
 
 

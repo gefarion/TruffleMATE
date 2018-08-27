@@ -46,7 +46,7 @@ import som.vmobjects.SReflectiveObject;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
 
-//This is a pseudo object memory because the objects are actually managed by the Truffle/Java memory manager
+// This is a pseudo object memory because the objects are actually managed by the Truffle/Java memory manager
 public class ObjectMemory {
   @CompilationFinal public static ObjectMemory last;
   private final HashMap<SSymbol, DynamicObject> globals;

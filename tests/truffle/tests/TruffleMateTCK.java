@@ -8,9 +8,6 @@ import org.junit.Test;
 
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-import com.oracle.truffle.tck.TruffleTCK;
 
 import som.interpreter.SomLanguage;
 import som.vmobjects.SClass;

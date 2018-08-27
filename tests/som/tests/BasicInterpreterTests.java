@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -133,6 +134,16 @@ public class BasicInterpreterTests {
     this.resultType     = resultType;
   }
 
+  @Before
+  public void initialize() {
+    // Initialize the VM only the first time
+    if (Universe.getCurrent() == null) {
+      Universe.createVM(getVMArguments());
+    } else {
+      Universe.getCurrent().updateArguments(getVMArguments());
+    }
+  }
+
   protected void assertEqualsSOMValue(final Object expectedResult, final Object actualResult) {
     if (resultType == Long.class) {
       long expected = (int) expectedResult;
@@ -166,7 +177,7 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() {
-    Universe vm = Universe.getInitializedVM(getVMArguments());
+    Universe vm = Universe.getCurrent();
     vm.setAvoidExit(true);
     Object actualResult = vm.execute(testClass, testSelector);
     assertEqualsSOMValue(expectedResult, actualResult);
