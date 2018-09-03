@@ -116,7 +116,7 @@ public class Primitives {
   public Primitives(final ObjectMemory om, final SomLanguage language) {
     eagerPrimitives = new HashMap<>();
     vmPrimitives = new HashMap<>();
-    this.vm = language.getVM();
+    this.vm = language.getContextReference().get();
     initialize(om, language);
   }
 

@@ -17,8 +17,8 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
-public final class GenericDispatchNode extends AbstractDispatchNode {
-  @Child private IndirectCallNode call;
+public class GenericDispatchNode extends AbstractDispatchNode {
+  @Child protected IndirectCallNode call;
   protected final SSymbol selector;
   protected final BranchProfile dnu = BranchProfile.create();
 
@@ -41,7 +41,7 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
 
     if (method != null) {
       target = SInvokable.getCallTarget(method, exLevel);
-      args = SArguments.createSArguments(environment, exLevel, arguments);
+      args = this.getArguments(frame, environment, exLevel, arguments);
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
       dnu.enter();
@@ -50,6 +50,10 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
       target = SMethod.getCallTarget(CachedDnuNode.getDnuMethod(rcvrClass), exLevel);
     }
     return call.call(target, args);
+  }
+
+  protected Object[] getArguments(final VirtualFrame frame, final DynamicObject environment, final ExecutionLevel exLevel, final Object[] arguments) {
+    return SArguments.createSArguments(environment, exLevel, arguments);
   }
 
   @Override

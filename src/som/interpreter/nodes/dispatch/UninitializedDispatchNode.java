@@ -57,7 +57,7 @@ public class UninitializedDispatchNode extends AbstractDispatchNode {
     // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
     // thus, this callsite is considered to be megaprophic, and we generalize
     // it.
-    GenericDispatchNode genericReplacement = new GenericDispatchNode(this.sourceSection, selector);
+    GenericDispatchNode genericReplacement = this.genericDispatchNode(this.sourceSection, selector);
     GenericMessageSendNode sendNode = (GenericMessageSendNode) first.getParent();
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
@@ -83,5 +83,9 @@ public class UninitializedDispatchNode extends AbstractDispatchNode {
 
   protected UninitializedDispatchNode uninitializedNode(final SourceSection section, final SSymbol selector) {
     return new UninitializedDispatchNode(this.sourceSection, selector);
+  }
+
+  protected GenericDispatchNode genericDispatchNode(final SourceSection section, final SSymbol selector) {
+    return new GenericDispatchNode(this.sourceSection, selector);
   }
 }

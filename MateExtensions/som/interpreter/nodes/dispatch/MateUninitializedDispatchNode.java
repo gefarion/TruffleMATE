@@ -21,4 +21,10 @@ public class MateUninitializedDispatchNode extends UninitializedDispatchNode {
   protected UninitializedDispatchNode uninitializedNode(final SourceSection section, final SSymbol selector) {
     return new MateUninitializedDispatchNode(this.sourceSection, selector);
   }
+
+  @Override
+  protected GenericDispatchNode genericDispatchNode(final SourceSection section, final SSymbol selector) {
+    return new MateGenericDispatchNode(this.sourceSection, selector);
+  }
+
 }
