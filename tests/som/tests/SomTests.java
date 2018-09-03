@@ -98,7 +98,7 @@ public class SomTests {
   protected String[] getArguments() {
     String[] arg = {
         "-cp",
-        "Smalltalk:Testsuite",
+        "Smalltalk:TestSuite",
         "TestHarness",
         testName};
     return arg;

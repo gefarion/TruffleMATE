@@ -32,7 +32,7 @@ public class MateSOMTests extends SomTests {
         "-cp",
         "Smalltalk:Smalltalk/Mate:Smalltalk/Mate/MOP:Smalltalk/Mate/Compiler:" +
         "Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Streams:Smalltalk/Collections/Streams:" +
-        "Testsuite:Testsuite/Mate:Testsuite/Filesystem",
+        "TestSuite:TestSuite/Mate:TestSuite/FileSystem",
         "TestHarness",
         testName};
     return args;
