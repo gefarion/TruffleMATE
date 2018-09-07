@@ -1,6 +1,5 @@
 package som.primitives;
 
-import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -43,23 +42,15 @@ public final class SystemPrims {
       super(eagWrap, source);
     }
 
-    @Specialization(guards = "receiverIsSystemObject(receiver)", assumptions = "cachedAssumption")
+    @Specialization(guards = "receiverIsSystemObject(receiver)")
     public final Object doSObject(final DynamicObject receiver, final SSymbol argument,
-        @Cached("currentUniverse()") final Universe currentUniverse,
-        @Cached("getAssumption(currentUniverse)") final Assumption cachedAssumption) {
+        @Cached("currentUniverse()") final Universe currentUniverse) {
       DynamicObject result = currentUniverse.loadClass(argument);
       return result != null ? result : Nil.nilObject;
     }
 
-    /*This may be the best to do for all system primitives since the universe may change.
-     * It is mandatory for this primitive because the classpath changes, for instance, between test classes
-     */
     public static Universe currentUniverse() {
       return Universe.getCurrent();
-    }
-
-    public static Assumption getAssumption(final Universe universe) {
-      return universe.getValidUniverseAssumption();
     }
   }
 
