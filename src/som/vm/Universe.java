@@ -159,8 +159,7 @@ public class Universe {
 
   public static void main(final String[] arguments) {
     createVM(arguments);
-    // context.eval(SomLanguage.START);
-    context.close();
+    context.eval(SomLanguage.START);
     System.exit(Universe.getCurrent().lastExitCode);
   }
 

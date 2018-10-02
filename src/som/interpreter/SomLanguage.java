@@ -2,6 +2,8 @@ package som.interpreter;
 
 import java.io.IOException;
 
+import org.graalvm.polyglot.Source;
+
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
@@ -12,7 +14,6 @@ import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.Source;
 
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
@@ -81,10 +82,23 @@ public class SomLanguage extends TruffleLanguage<Universe> {
     super();
   }
 
-  public static final Source START = getSyntheticSource("", "START");
+  public static final Source START;
+  static {
+    Source tmp = null;
+    try {
+      tmp = getSyntheticSource("", "START");
+    } catch (IOException ex) {
+      // Checkstyle: stop
+      System.err.print("Fail to generate system startup synthetic source");
+      System.exit(1);
+      // Checkstyle: start
+    }
+    START = tmp;
+  }
 
-  public static Source getSyntheticSource(final String text, final String name) {
-    return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE).build();
+
+  public static Source getSyntheticSource(final String text, final String name) throws IOException {
+    return Source.newBuilder(SomLanguage.LANG_NAME, text, name).build();
   }
 
   private static final class ParseResult extends RootNode {
@@ -134,8 +148,9 @@ public class SomLanguage extends TruffleLanguage<Universe> {
 
   @Override
   protected CallTarget parse(final ParsingRequest request) throws IOException {
-    Source code = request.getSource();
-    if (code == START || (code.getLength() == 0 && code.getName().equals("START"))) {
+
+    com.oracle.truffle.api.source.Source code = request.getSource();
+    if (code.getLength() == 0 && code.getName().equals("START")) {
       return createStartCallTarget();
     }
 

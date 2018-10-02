@@ -221,7 +221,7 @@ public class Primitives {
     CompilerAsserts.neverPartOfCompilation("constructPrimitive");
     int numArgs = signature.getNumberOfSignatureArguments();
 
-    Source s = SomLanguage.getSyntheticSource("primitive", specializer.fact.getClass().getSimpleName());
+    Source s = Source.newBuilder(SomLanguage.LANG_NAME, "primitive", specializer.fact.getClass().getSimpleName()).build();
 
     MethodGenerationContext mgen = new MethodGenerationContext(null, language);
     ExpressionWithTagsNode[] args = new ExpressionWithTagsNode[numArgs];

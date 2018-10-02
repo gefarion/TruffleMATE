@@ -10,14 +10,21 @@ import shlex
 
 BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
 TRUFFLE_DIR = BASE_DIR + '/libs/graal'
-JAVA_HOME   = os.getenv('JAVA_HOME',  None)
-JVMCI_BIN   = os.getenv('JVMCI_BIN',  None)
-GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
-GRAAL_LOCATIONS = ['~/.local/graal-core/',
-                   BASE_DIR + '/../graal/graal-jvmci-8']
-                       
+def addBaseDir( path ):
+    paths = path.split(":")
+    return ':'.join([BASE_DIR + '/' + s for s in paths])
+
+                   
+defaultClassPath = ['Smalltalk:Smalltalk/Mate/:Smalltalk/Mate/MOP:' + 
+                   'Smalltalk/Collections/Streams:' +
+                   'Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Streams:' + 
+                   'Examples/Benchmarks:Examples/Benchmarks/LanguageFeatures:Examples/Benchmarks/DeltaBlueInstrumented:Examples/Benchmarks/DeltaBlue:Examples/Benchmarks/NBody:Examples/Benchmarks/Mate:Examples/Benchmarks/Mate/DelegationProxies:Examples/Benchmarks/Mate/Tracing:Examples/Benchmarks/Json:Examples/Benchmarks/Mate/IndividualOperations:Examples/Benchmarks/Mate/Profiling:Examples/Benchmarks/Mate/Columnar']
+
+defaultClassPath = ''.join(map(addBaseDir, defaultClassPath))
+
+
 parser = argparse.ArgumentParser(
     description='Helper script to run TruffleMate with/without Graal')
 
@@ -33,18 +40,6 @@ parser.add_argument('-ti', '--trace-invalidation', help='trace assumption invali
                     dest='trace_invalidation', action='store_true', default=False)
 parser.add_argument('-it', '--inline_threshold', help='Increase the inlining threshold',
                     dest='inline_threshold', type=int)
-
-def addBaseDir( path ):
-    paths = path.split(":")
-    return ':'.join([BASE_DIR + '/' + s for s in paths])
-
-                   
-defaultClassPath = ['Smalltalk:Smalltalk/Mate/:Smalltalk/Mate/MOP:' + 
-                   'Smalltalk/Collections/Streams:' +
-                   'Smalltalk/FileSystem/Core:Smalltalk/FileSystem/Disk:Smalltalk/FileSystem/Streams:' + 
-                   'Examples/Benchmarks:Examples/Benchmarks/LanguageFeatures:Examples/Benchmarks/DeltaBlueInstrumented:Examples/Benchmarks/DeltaBlue:Examples/Benchmarks/NBody:Examples/Benchmarks/Mate:Examples/Benchmarks/Mate/DelegationProxies:Examples/Benchmarks/Mate/Tracing:Examples/Benchmarks/Json:Examples/Benchmarks/Mate/IndividualOperations:Examples/Benchmarks/Mate/Profiling:Examples/Benchmarks/Mate/Columnar']
-
-defaultClassPath = ''.join(map(addBaseDir, defaultClassPath))
 
 parser.add_argument('-cp', '--classpath', help='classpath, default: all benchs and core-lib',
                     dest='som_cp', default=defaultClassPath)
@@ -124,48 +119,26 @@ if len(sys.argv) < 2:
     parser.print_help()
     sys.exit(1)
 
+
 if args.java_interpreter or args.dynamic_metrics:
     args.interpreter = True
 
-graal_home = GRAAL_HOME
-java_bin = None
-
-if JAVA_HOME:
-  java_bin = JAVA_HOME + '/bin/java'
-if JVMCI_BIN:
-  java_bin = JVMCI_BIN
-  
-if not java_bin:
-  if not graal_home:
-    # search known Graal locations
-    for d in GRAAL_LOCATIONS:
-      d = os.path.expanduser(d)
-      if os.path.isdir(d):
-        graal_home = d
-        break
-  
-  if graal_home and os.path.isdir(graal_home + '/bin'):
-    java_bin = graal_home + '/bin/java'	          
-
-if not java_bin or java_bin is graal_home or not os.path.isfile(java_bin):
-  java_bin = "java"
 
 JAVA_MAJOR_VERSION = None
 try:
-  j_ver_str = os.popen(java_bin + " -version 2>&1").read()
+  j_ver_str = os.popen("java -version 2>&1").read()
   j_arr = j_ver_str.split("\"")
-  if j_arr[1].startswith("1.8"):
-    JAVA_MAJOR_VERSION = 8
-  else:
-    JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
+  # For openjdk		
+  JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
+except ValueError:
+  # For oracle jdk
+  JAVA_MAJOR_VERSION = int(j_arr[1].split("-")[0])
 except:
   pass
-  
-if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
+
+if (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
   print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
   sys.exit(1)    
-
-
 
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-debug.jar:')
@@ -174,13 +147,11 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:'
              + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar')
 
-GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
-  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal.jar']
-
-GRAAL_JAVA_9_FLAGS = [
+GRAAL_FLAGS = [
   '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
        TRUFFLE_DIR + '/truffle/mxbuild/modules/com.oracle.truffle.truffle_api.jar',
-  '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/modules/jdk.internal.vm.compiler.jar']
+  '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/modules/jdk.internal.vm.compiler.jar', 
+  '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
 
 SOM_ARGS = ["som.vm.Universe"]
     
@@ -198,33 +169,18 @@ if args.inline_threshold:
 else:
   TWEAK_INLINING = []
    
-GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
-
 JAVA_ARGS = ['-server']
 
-if JAVA_MAJOR_VERSION == 8:
-  JAVA_ARGS += ['-d64']
-  GRAAL_EMBEDDED_FLAGS = GRAAL_JAVA_8_FLAGS
+flags = []
 
-if JAVA_MAJOR_VERSION > 8:
-  GRAAL_EMBEDDED_FLAGS = GRAAL_JAVA_9_FLAGS   
-
-# Handle executable names
-if not args.interpreter and GRAAL_FLAGS:
-    flags = shlex.split(str.strip(GRAAL_FLAGS))
-else:
-    flags = []
-    
 if args.dynamic_metrics:
     SOM_ARGS += ['--dynamic-metrics']
     flags += ['-Dsom.dynamicMetrics=true']
 
 if args.interpreter:
-    flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime']
+  	flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime']
 else:
-  flags += GRAAL_JVMCI_FLAGS
-#  if args.embedded_graal:
-  flags += GRAAL_EMBEDDED_FLAGS
+  	flags += GRAAL_FLAGS
 
 if not args.interpreter:
     # Make sure everything gets compiled
@@ -310,9 +266,4 @@ if args.java_args:
 
 all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + TWEAK_INLINING + flags + SOM_ARGS + mate_args + ['-cp'] + args.som_cp.split() + args.args
 
-if args.verbose:
-    print "CMD: " + java_bin + ' ' + ' '.join(all_args)
-
-java_bin = "java"
-
-os.execvp(java_bin, all_args)
+os.execvp("java", all_args)
