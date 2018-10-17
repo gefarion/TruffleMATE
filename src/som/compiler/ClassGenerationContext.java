@@ -27,7 +27,12 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.ValueProfile;
+
 import som.vm.ObjectMemory;
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
@@ -35,10 +40,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 public final class ClassGenerationContext {
   private static final ValueProfile storageType = ValueProfile.createClassProfile();
@@ -125,7 +126,7 @@ public final class ClassGenerationContext {
     DynamicObject superClass = Universe.getCurrent().loadClass(superName);
 
     // Allocate the class of the resulting class
-    DynamicObject resultClass = SClass.createSClass(Classes.metaclassClass, objectMemory.symbolFor(ccname), SObject.getSOMClass(superClass),
+    DynamicObject resultClass = SClass.createSClass(Classes.metaclassClass, Symbols.symbolFor(ccname), SObject.getSOMClass(superClass),
         SArray.create(classFields.toArray(new Object[0])), SArray.create(classMethods.toArray(new Object[0])));
 
     // Allocate the resulting class

@@ -25,27 +25,24 @@
 
 package som.primitives;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
+import bd.primitives.PrimitiveLoader;
+import bd.primitives.Specializer;
 import som.compiler.MethodGenerationContext;
-import som.interpreter.Primitive;
-import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfMessageNodeFactory;
@@ -57,7 +54,6 @@ import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileWithStaticBlocksNodeFactory;
-import som.primitives.Primitive.NoChild;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitAndPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
@@ -85,153 +81,48 @@ import som.primitives.reflection.PerformInSuperclassPrimFactory;
 import som.primitives.reflection.PerformPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory;
-import som.vm.ObjectMemory;
+import som.vm.Symbols;
 import som.vm.Universe;
-import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
-public class Primitives {
-  private Map<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
-  private Map<SSymbol, List<DynamicObject>> vmPrimitives;
+public class Primitives extends PrimitiveLoader<Universe, ExpressionNode, SSymbol> {
+  private EconomicMap<SSymbol, List<DynamicObject>> vmPrimitives;
+  private final SomLanguage language;
 
-  private final Universe vm;
-
-  @SuppressWarnings("unchecked")
-  public Specializer<EagerlySpecializableNode> getEagerSpecializer(final SSymbol selector,
-      final Object[] arguments, final ExpressionNode[] argumentNodes) {
-    Specializer<? extends ExpressionNode> specializer = eagerPrimitives.get(selector);
-    if (specializer != null && specializer.mate() && !Universe.getCurrent().vmReflectionEnabled()) {
-      return null;
-    }
-    if (specializer != null && specializer.matches(arguments, argumentNodes)) {
-      return (Specializer<EagerlySpecializableNode>) specializer;
-    }
-    return null;
+  public Primitives(final SomLanguage lang) {
+    super(Symbols.PROVIDER);
+    vmPrimitives = EconomicMap.create();
+    this.language = lang;
+    initialize();
   }
+
 
   public List<DynamicObject> getVMPrimitivesForClassNamed(final SSymbol classname) {
     return vmPrimitives.get(classname);
   }
 
-  public Primitives(final ObjectMemory om, final SomLanguage language) {
-    eagerPrimitives = new HashMap<>();
-    vmPrimitives = new HashMap<>();
-    this.vm = language.getContextReference().get();
-    initialize(om, language);
-  }
-
-  /**
-   * A Specializer defines when a node can be used as a eager primitive and how
-   * it is to be instantiated.
-   */
-  public static class Specializer<T> {
-    protected Universe vm;
-    protected final som.primitives.Primitive prim;
-    protected final NodeFactory<T> fact;
-    private final NodeFactory<? extends ExpressionNode> extraChildFactory;
-
-    @SuppressWarnings("unchecked")
-    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact, final Universe vm) {
-      this.prim = prim;
-      this.fact = fact;
-      this.vm = vm;
-
-      if (prim.extraChild() == NoChild.class) {
-        extraChildFactory = null;
-      } else {
-        try {
-          extraChildFactory = (NodeFactory<? extends ExpressionNode>) prim.extraChild().getMethod("getInstance").invoke(null);
-        } catch (IllegalAccessException | IllegalArgumentException
-            | InvocationTargetException | NoSuchMethodException
-            | SecurityException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }
-
-    public boolean noWrapper() {
-      return prim.noWrapper();
-    }
-
-    public boolean mate() {
-      return prim.mate();
-    }
-
-    public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
-      if (prim.disabled() && VmSettings.DYNAMIC_METRICS) {
-        return false;
-      }
-
-      if (prim.receiverType().length == 0) {
-        // no constraints, so, it matches
-        return true;
-      }
-
-      for (Class<?> c : prim.receiverType()) {
-        if (c.isInstance(args[0])) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    public T create(final Object[] arguments,
-        final ExpressionNode[] argNodes, final SourceSection section,
-        final boolean eagerWrapper, final Frame frame) {
-      assert arguments == null || arguments.length == argNodes.length;
-      int numArgs = argNodes.length + 2 +
-          (extraChildFactory != null ? 1 : 0) +
-          (prim.requiresArguments() ? 1 : 0) +
-          (prim.requiresExecutionLevel() ? 1 : 0);
-
-      Object[] ctorArgs = new Object[numArgs];
-      ctorArgs[0] = eagerWrapper;
-      ctorArgs[1] = section;
-      int offset = 2;
-
-      if (prim.requiresContext()) {
-        assert vm != null : "vm i.e. the context was not yet initialized";
-        ctorArgs[offset] = vm;
-        offset += 1;
-      }
-
-      if (prim.requiresArguments()) {
-        ctorArgs[offset] = arguments;
-        offset += 1;
-      }
-
-      if (prim.requiresExecutionLevel()) {
-        ctorArgs[offset] = SArguments.getExecutionLevel(frame);
-        offset += 1;
-      }
-
-      for (int i = 0; i < argNodes.length; i += 1) {
-        ctorArgs[i + offset] = eagerWrapper ? null : argNodes[i];
-      }
-
-      if (extraChildFactory != null) {
-        ctorArgs[ctorArgs.length - 1] = extraChildFactory.createNode(false, null, null);
-      }
-      return fact.createNode(ctorArgs);
-    }
-  }
 
   public static DynamicObject constructPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode> specializer, final SomLanguage language) {
-    CompilerAsserts.neverPartOfCompilation("constructPrimitive");
+      final Specializer<Universe, ExpressionNode, SSymbol> specializer, final SomLanguage language) {
+    CompilerAsserts.neverPartOfCompilation("constructing primitives should only happen when bootstrapping");
     int numArgs = signature.getNumberOfSignatureArguments();
-
-    Source s = Source.newBuilder(SomLanguage.LANG_NAME, "primitive", specializer.fact.getClass().getSimpleName()).build();
+    Source s = null;
+    try {
+      s = SomLanguage.getSyntheticSourceTruffle("primitive", specializer.getName());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    SourceSection source = s.createSection(1);
 
     MethodGenerationContext mgen = new MethodGenerationContext(null, language);
     ExpressionWithTagsNode[] args = new ExpressionWithTagsNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      args[i] = new LocalArgumentReadNode(i, s.createSection(1));
+      args[i] = new LocalArgumentReadNode(i, source);
     }
 
-    ExpressionNode primNode = specializer.create(null, args, s.createSection(1), false, null);
+    ExpressionNode primNode = specializer.create(null, args, source, false, Universe.getCurrent());
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
+    som.interpreter.Primitive primMethodNode = new som.interpreter.Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy(), null, language);
     DynamicObject primitive = Universe.newMethod(signature, primMethodNode, true, new DynamicObject[0]);
     primMethodNode.setMethod(primitive);
@@ -243,125 +134,32 @@ public class Primitives {
     MethodGenerationContext mgen = new MethodGenerationContext(null, language);
 
     ExpressionWithTagsNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
-    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
+    som.interpreter.Primitive primMethodNode = new som.interpreter.Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
         (ExpressionWithTagsNode) primNode.deepCopy(), null, language);
     DynamicObject method = Universe.newMethod(signature, primMethodNode, true, new DynamicObject[0]);
     primMethodNode.setMethod(method);
     return method;
   }
 
-  public static DynamicObject installPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode> specializer, final DynamicObject holder, final SomLanguage language) {
-    DynamicObject prim = constructPrimitive(signature, specializer, language);
-    SClass.addInstancePrimitive(holder, prim, false);
-    return prim;
-  }
 
-  private static som.primitives.Primitive[] getPrimitiveAnnotation(
-      final NodeFactory<? extends ExpressionNode> primFact) {
-    Class<?> nodeClass = primFact.getNodeClass();
-    return nodeClass.getAnnotationsByType(som.primitives.Primitive.class);
-  }
+  @Override
+  protected void registerPrimitive(final Specializer<Universe, ExpressionNode, SSymbol> specializer) {
+    String classname = specializer.getPrimitive().className();
 
-  /**
-   * Setup the lookup data structures for vm primitive registration as well as
-   * eager primitive replacement.
-   */
-  private void initialize(final ObjectMemory om, final SomLanguage language) {
-    List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
-
-    for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
-      som.primitives.Primitive[] prims = getPrimitiveAnnotation(primFact);
-      if (prims != null) {
-        for (som.primitives.Primitive prim : prims) {
-          Specializer<? extends ExpressionNode> specializer = getSpecializer(prim, primFact);
-          String classname = prim.klass();
-          if (!("".equals(classname))) {
-            SSymbol klass = om.symbolFor(classname);
-            SSymbol signature = om.symbolFor(prim.selector());
-            List<DynamicObject> content;
-            if (vmPrimitives.containsKey(klass)) {
-              content = vmPrimitives.get(klass);
-            } else {
-              content = new ArrayList<DynamicObject>();
-              vmPrimitives.put(klass, content);
-            }
-            content.add(constructPrimitive(signature, specializer, language));
-          }
-
-          if ((!("".equals(prim.selector())) && prim.eagerSpecializable())) {
-            SSymbol msgSel = om.symbolFor(prim.selector());
-            assert !eagerPrimitives.containsKey(msgSel) : "clash of selectors and eager specialization";
-            eagerPrimitives.put(msgSel, specializer);
-          }
-        }
+    if (!("".equals(classname))) {
+      SSymbol klass = Symbols.symbolFor(classname);
+      SSymbol signature = Symbols.symbolFor(specializer.getPrimitive().primitive());
+      List<DynamicObject> content;
+      if (vmPrimitives.containsKey(klass)) {
+        content = vmPrimitives.get(klass);
+      } else {
+        content = new ArrayList<DynamicObject>();
+        vmPrimitives.put(klass, content);
       }
+      content.add(constructPrimitive(signature, specializer, language));
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private <T> Specializer<T> getSpecializer(final som.primitives.Primitive prim, final NodeFactory<T> factory) {
-    try {
-      return prim.specializer().
-          getConstructor(som.primitives.Primitive.class, NodeFactory.class, Universe.class).
-          newInstance(prim, factory, vm);
-    } catch (InstantiationException | IllegalAccessException |
-        IllegalArgumentException | InvocationTargetException |
-        NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  // private static final Map<NodeFactory<? extends ExpressionNode>, som.primitives.Primitive[]> primitives;
-  // private static final Map<som.primitives.Primitive, Specializer<? extends ExpressionNode>> specializers;
-
-  /*static {
-    primitives = new HashMap<>();
-    specializers = new HashMap<>();
-
-    findAllPrimitivesAndSpecializers();
-  }
-
-  private static void findAllPrimitivesAndSpecializers() {
-    List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
-
-    for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
-      som.primitives.Primitive[] prims = getPrimitiveAnnotation(primFact);
-      if (prims != null) {
-        primitives.put(primFact, prims);
-        for (som.primitives.Primitive prim : prims) {
-          @SuppressWarnings("rawtypes")
-          Class<? extends Specializer> spezCls = prim.specializer();
-          assert !specializers.containsKey(prim);
-
-          Specializer<? extends ExpressionNode> spez = instantiateSpecializer(primFact, prim, spezCls);
-          specializers.put(prim, spez);
-        }
-      }
-    }
-  }
-
-  private static void initializeSpecializers(final Universe vm) {
-    for (Specializer<?> spez : specializers.values()) {
-      spez.initialize(vm);
-    }
-  }*/
-
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  private static Specializer<? extends ExpressionNode> instantiateSpecializer(
-      final NodeFactory<? extends ExpressionNode> primFact,
-      final som.primitives.Primitive prim,
-      final Class<? extends Specializer> spezCls) {
-    try {
-      return spezCls.
-          getConstructor(som.primitives.Primitive.class, NodeFactory.class).
-          newInstance(prim, primFact);
-    } catch (InstantiationException | IllegalAccessException |
-        IllegalArgumentException | InvocationTargetException |
-        NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   private static List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
@@ -430,5 +228,12 @@ public class Primitives {
     allFactories.add(UnequalsPrimFactory.getInstance());
     allFactories.add(new WhileWithStaticBlocksNodeFactory());
     return allFactories;
+  }
+
+  @Override
+  protected List<Specializer<Universe, ExpressionNode, SSymbol>> getSpecializers() {
+    ArrayList<Specializer<Universe, ExpressionNode, SSymbol>> specializers = new ArrayList<Specializer<Universe, ExpressionNode, SSymbol>>();
+    addAll(specializers, getFactories());
+    return specializers;
   }
 }

@@ -4,19 +4,14 @@ import java.math.BigInteger;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
-import som.primitives.Primitive;
+import bd.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Integer", selector = "-")
-@Primitive(klass = "Double", selector = "-", eagerSpecializable = false)
+@Primitive(className = "Integer", primitive = "-", selector = "-")
+@Primitive(className = "Double", primitive = "-")
 public abstract class SubtractionPrim extends ArithmeticPrim {
-  public SubtractionPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
     return Math.subtractExact(left, right);

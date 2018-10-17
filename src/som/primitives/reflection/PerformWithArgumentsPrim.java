@@ -1,10 +1,5 @@
 package som.primitives.reflection;
 
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.primitives.Primitive;
-import som.vmobjects.SArray;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -12,9 +7,14 @@ import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.vmobjects.SArray;
+import som.vmobjects.SSymbol;
+
 
 @GenerateNodeFactory
-@Primitive(klass = "Object", selector = "perform:withArguments:")
+@Primitive(className = "Object", primitive = "perform:withArguments:", selector = "perform:withArguments:")
 public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
 
   @Child protected AbstractSymbolDispatch dispatch;

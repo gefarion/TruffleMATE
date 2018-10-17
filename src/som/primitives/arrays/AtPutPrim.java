@@ -7,8 +7,8 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -18,7 +18,7 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Array", selector = "at:put:", receiverType = SArray.class)
+@Primitive(className = "Array", primitive = "at:put:", selector = "at:put:", receiverType = SArray.class)
 @ImportStatic(ArrayType.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
 

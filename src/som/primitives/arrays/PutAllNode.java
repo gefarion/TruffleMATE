@@ -10,15 +10,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.LengthPrim;
 import som.primitives.LengthPrimFactory;
-import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -27,15 +26,14 @@ import som.vmobjects.SBlock;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
-@Primitive(klass = "Array", selector = "putAll:", disabled = true,
+@Primitive(className = "Array", primitive = "putAll:", selector = "putAll:", disabled = true,
            extraChild = LengthPrimFactory.class)
 @NodeChild(value = "length", type = LengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode {
   @Child private BlockDispatchNode blockFirstIteration;
   @Child private BlockDispatchNode block;
 
-  public PutAllNode(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
+  public PutAllNode() {
     block = BlockDispatchNodeGen.create();
     blockFirstIteration = BlockDispatchNodeGen.create();
   }

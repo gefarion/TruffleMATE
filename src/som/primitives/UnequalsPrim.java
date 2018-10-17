@@ -2,28 +2,24 @@ package som.primitives;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.object.DynamicObject;
+
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 @GenerateNodeFactory
-@Primitive(klass = "Integer", selector = "<>")
-@Primitive(klass = "Double", selector = "<>", eagerSpecializable = false)
-@Primitive(klass = "String", selector = "<>", eagerSpecializable = false)
-@Primitive(klass = "Integer", selector = "~=")
-@Primitive(klass = "Double", selector = "~=", eagerSpecializable = false)
-@Primitive(klass = "String", selector = "~=", eagerSpecializable = false)
+@Primitive(className = "Integer", primitive = "<>", selector = "<>")
+@Primitive(className = "Double", primitive = "<>")
+@Primitive(className = "String", primitive = "<>")
+@Primitive(className = "Integer", primitive = "~=")
+@Primitive(className = "Double", primitive = "~=")
+@Primitive(className = "String", primitive = "~=")
 public abstract class UnequalsPrim extends BinaryExpressionNode {
-  public UnequalsPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left != right;

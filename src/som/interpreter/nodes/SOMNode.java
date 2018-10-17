@@ -21,11 +21,13 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.inlining.nodes.WithSource;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.ReflectiveNode;
@@ -33,12 +35,16 @@ import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
 @TypeSystemReference(Types.class)
-public abstract class SOMNode extends Node implements ReflectiveNode {
-  protected final SourceSection sourceSection;
+public abstract class SOMNode extends Node implements ReflectiveNode, WithSource {
+  @CompilationFinal protected SourceSection sourceSection;
 
-  public SOMNode(final SourceSection sourceSection) {
-    super();
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T extends Node> T initialize(final SourceSection sourceSection) {
+    assert sourceSection != null;
+    assert this.sourceSection == null : "sourceSection should only be set once";
     this.sourceSection = sourceSection;
+    return (T) this;
   }
 
   /**

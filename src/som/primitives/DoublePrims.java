@@ -7,12 +7,14 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitives.Specializer;
 import som.vm.Universe;
 import som.vm.constants.Classes;
+import som.vmobjects.SSymbol;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.OpArithmetic;
 
@@ -20,7 +22,7 @@ import tools.dym.Tags.OpArithmetic;
 public abstract class DoublePrims  {
 
   @GenerateNodeFactory
-  @Primitive(klass = "Double", selector = "round", receiverType = Double.class)
+  @Primitive(className = "Double", primitive = "round", selector = "round", receiverType = Double.class)
   public abstract static class RoundPrim extends UnaryBasicOperation {
     public RoundPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -42,7 +44,7 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Double", selector = "asInteger", receiverType = Double.class)
+  @Primitive(className = "Double", primitive = "asInteger", selector = "asInteger", receiverType = Double.class)
   public abstract static class AsIntegerPrim extends UnaryBasicOperation {
     public AsIntegerPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -63,8 +65,10 @@ public abstract class DoublePrims  {
     }
   }
 
-  public static class IsDoubleClass extends Specializer<ExpressionNode> {
-    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final Universe vm) { super(prim, fact, vm); }
+  public static class IsDoubleClass extends Specializer<Universe, ExpressionNode, SSymbol> {
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
@@ -73,7 +77,7 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Double Class", selector = "PositiveInfinity",
+  @Primitive(className = "Double Class", primitive = "PositiveInfinity", selector = "PositiveInfinity",
              noWrapper = true, specializer = IsDoubleClass.class)
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
     public PositiveInfinityPrim(final boolean eagWrap, final SourceSection source) {
@@ -100,7 +104,7 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Double", selector = "floor", receiverType = Double.class)
+  @Primitive(className = "Double", primitive = "floor", selector = "floor", receiverType = Double.class)
   public abstract static class FloorPrim extends UnaryBasicOperation {
     public FloorPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);

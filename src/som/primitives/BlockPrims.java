@@ -12,6 +12,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.VmSettings;
 import som.interpreter.SArguments;
 import som.interpreter.SomException;
@@ -33,7 +34,7 @@ import tools.dym.Tags.OpClosureApplication;
 public abstract class BlockPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block", selector = "restart", eagerSpecializable = false)
+  @Primitive(className = "Block", primitive = "restart")
   public abstract static class RestartPrim extends UnaryExpressionNode {
     public RestartPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -50,7 +51,7 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block1", selector = "value",
+  @Primitive(className = "Block1", primitive = "value", selector = "value",
              receiverType = {SBlock.class, Boolean.class})
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
     @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
@@ -75,16 +76,12 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block2", selector = "value:", receiverType = {SBlock.class})
+  @Primitive(className = "Block2", primitive = "value:", selector = "value:", receiverType = {SBlock.class})
   public abstract static class ValueOnePrim extends BinaryExpressionNode {
     @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
     public ValueOnePrim(final boolean eagWrap) {
       this(eagWrap, Universe.emptySource.createUnavailableSection());
-    }
-
-    public ValueOnePrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
     }
 
     @Specialization
@@ -104,8 +101,8 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block3", selector = "value:with:",
-      receiverType = {SBlock.class})
+  @Primitive(className = "Block3", primitive = "value:with:",
+      selector = "value:with:", receiverType = {SBlock.class})
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
     @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
@@ -134,8 +131,8 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block4", selector = "value:with:with:",
-      receiverType = {SBlock.class})
+  @Primitive(className = "Block4", primitive = "value:with:with:",
+      selector = "value:", receiverType = {SBlock.class})
   public abstract static class ValueThreePrim extends QuaternaryExpressionNode {
     @Child private BlockDispatchNode dispatchNode = BlockDispatchNodeGen.create();
 
@@ -164,7 +161,7 @@ public abstract class BlockPrims {
   }
 
   /*@GenerateNodeFactory
-  @Primitive(klass = "Block5", selector = "value:with:with:with:",
+  @Primitive(className = "Block5", primitive = "value:with:with:with:",
              receiverType = {SBlock.class})
   public abstract static class ValueMorePrim extends QuaternaryExpressionNode {
     public ValueMorePrim(final boolean eagerlyWrapped) {this(eagerlyWrapped, null);}
@@ -179,7 +176,7 @@ public abstract class BlockPrims {
   }*/
 
   @GenerateNodeFactory
-  @Primitive(klass = "Block", selector = "doTry:onCatchDo:")
+  @Primitive(className = "Block", primitive = "doTry:onCatchDo:", selector = "value:")
   public abstract static class ExceptionDoOnPrim extends TernaryExpressionNode {
 
     protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
@@ -237,16 +234,12 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "", selector = "ensurePrimitive:")
-  @Primitive(selector = "ensure:", receiverType = SBlock.class)
+  @Primitive(className = "", primitive = "ensurePrimitive:", selector = "value:")
+  @Primitive(primitive = "ensure:", receiverType = SBlock.class)
   public abstract static class EnsurePrim extends BinaryExpressionNode {
 
     @Child private BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
     @Child private BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
-
-    protected EnsurePrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body, final SBlock ensureHandler) {

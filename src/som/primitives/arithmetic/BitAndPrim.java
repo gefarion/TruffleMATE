@@ -2,19 +2,15 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.primitives.Primitive;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
+
+import bd.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Integer", selector = "&")
+@Primitive(className = "Integer", primitive = "&", selector = "&")
 public abstract class BitAndPrim extends ArithmeticPrim {
-  public BitAndPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization
   public final long doLong(final long left, final long right) {
     return left & right;

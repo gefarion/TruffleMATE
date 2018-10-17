@@ -10,7 +10,6 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
@@ -43,8 +42,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   }
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final SourceSection source, final ExecutionLevel level) {
-    super(false, source);
+      final boolean predicateBool, final ExecutionLevel level) {
 
     CallTarget callTargetCondition = SInvokable.getCallTarget(rcvr.getMethod(), level);
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(

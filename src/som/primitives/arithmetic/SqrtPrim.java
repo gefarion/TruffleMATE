@@ -8,14 +8,13 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.primitives.Primitive;
 import tools.dym.Tags.OpArithmetic;
 
 @GenerateNodeFactory
-@Primitive(klass = "Int", selector = "sqrt", eagerSpecializable = false)
-@Primitive(klass = "Double", selector = "sqrt", eagerSpecializable = false)
-@Primitive(selector = "sqrt", receiverType = {Long.class, BigInteger.class, Double.class})
+@Primitive(className = "Int", primitive = "sqrt", selector = "sqrt", receiverType = {Long.class, BigInteger.class, Double.class})
+@Primitive(className = "Double", primitive = "sqrt")
 public abstract class SqrtPrim extends UnaryBasicOperation {
 
   public SqrtPrim(final boolean eagWrap, final SourceSection source) {

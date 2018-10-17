@@ -1,13 +1,5 @@
 package som.primitives;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
-import som.interpreter.nodes.dispatch.InvokeOnCache;
-import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
-import som.vmobjects.SArray;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
@@ -15,6 +7,15 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
+
+import bd.primitives.Primitive;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.dispatch.InvokeOnCache;
+import som.interpreter.nodes.nary.ExpressionWithTagsNode;
+import som.primitives.arrays.ToArgumentsArrayNode;
+import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.vmobjects.SArray;
 
 
 @GenerateNodeFactory
@@ -24,11 +25,10 @@ import com.oracle.truffle.api.source.SourceSection;
   @NodeChild(value = "somArr", type = ExpressionNode.class),
   @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
              executeWith = {"somArr", "target"})})
-@Primitive(klass = "Method", selector = "invokeOn:with:",
+@Primitive(className = "Method", primitive = "invokeOn:with:", selector = "invokeOn:with:",
            noWrapper = true, extraChild = ToArgumentsArrayNodeFactory.class)
-@Primitive(klass = "Primitive", selector = "invokeOn:with:",
-           noWrapper = true, extraChild = ToArgumentsArrayNodeFactory.class,
-           eagerSpecializable = false)
+@Primitive(className = "Primitive", primitive = "invokeOn:with:",
+           noWrapper = true, extraChild = ToArgumentsArrayNodeFactory.class)
 public abstract class InvokeOnPrim extends ExpressionWithTagsNode
   implements PreevaluatedExpression {
   @Child private InvokeOnCache callNode;

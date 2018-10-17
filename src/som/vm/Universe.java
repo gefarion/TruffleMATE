@@ -66,7 +66,9 @@ import som.interpreter.MateifyVisitor;
 import som.interpreter.NodeVisitorUtil;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MateMessageSpecializationsFactory;
 import som.primitives.Primitives;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.MateClasses;
@@ -99,6 +101,8 @@ public class Universe {
     mateDeactivated = this.getTruffleRuntime().createAssumption();
     globalSemanticsDeactivated = this.getTruffleRuntime().createAssumption();
     optimizedIH = this.getTruffleRuntime().createAssumption();
+    mateSpecializationFactory = new MateMessageSpecializationsFactory();
+    somSpecializationFactory = new AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory();
     current = this;
   }
 
@@ -113,6 +117,7 @@ public class Universe {
     if (options.vmReflectionActivated) {
       activatedMate();
     }
+
     if (options.unoptimizedIH) {
       unoptimizedIH();
     }
@@ -247,7 +252,7 @@ public class Universe {
 
   @TruffleBoundary
   public SSymbol symbolFor(final String string) {
-    return objectMemory.symbolFor(string);
+    return Symbols.symbolFor(string);
   }
 
   public static SBlock newBlock(final DynamicObject method,
@@ -564,6 +569,9 @@ public class Universe {
   }
 
   private final TruffleRuntime                  truffleRuntime;
+  public final AbstractMessageSpecializationsFactory mateSpecializationFactory;
+  public final AbstractMessageSpecializationsFactory somSpecializationFactory;
+
   // TODO: this is not how it is supposed to be... it is just a hack to cope
   //       with the use of system.exit in SOM to enable testing
   @CompilationFinal private boolean             avoidExit;
@@ -589,5 +597,6 @@ public class Universe {
   @CompilationFinal private Assumption globalSemanticsDeactivated;
   @CompilationFinal private Assumption optimizedIH;
   @CompilationFinal private DynamicObject globalSemantics;
+
   @CompilationFinal private Map<DynamicObject, List<ObjectType>> objectTypes = new HashMap<DynamicObject, List<ObjectType>>();
 }

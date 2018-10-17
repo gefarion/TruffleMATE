@@ -15,6 +15,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Invokable;
 import som.interpreter.MateVisitors;
@@ -29,7 +30,7 @@ import som.vmobjects.MockJavaObject;
 
 public class ContextPrims {
   @GenerateNodeFactory
-  @Primitive(klass = "Context", selector = "method", receiverType = {FrameInstance.class})
+  @Primitive(className = "Context", primitive = "method", selector = "method", receiverType = {FrameInstance.class})
   public abstract static class GetMethodPrim extends UnaryExpressionNode {
     public GetMethodPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -43,7 +44,7 @@ public class ContextPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Context", selector = "sender", receiverType = {FrameInstance.class})
+  @Primitive(className = "Context", primitive = "sender", selector = "sender", receiverType = {FrameInstance.class})
   public abstract static class SenderPrim extends UnaryExpressionNode {
     public SenderPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -69,7 +70,7 @@ public class ContextPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Context", selector = "receiver", receiverType = {FrameInstance.class})
+  @Primitive(className = "Context", selector = "receiver", receiverType = {FrameInstance.class})
   public abstract static class GetReceiverFromContextPrim extends UnaryExpressionNode {
     public GetReceiverFromContextPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -83,12 +84,8 @@ public class ContextPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Context", selector = "localAt:", receiverType = { MockJavaObject.class })
+  @Primitive(className = "Context", primitive = "localAt:", selector = "localAt:", receiverType = { MockJavaObject.class })
   public abstract static class GetLocalVarAtPrim extends BinaryExpressionNode {
-    public GetLocalVarAtPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization(guards = {"identifier==cachedIdentifier"})
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,
         final String identifier,
@@ -120,7 +117,7 @@ public class ContextPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Context", selector = "localAt:put:", receiverType = { MockJavaObject.class })
+  @Primitive(className = "Context", primitive = "localAt:put:", selector = "localAt:put:", receiverType = { MockJavaObject.class })
   public abstract static class LocalVarAtPutPrim extends TernaryExpressionNode {
     public LocalVarAtPutPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -160,12 +157,8 @@ public class ContextPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Context", selector = "argAt:", receiverType = { MockJavaObject.class })
+  @Primitive(className = "Context", primitive = "argAt:", selector = "argAt:", receiverType = { MockJavaObject.class })
   public abstract static class GetArgAtPrim extends BinaryExpressionNode {
-    public GetArgAtPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     // Todo: dispatch chain index->slot
     @Specialization
     public final Object doVirtualFrame(final MockJavaObject mockedFrame,

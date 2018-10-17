@@ -1,5 +1,14 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
+import bd.primitives.Primitive;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -12,24 +21,15 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
-
 public final class ObjectPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "instVarAt:")
+  @Primitive(className = "Object", primitive = "instVarAt:", selector = "instVarAt:")
   public abstract static class InstVarAtPrim extends BinaryExpressionNode {
 
     @Child private IndexDispatch dispatch;
 
-    public InstVarAtPrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
+    public InstVarAtPrim() {
       dispatch = IndexDispatch.create();
     }
 
@@ -56,7 +56,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "instVarAt:put:", noWrapper = true)
+  @Primitive(className = "Object", primitive = "instVarAt:put:", selector = "instVarAt:put:", noWrapper = true)
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
     @Child private IndexDispatch dispatch;
 
@@ -90,14 +90,9 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "instVarNamed:")
+  @Primitive(className = "Object", primitive = "instVarNamed:", selector = "instVarNamed:")
   public abstract static class InstVarNamedPrim extends BinaryExpressionNode {
-    public InstVarNamedPrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     // TODO: Specialize for optimization
-
     @TruffleBoundary
     @Specialization
     public final Object doSObject(final DynamicObject receiver, final SSymbol fieldName) {
@@ -107,7 +102,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "instVarNamed:put:")
+  @Primitive(className = "Object", primitive = "instVarNamed:put:", selector = "instVarNamed:put:")
   public abstract static class InstVarNamedPutPrim extends TernaryExpressionNode {
     public InstVarNamedPutPrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
@@ -125,7 +120,7 @@ public final class ObjectPrims {
 
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "halt", eagerSpecializable = false)
+  @Primitive(className = "Object", primitive = "halt")
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -139,7 +134,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "class", eagerSpecializable = false)
+  @Primitive(className = "Object", primitive = "class")
   public abstract static class ClassPrim extends UnaryExpressionNode {
     public ClassPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -157,7 +152,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "shallowCopy", eagerSpecializable = false)
+  @Primitive(className = "Object", primitive = "shallowCopy")
   public abstract static class ShallowCopyPrim extends UnaryExpressionNode {
     public ShallowCopyPrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
@@ -170,7 +165,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "identityHash", eagerSpecializable = false)
+  @Primitive(className = "Object", primitive = "identityHash")
   public abstract static class HashPrim extends UnaryExpressionNode {
     public HashPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -195,7 +190,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Object", selector = "objectSize", eagerSpecializable = false)
+  @Primitive(className = "Object", primitive = "objectSize")
   @ImportStatic(SObject.class)
   public abstract static class ObjectSizePrim extends UnaryExpressionNode {
     public ObjectSizePrim(final boolean eagWrap, final SourceSection source) {

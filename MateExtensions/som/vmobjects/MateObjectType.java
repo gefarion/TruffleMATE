@@ -1,19 +1,17 @@
 package som.vmobjects;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.ObjectType;
 
-import som.interop.DynamicObjectInteropMessageResolutionForeign;
 import som.vm.constants.Nil;
 
 
 public class MateObjectType extends ObjectType {
-  @Override
+  /*@Override
   public ForeignAccess getForeignAccessFactory(final DynamicObject object) {
     return DynamicObjectInteropMessageResolutionForeign.ACCESS;
-  }
+  }*/
 
   @Override
   @TruffleBoundary

@@ -5,6 +5,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -13,32 +14,40 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.nodes.WithContext;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
-import som.primitives.Primitive;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.LoopNode;
 
-@Primitive(selector = "downTo:do:", noWrapper = true, disabled = true,
-           requiresExecutionLevel = true, requiresArguments = true,
-           specializer = ToDoSplzr.class)
+@Primitive(primitive = "downTo:do:", selector = "downTo:do:", noWrapper = true, disabled = true,
+           requiresArguments = true, specializer = ToDoSplzr.class)
 @GenerateNodeFactory
-public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
+public abstract class IntDownToDoMessageNode extends TernaryExpressionNode
+  implements WithContext<IntDownToDoMessageNode, Universe> {
 
   private final DynamicObject blockMethod;
   @Child private DirectCallNode valueSend;
+
+
+  @Override
+  public IntDownToDoMessageNode initialize(final Universe vm) {
+    valueSend = Truffle.getRuntime().createDirectCallNode(
+        SInvokable.getCallTarget(blockMethod,
+            SArguments.getExecutionLevel(vm.getTruffleRuntime().getCurrentFrame().getFrame(FrameAccess.READ_ONLY))));
+    return this;
+  };
 
   public IntDownToDoMessageNode(final boolean eagPrim, final SourceSection source,
       final Object[] args, final ExecutionLevel level) {
     super(false, source);
     blockMethod = ((SBlock) args[2]).getMethod();
-    valueSend = Truffle.getRuntime().createDirectCallNode(
-                    SInvokable.getCallTarget(blockMethod, level));
   }
 
   protected final boolean isSameBlockLong(final SBlock block) {

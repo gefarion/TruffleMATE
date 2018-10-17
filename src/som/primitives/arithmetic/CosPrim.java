@@ -5,13 +5,13 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.primitives.Primitive;
 import tools.dym.Tags.OpArithmetic;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Double", selector = "cos", receiverType = Double.class)
+@Primitive(className = "Double", primitive = "cos", selector = "cos", receiverType = Double.class)
 public abstract class CosPrim extends UnaryBasicOperation {
 
   public CosPrim(final boolean eagWrap, final SourceSection source) {

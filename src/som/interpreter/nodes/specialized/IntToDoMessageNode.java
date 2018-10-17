@@ -6,6 +6,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -14,27 +15,33 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
+import bd.primitives.nodes.WithContext;
 import som.VmSettings;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
-import som.primitives.Primitive;
-import som.primitives.Primitives.Specializer;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.LoopNode;
+
 //Should have noWrapper = true?
 @GenerateNodeFactory
 @Primitive(selector = "to:do:", disabled = true,
-           specializer = ToDoSplzr.class, requiresArguments = true,
-           requiresExecutionLevel = true)
-public abstract class IntToDoMessageNode extends TernaryExpressionNode {
-  public static class ToDoSplzr extends Specializer<IntToDoMessageNode> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact, final Universe vm) { super(prim, fact, vm); }
+           specializer = ToDoSplzr.class, requiresArguments = true)
+public abstract class IntToDoMessageNode extends TernaryExpressionNode
+  implements WithContext<IntToDoMessageNode, Universe> {
+
+  public static class ToDoSplzr extends Specializer<Universe, ExpressionNode, SSymbol> {
+    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
+    }
 
     @Override
     public boolean matches(final Object[] args,
@@ -48,12 +55,18 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   private final DynamicObject blockMethod;
   @Child private DirectCallNode valueSend;
 
+  @Override
+  public IntToDoMessageNode initialize(final Universe vm) {
+    valueSend = Truffle.getRuntime().createDirectCallNode(
+        SInvokable.getCallTarget(blockMethod,
+            SArguments.getExecutionLevel(vm.getTruffleRuntime().getCurrentFrame().getFrame(FrameAccess.READ_ONLY))));
+    return this;
+  };
+
   public IntToDoMessageNode(final boolean eagWrap, final SourceSection source,
       final Object[] args, final ExecutionLevel level) {
     super(false, source);
     blockMethod = ((SBlock) args[2]).getMethod();
-    valueSend = Truffle.getRuntime().createDirectCallNode(
-                    SInvokable.getCallTarget(blockMethod, level));
   }
 
   protected final boolean isSameBlockLong(final SBlock block) {

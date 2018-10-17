@@ -29,7 +29,6 @@ import com.oracle.truffle.api.instrumentation.InstrumentableNode;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.TypesGen;
 import som.vm.constants.ReflectiveOp;
@@ -41,13 +40,8 @@ import som.vmobjects.SSymbol;
 @GenerateWrapper
 public abstract class ExpressionNode extends SOMNode implements InstrumentableNode {
 
-  public ExpressionNode(final SourceSection sourceSection) {
-    super(sourceSection);
-  }
-
-  protected ExpressionNode(final ExpressionNode wrappedNode) {
-    super(null);
-  }
+  public ExpressionNode() {}
+  protected ExpressionNode(final ExpressionNode wrappedNode) {}
 
   public void markAsRootExpression()        { throw new UnsupportedOperationException(); }
   public void markAsLoopBody()              { throw new UnsupportedOperationException(); }
@@ -60,7 +54,7 @@ public abstract class ExpressionNode extends SOMNode implements InstrumentableNo
 
   @Override
   public WrapperNode createWrapper(final ProbeNode probeNode) {
-    return new ExpressionNodeWrapper(this, this, probeNode);
+    return new ExpressionNodeWrapper(this, probeNode);
   }
 
   @Override

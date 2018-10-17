@@ -5,6 +5,8 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="libs/black-diamonds/src"/>
+	<classpathentry kind="src" path="libs/black-diamonds/src_gen"/>
 	<classpathentry excluding="**/TruffleMateTCK.java" kind="src" path="tests"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="MateExtensions"/>

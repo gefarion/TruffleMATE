@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -29,14 +30,13 @@ public final class SystemPrims {
   @GenerateNodeFactory
   public abstract static class BinarySystemNode extends BinaryExpressionNode {
     protected final Universe universe;
-    protected BinarySystemNode(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
+    protected BinarySystemNode() {
       this.universe = Universe.getCurrent();
     }
   }
 
   @ImportStatic(SystemPrims.class)
-  @Primitive(klass = "System", selector = "load:", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "load:")
   public abstract static class LoadPrim extends BinarySystemNode {
     protected LoadPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -55,7 +55,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
-  @Primitive(klass = "System", selector = "exit:", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "exit:")
   public abstract static class ExitPrim extends BinarySystemNode {
     protected ExitPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -70,7 +70,7 @@ public final class SystemPrims {
 
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "global:put:", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "global:put:")
   public abstract static class GlobalPutPrim extends TernaryExpressionNode {
     private final Universe universe;
     public GlobalPutPrim(final boolean eagWrap, final SourceSection source) {
@@ -87,7 +87,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
-  @Primitive(klass = "System", selector = "printString:", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "printString:")
   public abstract static class PrintStringPrim extends BinarySystemNode {
     protected PrintStringPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -107,7 +107,7 @@ public final class SystemPrims {
 
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "printNewline", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "printNewline")
   public abstract static class PrintNewlinePrim extends UnaryExpressionNode {
     public PrintNewlinePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -122,7 +122,7 @@ public final class SystemPrims {
 
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "fullGC", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "fullGC")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
     public FullGCPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -137,7 +137,7 @@ public final class SystemPrims {
 
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "time", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "time")
   public abstract static class TimePrim extends UnaryBasicOperation {
     public TimePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -151,7 +151,7 @@ public final class SystemPrims {
 
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "ticks", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "ticks")
   public abstract static class TicksPrim extends UnaryBasicOperation {
     public TicksPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -165,7 +165,7 @@ public final class SystemPrims {
 
   @ImportStatic(SystemPrims.class)
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "export:as:", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "export:as:")
   public abstract static class ExportAsPrim extends TernaryExpressionNode {
 
     public ExportAsPrim(final boolean eagWrap, final SourceSection source) {
@@ -186,7 +186,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "System Class", selector = "current", eagerSpecializable = false)
+  @Primitive(className = "System Class", primitive = "current")
   public abstract static class CurrentInstancePrim extends UnaryExpressionNode {
     public CurrentInstancePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -207,7 +207,7 @@ public final class SystemPrims {
   private static long startMicroTime;
 
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "inTruffle", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "inTruffle")
   public abstract static class InTrufflePrim extends UnaryExpressionNode {
 
     public InTrufflePrim(final boolean eagWrap, final SourceSection source) {
@@ -221,7 +221,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "System", selector = "baseExecutionLevel", eagerSpecializable = false)
+  @Primitive(className = "System", primitive = "baseExecutionLevel")
   public abstract static class BaseExecutionLevelPrim extends UnaryExpressionNode {
 
     public BaseExecutionLevelPrim(final boolean eagWrap, final SourceSection source) {

@@ -9,7 +9,6 @@ import com.oracle.truffle.api.object.DynamicObject;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
@@ -25,7 +24,6 @@ public abstract class WhileCache extends BinaryExpressionNode {
   protected final boolean predicateBool;
 
   public WhileCache(final boolean predicateBool) {
-    super(false, Universe.emptySource.createUnavailableSection());
     this.predicateBool = predicateBool;
   }
 

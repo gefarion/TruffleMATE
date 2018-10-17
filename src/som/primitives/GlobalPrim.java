@@ -7,11 +7,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadWithoutErrorNode;
 import som.interpreter.nodes.SOMNode;
-import som.primitives.Primitives.Specializer;
 import som.primitives.SystemPrims.BinarySystemNode;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
@@ -22,7 +23,7 @@ import som.vmobjects.SSymbol;
 
 
 @ImportStatic(SystemPrims.class)
-@Primitive(klass = "System", selector = "global:",
+@Primitive(className = "System", primitive = "global:", selector = "global:",
            specializer = GlobalPrim.IsSystemObject.class)
 public abstract class GlobalPrim extends BinarySystemNode {
   protected GlobalPrim(final boolean eagWrap, final SourceSection source) {
@@ -36,8 +37,10 @@ public abstract class GlobalPrim extends BinarySystemNode {
     return getGlobal.getGlobal(frame, argument);
   }
 
-  public static class IsSystemObject extends Specializer<ExpressionNode> {
-    public IsSystemObject(final Primitive prim, final NodeFactory<ExpressionNode> fact, final Universe vm) { super(prim, fact, vm); }
+  public static class IsSystemObject extends Specializer<Universe, ExpressionNode, SSymbol> {
+    public IsSystemObject(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {

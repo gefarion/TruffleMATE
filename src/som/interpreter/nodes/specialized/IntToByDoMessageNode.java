@@ -5,6 +5,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -12,10 +13,12 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.nodes.WithContext;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.primitives.Primitive;
+import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -23,19 +26,26 @@ import tools.dym.Tags.LoopNode;
 
 //Should have noWrapper = true?
 @Primitive(selector = "to:by:do:", disabled = true,
-           requiresArguments = true, requiresExecutionLevel = true)
+           requiresArguments = true)
 @GenerateNodeFactory
-public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
+public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
+  implements WithContext<IntToByDoMessageNode, Universe> {
 
   private final DynamicObject blockMethod;
   @Child private DirectCallNode valueSend;
+
+  @Override
+  public IntToByDoMessageNode initialize(final Universe vm) {
+    valueSend = Truffle.getRuntime().createDirectCallNode(
+        SInvokable.getCallTarget(blockMethod,
+            SArguments.getExecutionLevel(vm.getTruffleRuntime().getCurrentFrame().getFrame(FrameAccess.READ_ONLY))));
+    return this;
+  };
 
   public IntToByDoMessageNode(final boolean eagWrap, final SourceSection section,
       final Object[] args, final ExecutionLevel level) {
     super(false, section);
     blockMethod = ((SBlock) args[3]).getMethod();
-    valueSend = Truffle.getRuntime().createDirectCallNode(
-                    SInvokable.getCallTarget(blockMethod, level));
   }
 
   protected final boolean isSameBlockLong(final SBlock block) {

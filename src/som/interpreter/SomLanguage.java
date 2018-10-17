@@ -101,6 +101,10 @@ public class SomLanguage extends TruffleLanguage<Universe> {
     return Source.newBuilder(SomLanguage.LANG_NAME, text, name).build();
   }
 
+  public static com.oracle.truffle.api.source.Source getSyntheticSourceTruffle(final String text, final String name) throws IOException {
+    return com.oracle.truffle.api.source.Source.newBuilder(SomLanguage.LANG_NAME, text, name).build();
+  }
+
   private static final class ParseResult extends RootNode {
     private final DynamicObject klass;
 

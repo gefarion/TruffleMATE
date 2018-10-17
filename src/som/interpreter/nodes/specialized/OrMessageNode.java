@@ -8,15 +8,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNode.OrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
-import som.primitives.Primitive;
-import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -24,7 +23,7 @@ import tools.dym.Tags.ControlFlowCondition;
 import tools.dym.Tags.OpComparison;
 
 
-@Primitive(selector = "or:",  specializer = OrSplzr.class)
+@Primitive(selector = "or:", specializer = OrSplzr.class)
 @Primitive(selector = "||",   specializer = OrSplzr.class)
 @GenerateNodeFactory
 public abstract class OrMessageNode extends BinaryExpressionNode {
@@ -33,13 +32,12 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
 
   public static final class OrSplzr extends AndOrSplzr {
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public OrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> fact, final Universe vm) {
-      super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance(), vm);
+    public OrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance());
     }
   }
 
-  public OrMessageNode(final SBlock arg, final SourceSection source, final ExecutionLevel level) {
-    super(true, source);
+  public OrMessageNode(final SBlock arg, final ExecutionLevel level) {
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         SInvokable.getCallTarget(blockMethod, level));
@@ -61,10 +59,6 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class OrBoolMessageNode extends BinaryExpressionNode {
-    public OrBoolMessageNode(final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     public final boolean doOr(final VirtualFrame frame, final boolean receiver,
         final boolean argument) {

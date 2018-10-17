@@ -1,20 +1,20 @@
 package som.primitives.arrays;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitive;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.ArrayType;
+
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
-@Primitive(klass = "Array", selector = "copy", receiverType = {SArray.class})
+@Primitive(className = "Array", primitive = "copy", selector = "copy", receiverType = {SArray.class})
 public abstract class CopyPrim extends UnaryExpressionNode {
 
   public CopyPrim(final boolean eagWrap, final SourceSection source) {

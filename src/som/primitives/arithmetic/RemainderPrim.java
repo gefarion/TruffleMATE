@@ -2,19 +2,15 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.primitives.Primitive;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
+
+import bd.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Integer", selector = "rem:")
+@Primitive(className = "Integer", primitive = "rem:", selector = "rem:")
 public abstract class RemainderPrim extends ArithmeticPrim {
-  public RemainderPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization
   public final double doDouble(final double left, final double right) {
     return left % right;

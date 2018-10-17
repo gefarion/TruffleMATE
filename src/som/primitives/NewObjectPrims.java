@@ -10,6 +10,7 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
@@ -21,7 +22,7 @@ public class NewObjectPrims {
 
   @GenerateNodeFactory
   @ImportStatic(SClass.class)
-  @Primitive(klass = "Class", selector = "basicNew")
+  @Primitive(className = "Class", primitive = "basicNew", selector = "basicNew")
   public abstract static class NewObjectPrim extends UnaryExpressionNode {
     private static final SObject layoutClass = Universe.getCurrent().getInstanceArgumentsBuilder();
 
@@ -54,13 +55,9 @@ public class NewObjectPrims {
 
   @GenerateNodeFactory
   @ImportStatic(SClass.class)
-  @Primitive(klass = "Class", selector = "basicNew:")
+  @Primitive(className = "Class", primitive = "basicNew:", selector = "basicNew:")
   public abstract static class NewObjectWithEnvironmentPrim extends BinaryExpressionNode {
     private static final SObject layoutClass = Universe.getCurrent().getInstanceArgumentsBuilder();
-
-    public NewObjectWithEnvironmentPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
 
     @Specialization(guards = "receiver == cachedClass")
     public final DynamicObject cachedClass(final DynamicObject receiver,

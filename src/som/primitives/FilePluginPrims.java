@@ -13,6 +13,7 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
@@ -28,7 +29,7 @@ import som.vmobjects.SFile;
 public abstract class FilePluginPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "FilePluginPrims", selector = "imageFile")
+  @Primitive(className = "FilePluginPrims", primitive = "imageFile", selector = "imageFile")
   public abstract static class ImageFilePrim extends UnaryExpressionNode {
     public ImageFilePrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
@@ -41,7 +42,7 @@ public abstract class FilePluginPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "StandardFileStream", selector = "primOpen:writable:")
+  @Primitive(className = "StandardFileStream", selector = "primOpen:writable:")
   public abstract static class OpenFilePrim extends TernaryExpressionNode {
     public OpenFilePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -58,13 +59,8 @@ public abstract class FilePluginPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "StandardFileStream", selector = "primGetPosition:")
+  @Primitive(className = "StandardFileStream", primitive = "primGetPosition:", selector = "primGetPosition:")
   public abstract static class GetPositionFilePrim extends BinaryExpressionNode {
-
-    public GetPositionFilePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     public long doGeneric(final DynamicObject receiver, final SFile file) {
       return file.getPosition();
@@ -72,7 +68,7 @@ public abstract class FilePluginPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "StandardFileStream", selector = "primSetPosition:to:")
+  @Primitive(className = "StandardFileStream", primitive = "primSetPosition:to:", selector = "primSetPosition:to:")
   public abstract static class SetPositionFilePrim extends TernaryExpressionNode {
     public SetPositionFilePrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -87,12 +83,8 @@ public abstract class FilePluginPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "StandardFileStream", selector = "primSize:")
+  @Primitive(className = "StandardFileStream", selector = "primSize:")
   public abstract static class SizeFilePrim extends BinaryExpressionNode {
-    public SizeFilePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     public long doGeneric(final DynamicObject receiver, final SFile file) {
       return file.getFile().length();
@@ -107,7 +99,7 @@ public abstract class FilePluginPrims {
     @NodeChild(value = "starting", type = ExpressionNode.class),
     @NodeChild(value = "count", type = ExpressionNode.class),
   })
-  @Primitive(klass = "StandardFileStream", selector = "primRead:into:startingAt:count:", eagerSpecializable = false)
+  @Primitive(className = "StandardFileStream", primitive = "primRead:into:startingAt:count:")
   @ImportStatic(ArrayType.class)
   public abstract static class ReadIntoFilePrim extends ExpressionWithTagsNode {
     public ReadIntoFilePrim(final boolean eagWrap, final SourceSection source) {
@@ -148,12 +140,8 @@ public abstract class FilePluginPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "StandardFileStream", selector = "primAtEnd:")
+  @Primitive(className = "StandardFileStream", primitive = "primAtEnd:", selector = "primAtEnd:")
   public abstract static class AtEndFilePrim extends BinaryExpressionNode {
-    public AtEndFilePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     @TruffleBoundary
     public boolean doGeneric(final DynamicObject receiver, final SFile file) {
@@ -167,12 +155,8 @@ public abstract class FilePluginPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "StandardFileStream", selector = "primClose:")
+  @Primitive(className = "StandardFileStream", primitive = "primClose:", selector = "primClose:")
   public abstract static class CloseFilePrim extends BinaryExpressionNode {
-    public CloseFilePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     @TruffleBoundary
     public boolean doGeneric(final DynamicObject receiver, final SFile file) {

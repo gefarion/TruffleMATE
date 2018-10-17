@@ -5,10 +5,9 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -16,14 +15,9 @@ import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.BasicPrimitiveOperation;
 
 @GenerateNodeFactory
-@Primitive(klass = "Array", selector = "at:", receiverType = SArray.class)
+@Primitive(className = "Array", primitive = "at:", selector = "at:", receiverType = SArray.class)
 @ImportStatic(ArrayType.class)
 public abstract class AtPrim extends BinaryExpressionNode {
-
-  public AtPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Specialization(guards = "isEmptyType(receiver)")

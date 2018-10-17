@@ -10,6 +10,7 @@ import com.oracle.truffle.api.object.LocationModifier;
 import com.oracle.truffle.api.object.Property;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -24,13 +25,8 @@ import som.vmobjects.SSymbol;
 
 public class ShapePrims {
   @GenerateNodeFactory
-  @Primitive(klass = "Shape class", selector = "newWithFieldsCount:",
-             eagerSpecializable = false, mate = true)
+  @Primitive(className = "Shape class", primitive = "newWithFieldsCount:", mate = true)
   public abstract static class MateNewShapePrim extends BinaryExpressionNode {
-    public MateNewShapePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     public final SAbstractObject doSClass(final DynamicObject receiver, final long fieldsCount) {
       return new SShape((int) fieldsCount);
@@ -38,8 +34,7 @@ public class ShapePrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "fieldsCount",
-             eagerSpecializable = false, mate = true)
+  @Primitive(className = "Shape", primitive = "fieldsCount", mate = true)
   public abstract static class MateShapeFieldsCountPrim extends UnaryExpressionNode {
     public MateShapeFieldsCountPrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);
@@ -52,13 +47,8 @@ public class ShapePrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "installEnvironment:",
-             eagerSpecializable = false, mate = true)
+  @Primitive(className = "Shape", primitive = "installEnvironment:", mate = true)
   public abstract static class MateInstallEnvironmentInShapePrim extends BinaryExpressionNode {
-    public MateInstallEnvironmentInShapePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
     public final SShape doSObject(final SShape shape, final DynamicObject environment) {
       return new SShape(
@@ -68,24 +58,18 @@ public class ShapePrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "installClass:",
-             eagerSpecializable = false, mate = true)
+  @Primitive(className = "Shape", primitive = "installClass:", mate = true)
   public abstract static class MateInstallClassInShapePrim extends BinaryExpressionNode {
-    public MateInstallClassInShapePrim(final boolean eagWrap, final SourceSection source) {
-      super(false, source);
-    }
-
     @Specialization
-    public final SShape doSObject(final SShape shape, final DynamicObject klass) {
+    public final SShape doSObject(final SShape shape, final DynamicObject className) {
       return new SShape(
           shape.getShape().changeType(
-              ((SReflectiveObjectType) shape.getShape().getObjectType()).setKlass(klass)));
+              ((SReflectiveObjectType) shape.getShape().getObjectType()).setKlass(className)));
     }
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Shape", selector = "define:final:hidden:",
-             eagerSpecializable = false, mate = true)
+  @Primitive(className = "Shape", primitive = "define:final:hidden:", mate = true)
   public abstract static class DefinePropertyInShapePrim extends QuaternaryExpressionNode {
     public DefinePropertyInShapePrim(final boolean eagWrap, final SourceSection source) {
       super(false, source);

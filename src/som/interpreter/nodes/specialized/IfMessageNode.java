@@ -12,9 +12,9 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
 import som.vm.constants.ExecutionLevel;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
@@ -41,8 +41,7 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
     public IfFalseMessageNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source, false); assert !eagWrap; }
   }
 
-  protected IfMessageNode(final boolean eagWrap, final SourceSection source, final boolean expected) {
-    super(false, source);
+  protected IfMessageNode(final boolean expected) {
     this.expected = expected;
   }
 

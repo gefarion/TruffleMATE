@@ -11,6 +11,7 @@ import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Specializer;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
@@ -21,7 +22,6 @@ import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExpressionWithReceiver;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
 import som.primitives.Primitives;
-import som.primitives.Primitives.Specializer;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vm.constants.ExecutionLevel;
@@ -39,9 +39,6 @@ public final class MessageSendNode {
   public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
     return new UninitializedSymbolSendNode(selector, null);
   }
-
-  public static AbstractMessageSpecializationsFactory specializationFactory = new AbstractMessageSpecializationsFactory.SOMMessageSpecializationsFactory();
-  public static AbstractMessageSpecializationsFactory mateSpecializationFactory = new MateMessageSpecializationsFactory();
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes,
@@ -135,7 +132,7 @@ public final class MessageSendNode {
     }
 
     protected AbstractMessageSpecializationsFactory getFactory() {
-      return specializationFactory;
+      return Universe.getCurrent().somSpecializationFactory;
     }
   }
 
@@ -163,12 +160,12 @@ public final class MessageSendNode {
 
       Primitives prims = Universe.getCurrent().getPrimitives();
 
-      Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
+      Specializer<Universe, ExpressionNode, SSymbol> specializer = prims.getEagerSpecializer(selector,
           arguments, argumentNodes);
 
       // synchronized (getLock()) {
       if (specializer != null) {
-        EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper(), frame);
+        EagerlySpecializableNode newNode = (EagerlySpecializableNode) specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper(), Universe.getCurrent());
         if (specializer.noWrapper()) {
           return replace(newNode);
         } else {
@@ -195,8 +192,7 @@ public final class MessageSendNode {
 
     private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim, final VirtualFrame frame) {
       Universe.insertInstrumentationWrapper(this);
-      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector,
-          argumentNodes, frame, this.getFactory()));
+      PreevaluatedExpression result = (PreevaluatedExpression) replace(prim.wrapInEagerWrapper(selector, argumentNodes, Universe.getCurrent()));
       Universe.insertInstrumentationWrapper((Node) result);
       for (ExpressionNode arg: argumentNodes) {
         unwrapIfNecessary(arg).markAsPrimitiveArgument();
@@ -207,7 +203,7 @@ public final class MessageSendNode {
   }
 
   public static class UninitializedMessageSendNode
-      extends AbstractUninitializedMessageSendNode implements PreevaluatedExpression{
+      extends AbstractUninitializedMessageSendNode implements PreevaluatedExpression {
 
     protected UninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments, final SourceSection source) {

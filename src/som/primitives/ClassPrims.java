@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -17,7 +18,7 @@ import som.vmobjects.SClass;
 public class ClassPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "Class", selector = "name", eagerSpecializable = false)
+  @Primitive(className = "Class", primitive = "name")
   @ImportStatic(SClass.class)
   public abstract static class NamePrim extends UnaryExpressionNode {
     public NamePrim(final boolean eagWrap, final SourceSection source) {
@@ -33,7 +34,7 @@ public class ClassPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Class", selector = "superclass")
+  @Primitive(className = "Class", primitive = "superclass", selector = "superclass")
   @ImportStatic(SClass.class)
   public abstract static class SuperClassPrim extends UnaryExpressionNode {
     public SuperClassPrim(final boolean eagWrap, final SourceSection source) {
@@ -48,7 +49,7 @@ public class ClassPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Class", selector = "methods")
+  @Primitive(className = "Class", primitive = "methods", selector = "methods")
   @ImportStatic(SClass.class)
   public abstract static class InstanceInvokablesPrim extends UnaryExpressionNode {
     public InstanceInvokablesPrim(final boolean eagWrap, final SourceSection source) {
@@ -64,7 +65,7 @@ public class ClassPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Class", selector = "fields")
+  @Primitive(className = "Class", primitive = "fields", selector = "fields")
   @ImportStatic(SClass.class)
   public abstract static class InstanceFieldsPrim extends UnaryExpressionNode {
     public InstanceFieldsPrim(final boolean eagWrap, final SourceSection source) {

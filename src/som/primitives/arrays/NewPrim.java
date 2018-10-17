@@ -5,28 +5,27 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-import som.primitives.Primitives.Specializer;
 import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.NewArray;
 
 @GenerateNodeFactory
-@Primitive(klass = "Array class", selector = "new:",
+@Primitive(className = "Array class", primitive = "new:", selector = "new:",
            specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
-  public NewPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
 
-  public static class IsArrayClass extends Specializer<NewPrim> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final Universe vm) { super(prim, fact, vm); }
+  public static class IsArrayClass extends Specializer<Universe, ExpressionNode, SSymbol> {
+    public IsArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

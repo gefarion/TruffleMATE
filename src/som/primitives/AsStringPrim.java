@@ -2,20 +2,21 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.vmobjects.SSymbol;
+
 
 @GenerateNodeFactory
-@Primitive(klass = "Character", selector = "asString", eagerSpecializable = false)
-@Primitive(klass = "Symbol", selector = "asString", eagerSpecializable = false)
-@Primitive(klass = "Integer", selector = "asString", eagerSpecializable = false)
-@Primitive(klass = "Double", selector = "asString", eagerSpecializable = false)
+@Primitive(className = "Character", primitive = "asString")
+@Primitive(className = "Symbol", primitive = "asString")
+@Primitive(className = "Integer", primitive = "asString")
+@Primitive(className = "Double", primitive = "asString")
 public abstract class AsStringPrim extends UnaryBasicOperation {
   public AsStringPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);

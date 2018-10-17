@@ -5,8 +5,8 @@ import com.oracle.truffle.api.nodes.NodeCost;
 
 import som.interpreter.nodes.AbstractMessageSpecializationsFactory;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageSendNode;
 import som.matenodes.IntercessionHandling;
+import som.vm.Universe;
 import som.vmobjects.SSymbol;
 
 public class MateEagerQuaternaryPrimitiveNode extends EagerQuaternaryPrimitiveNode {
@@ -52,7 +52,7 @@ public class MateEagerQuaternaryPrimitiveNode extends EagerQuaternaryPrimitiveNo
 
   @Override
   protected AbstractMessageSpecializationsFactory getFactory() {
-    return MessageSendNode.mateSpecializationFactory;
+    return Universe.getCurrent().mateSpecializationFactory;
   }
 
   @Override

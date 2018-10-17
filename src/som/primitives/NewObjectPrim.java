@@ -10,6 +10,7 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectFactory;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -19,7 +20,7 @@ import tools.dym.Tags.NewObject;
 
 @GenerateNodeFactory
 @ImportStatic(SClass.class)
-@Primitive(klass = "Class", selector = "basicNew")
+@Primitive(className = "Class", primitive = "basicNew", selector = "basicNew")
 public abstract class NewObjectPrim extends UnaryExpressionNode {
   private static final SObject layoutClass = Universe.getCurrent().getInstanceArgumentsBuilder();
 

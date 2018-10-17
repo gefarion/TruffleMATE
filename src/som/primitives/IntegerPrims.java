@@ -10,10 +10,11 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.primitives.Primitives.Specializer;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.Universe;
 import som.vm.constants.Classes;
@@ -27,7 +28,7 @@ import tools.dym.Tags.StringAccess;
 public abstract class IntegerPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "atRandom", receiverType = Long.class)
+  @Primitive(className = "Integer", primitive = "atRandom", selector = "atRandom", receiverType = Long.class)
   public abstract static class RandomPrim extends UnaryBasicOperation {
     public RandomPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -49,7 +50,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "as32BitSignedValue", receiverType = Long.class)
+  @Primitive(className = "Integer", primitive = "as32BitSignedValue", selector = "as32BitSignedValue", receiverType = Long.class)
   public abstract static class As32BitSignedValue extends UnaryBasicOperation {
     public As32BitSignedValue(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -71,7 +72,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "as32BitUnsignedValue", receiverType = Long.class)
+  @Primitive(className = "Integer", primitive = "as32BitUnsignedValue", selector = "as32BitUnsignedValue", receiverType = Long.class)
   public abstract static class As32BitUnsignedValue extends UnaryBasicOperation {
     public As32BitUnsignedValue(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -93,19 +94,17 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer Class", selector = "fromString:",
+  @Primitive(className = "Integer Class", primitive = "fromString:", selector = "fromString:",
       specializer = FromStringPrim.IsIntegerClass.class)
   public abstract static class FromStringPrim extends BinaryExpressionNode {
-    public FromStringPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     protected static final boolean receiverIsIntegerClass(final DynamicObject receiver) {
       return receiver == Classes.integerClass;
     }
 
-    public static class IsIntegerClass extends Specializer<ExpressionNode> {
-      public IsIntegerClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final Universe vm) { super(prim, fact, vm); }
+    public static class IsIntegerClass extends Specializer<Universe, ExpressionNode, SSymbol> {
+      public IsIntegerClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+        super(prim, fact);
+      }
 
       @Override
       public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
@@ -140,12 +139,8 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "<<", receiverType = Long.class)
+  @Primitive(className = "Integer", primitive = "<<", selector = "<<", receiverType = Long.class)
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
-    public LeftShiftPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     private final BranchProfile overflow = BranchProfile.create();
 
     @Specialization(rewriteOn = ArithmeticException.class)
@@ -169,12 +164,8 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = ">>>", receiverType = Long.class)
+  @Primitive(className = "Integer", primitive = ">>>", selector = ">>>", receiverType = Long.class)
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
-    public UnsignedRightShiftPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final long doLong(final long receiver, final long right) {
       return receiver >>> right;
@@ -182,13 +173,9 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "max:",
+  @Primitive(className = "Integer", primitive = "max:", selector = "max:",
              receiverType = Long.class, disabled = true)
   public abstract static class MaxIntPrim extends ArithmeticPrim {
-    public MaxIntPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final long doLong(final long receiver, final long right) {
       return Math.max(receiver, right);
@@ -196,13 +183,9 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "to:",
+  @Primitive(className = "Integer", primitive = "to:", selector = "to:",
              receiverType = Long.class, disabled = true)
   public abstract static class ToPrim extends BinaryExpressionNode {
-    public ToPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final SArray doLong(final long receiver, final long right) {
       int cnt = (int) right - (int) receiver + 1;
@@ -224,7 +207,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Integer", selector = "abs", receiverType = Long.class)
+  @Primitive(className = "Integer", primitive = "abs", selector = "abs", receiverType = Long.class)
   public abstract static class AbsPrim extends UnaryBasicOperation {
     public AbsPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);

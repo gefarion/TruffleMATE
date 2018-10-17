@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -11,10 +12,11 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.nodes.WithContext;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.constants.ExecutionLevel;
+import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
@@ -23,10 +25,11 @@ import som.vmobjects.SInvokable;
  * blocks' methods instead of inlining the code directly.
  * @author smarr
  */
-@Primitive(selector = "ifTrue:ifFalse:", noWrapper = true,
-           requiresArguments = true, requiresExecutionLevel = true)
+@Primitive(primitive = "ifTrue:ifFalse:", selector = "ifTrue:ifFalse:", noWrapper = true,
+           requiresArguments = true)
 @GenerateNodeFactory
-public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
+public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
+  implements WithContext<IfTrueIfFalseMessageNode, Universe> {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
   private final DynamicObject trueMethod;
@@ -37,14 +40,28 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
 
   @Child private IndirectCallNode call;
 
+  @Override
+  public IfTrueIfFalseMessageNode initialize(final Universe vm) {
+    if (trueMethod != null) {
+      trueValueSend = Truffle.getRuntime().createDirectCallNode(
+          SInvokable.getCallTarget(trueMethod,
+              SArguments.getExecutionLevel(vm.getTruffleRuntime().getCurrentFrame().getFrame(FrameAccess.READ_ONLY))));
+    }
+
+    if (falseMethod != null) {
+      falseValueSend = Truffle.getRuntime().createDirectCallNode(
+          SInvokable.getCallTarget(falseMethod,
+              SArguments.getExecutionLevel(vm.getTruffleRuntime().getCurrentFrame().getFrame(FrameAccess.READ_ONLY))));
+    }
+    return this;
+  }
+
   public IfTrueIfFalseMessageNode(final boolean eagWrap, final SourceSection source,
-      final Object[] args, final ExecutionLevel level) {
+      final Object[] args) {
     super(false, source);
     if (args[1] instanceof SBlock) {
       SBlock trueBlock = (SBlock) args[1];
       trueMethod = trueBlock.getMethod();
-      trueValueSend = Truffle.getRuntime().createDirectCallNode(
-          SInvokable.getCallTarget(trueMethod, level));
     } else {
       trueMethod = null;
     }
@@ -52,8 +69,6 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     if (args[2] instanceof SBlock) {
       SBlock falseBlock = (SBlock) args[2];
       falseMethod = falseBlock.getMethod();
-      falseValueSend = Truffle.getRuntime().createDirectCallNode(
-          SInvokable.getCallTarget(falseMethod, level));
     } else {
       falseMethod = null;
     }

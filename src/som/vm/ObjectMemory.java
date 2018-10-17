@@ -50,7 +50,6 @@ import tools.language.StructuralProbe;
 public class ObjectMemory {
   @CompilationFinal public static ObjectMemory last;
   private final HashMap<SSymbol, DynamicObject> globals;
-  private final HashMap<String, SSymbol> symbolTable;
 
   @CompilationFinal private DynamicObject trueObject;
   @CompilationFinal private DynamicObject falseObject;
@@ -69,10 +68,9 @@ public class ObjectMemory {
     last = this;
     this.compiler = compiler;
     globals      = new HashMap<SSymbol, DynamicObject>();
-    symbolTable  = new HashMap<>();
     blockClasses = new DynamicObject[5];
     structuralProbe = probe;
-    primitives = new Primitives(this, compiler.getLanguage());
+    primitives = new Primitives(compiler.getLanguage());
   }
 
   protected void initializeSystem() throws ParseError {
@@ -104,7 +102,7 @@ public class ObjectMemory {
     loadClass(Universe.getCurrent().getSourceForClassName(SClass.getName(systemClass)), systemClass);
 
     // Load the generic block class
-    blockClasses[0] = loadClass(Universe.getCurrent().getSourceForClassName(symbolFor("Block")), null);
+    blockClasses[0] = loadClass(Universe.getCurrent().getSourceForClassName(Symbols.symbolFor("Block")), null);
 
     // Setup the true and false objects
     trueObject  = newObject(trueClass);
@@ -178,8 +176,8 @@ public class ObjectMemory {
   }
 
   public void initializeSystemClassName(final DynamicObject klass, final String name) {
-    SClass.setName(klass, symbolFor(name));
-    SClass.setName(SObject.getSOMClass(klass), symbolFor(name + " class"));
+    SClass.setName(klass, Symbols.symbolFor(name));
+    SClass.setName(SObject.getSOMClass(klass), Symbols.symbolFor(name + " class"));
   }
 
   @TruffleBoundary
@@ -193,27 +191,12 @@ public class ObjectMemory {
   }
 
   public void setGlobal(final String name, final DynamicObject value) {
-    setGlobal(symbolFor(name), value);
+    setGlobal(Symbols.symbolFor(name), value);
   }
 
   @TruffleBoundary
   public void setGlobal(final SSymbol name, final DynamicObject value) {
       globals.put(name, value);
-  }
-
-  @TruffleBoundary
-  public SSymbol symbolFor(final String string) {
-    String interned = string.intern();
-    // Lookup the symbol in the symbol table
-    SSymbol result = symbolTable.get(interned);
-    if (result != null) { return result; }
-    return newSymbol(interned);
-  }
-
-  private SSymbol newSymbol(final String string) {
-    SSymbol result = new SSymbol(string);
-    symbolTable.put(string, result);
-    return result;
   }
 
   public static DynamicObject newSystemClass(final DynamicObject superClass) {
@@ -271,7 +254,7 @@ public class ObjectMemory {
   private void loadBlockClass(final int numberOfArguments) throws ParseError {
     // Compute the name of the block class with the given number of
     // arguments
-    SSymbol name = symbolFor("Block" + numberOfArguments);
+    SSymbol name = Symbols.symbolFor("Block" + numberOfArguments);
     assert getGlobal(name) == null;
 
     // Get the block class for blocks with the given number of arguments

@@ -45,7 +45,7 @@ public abstract class EagerPrimitive extends ExpressionNode
   }
 
   protected AbstractMessageSpecializationsFactory getFactory() {
-    return MessageSendNode.specializationFactory;
+    return Universe.getCurrent().somSpecializationFactory;
   }
 
   protected final GenericMessageSendNode replaceWithGenericSend(final ExecutionLevel level) {

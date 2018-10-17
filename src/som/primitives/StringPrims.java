@@ -6,6 +6,7 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
@@ -21,12 +22,8 @@ import tools.dym.Tags.StringAccess;
 public class StringPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "String", selector = "concatenate:", receiverType = {SSymbol.class, String.class})
+  @Primitive(className = "String", primitive = "concatenate:", selector = "concatenate:", receiverType = {SSymbol.class, String.class})
   public abstract static class ConcatPrim extends BinaryExpressionNode {
-    public ConcatPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final String doString(final String receiver, final String argument) {
       return receiver + argument;
@@ -58,14 +55,9 @@ public class StringPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "String", selector = "join:", receiverType = {String.class})
+  @Primitive(className = "String", primitive = "join:", selector = "join:", receiverType = {String.class})
   public abstract static class JoinPrim extends BinaryExpressionNode {
     final ValueProfile profile = ValueProfile.createClassProfile();
-
-    public JoinPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final String doString(final String receiver, final SArray argument) {
       return String.valueOf(argument.getCharStorage(profile));
@@ -83,7 +75,7 @@ public class StringPrims {
 
 
   @GenerateNodeFactory
-  @Primitive(klass = "String", selector = "asSymbol")
+  @Primitive(className = "String", primitive = "asSymbol", selector = "asSymbol")
   public abstract static class AsSymbolPrim extends UnaryBasicOperation {
     private final Universe universe;
     public AsSymbolPrim(final boolean eagWrap, final SourceSection source) {
@@ -112,7 +104,7 @@ public class StringPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "String", selector = "primSubstringFrom:to:", receiverType = {SSymbol.class, String.class})
+  @Primitive(className = "String", primitive = "primSubstringFrom:to:", selector = "primSubstringFrom:to:", receiverType = {SSymbol.class, String.class})
   public abstract static class SubstringPrim extends TernaryExpressionNode {
     public SubstringPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -147,18 +139,13 @@ public class StringPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "String", selector = "at:",
-             eagerSpecializable = false, receiverType = String.class)
+  @Primitive(className = "String", primitive = "at:", receiverType = String.class)
   /*
    * It is not specializable for avoiding the clash with Array at: primitive.
    * We should improve the specialization so that it enables to store different
    * specializers for the same selector.
    */
   public abstract static class AtStringPrim extends BinaryExpressionNode {
-    public AtStringPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final char doString(final String receiver, final long index) {
       if (index > receiver.length()) {
@@ -183,7 +170,7 @@ public class StringPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "String", selector = "asNumber", receiverType = String.class)
+  @Primitive(className = "String", primitive = "asNumber", selector = "asNumber", receiverType = String.class)
   public abstract static class AsNumberStringPrim extends UnaryExpressionNode {
 
     public AsNumberStringPrim(final boolean eagWrap, final SourceSection source) {

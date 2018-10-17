@@ -9,6 +9,7 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -17,10 +18,9 @@ import tools.dym.Tags.OpLength;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
-@Primitive(klass = "String", selector = "length",
+@Primitive(className = "String", primitive = "length", selector = "length",
            receiverType = {String.class, Array.class})
-@Primitive(klass = "Array", selector = "length",
-           eagerSpecializable = false)
+@Primitive(className = "Array", primitive = "length")
 public abstract class LengthPrim extends UnaryBasicOperation {
 
   public LengthPrim(final boolean eagerlyWrapped, final SourceSection source) {

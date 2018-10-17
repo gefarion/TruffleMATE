@@ -100,6 +100,7 @@ import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.ObjectMemory;
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -248,7 +249,7 @@ public class Parser {
   }
 
   public void classdef(final ClassGenerationContext cgenc) throws ParseError {
-    cgenc.setName(objectMemory.symbolFor(text));
+    cgenc.setName(Symbols.symbolFor(text));
     expect(Identifier, IdentifierTag.class);
     expect(Equal, KeywordTag.class);
 
@@ -290,10 +291,10 @@ public class Parser {
   private void superclass(final ClassGenerationContext cgenc) throws ParseError {
     SSymbol superName;
     if (sym == Identifier) {
-      superName = objectMemory.symbolFor(text);
+      superName = Symbols.symbolFor(text);
       accept(Identifier, KeywordTag.class);
     } else {
-      superName = objectMemory.symbolFor("Object");
+      superName = Symbols.symbolFor("Object");
     }
     cgenc.setSuperName(superName);
 
@@ -356,7 +357,7 @@ public class Parser {
     if (accept(Or, DelimiterOpeningTag.class)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        cgenc.addInstanceField(objectMemory.symbolFor(var));
+        cgenc.addInstanceField(Symbols.symbolFor(var));
       }
       expect(Or, DelimiterClosingTag.class);
     }
@@ -366,7 +367,7 @@ public class Parser {
     if (accept(Or, DelimiterOpeningTag.class)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        cgenc.addClassField(objectMemory.symbolFor(var));
+        cgenc.addClassField(Symbols.symbolFor(var));
       }
       expect(Or, DelimiterClosingTag.class);
     }
@@ -434,7 +435,7 @@ public class Parser {
     }
     while (sym == Keyword);
 
-    mgenc.setSignature(objectMemory.symbolFor(kw.toString()));
+    mgenc.setSignature(Symbols.symbolFor(kw.toString()));
   }
 
   private ExpressionWithTagsNode methodBlock(final MethodGenerationContext mgenc, final SourceCoordinate coord) throws ParseError {
@@ -446,7 +447,7 @@ public class Parser {
   }
 
   private SSymbol unarySelector() throws ParseError {
-    return objectMemory.symbolFor(identifier());
+    return Symbols.symbolFor(identifier());
   }
 
   private SSymbol binarySelector() throws ParseError {
@@ -462,7 +463,7 @@ public class Parser {
     } else { expect(NONE, null); }
     // Checkstyle: resume
 
-    return objectMemory.symbolFor(s);
+    return Symbols.symbolFor(s);
   }
 
   private String identifier() throws ParseError {
@@ -524,7 +525,7 @@ public class Parser {
   private ExpressionWithTagsNode createSequenceNode(final SourceCoordinate coord,
       final List<ExpressionWithTagsNode> expressions) {
     if (expressions.size() == 0) {
-      return createGlobalRead("nil", objectMemory, getSource(coord, 0));
+      return createGlobalRead("nil", getSource(coord, 0));
     } else if (expressions.size() == 1)  {
       return expressions.get(0);
     }
@@ -728,7 +729,7 @@ public class Parser {
     while (sym == Keyword);
 
     String msgStr = kw.toString();
-    SSymbol msg = objectMemory.symbolFor(msgStr);
+    SSymbol msg = Symbols.symbolFor(msgStr);
 
     SourceSection source = getSource(coord, 0);
 
@@ -878,7 +879,7 @@ public class Parser {
     expect(Pound, null);
     if (sym == STString) {
       String s = string();
-      symb = objectMemory.symbolFor(s);
+      symb = Symbols.symbolFor(s);
     } else {
       symb = selector();
     }
@@ -959,7 +960,7 @@ public class Parser {
   private SSymbol keywordSelector() throws ParseError {
     String s = new String(text);
     expectOneOf(keywordSelectorSyms);
-    SSymbol symb = objectMemory.symbolFor(s);
+    SSymbol symb = Symbols.symbolFor(s);
     return symb;
   }
 
@@ -986,7 +987,7 @@ public class Parser {
       blockSig += ":";
     }
 
-    mgenc.setSignature(objectMemory.symbolFor(blockSig));
+    mgenc.setSignature(Symbols.symbolFor(blockSig));
 
     ExpressionWithTagsNode expressions = blockContents(mgenc);
 
@@ -1028,7 +1029,7 @@ public class Parser {
     }
 
     // then object fields
-    SSymbol varName = objectMemory.symbolFor(variableName);
+    SSymbol varName = Symbols.symbolFor(variableName);
     FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName, source);
 
     if (fieldRead != null) {
@@ -1046,7 +1047,7 @@ public class Parser {
       return mgenc.getLocalWriteNode(variableName, exp, source);
     }
 
-    SSymbol fieldName = objectMemory.symbolFor(variableName);
+    SSymbol fieldName = Symbols.symbolFor(variableName);
     FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, source);
 
     if (fieldWrite != null) {

@@ -3,15 +3,16 @@
 	xmlns:if="ant:if"
 	xmlns:jacoco="antlib:org.jacoco.ant">
 
-    <property name="src.dir"     value="src"/>
-    <property name="src.dirMate" value="MateExtensions"/>
-    <property name="src_gen.dir" value="src_gen"/>
-    <property name="test.dir"    value="tests"/>
-    <property name="lib.dir"     value="libs" />
-    <property name="sdk.build"   location="${lib.dir}/graal/sdk/mxbuild/dists" />
-    <property name="truffle.dir" value="${lib.dir}/graal/truffle" />
-	<property name="graal.dir" 	 value="${lib.dir}/graal/compiler" />
-    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
+    <property name="src.dir"       value="src"/>
+    <property name="src.dirMate"   value="MateExtensions"/>
+    <property name="src_gen.dir"   value="src_gen"/>
+    <property name="test.dir"      value="tests"/>
+    <property name="lib.dir"       location="libs" />
+    <property name="sdk.build"     location="${lib.dir}/graal/sdk/mxbuild/dists" />
+    <property name="truffle.dir"   location="${lib.dir}/graal/truffle" />
+	<property name="graal.dir" 	   location="${lib.dir}/graal/compiler" />
+	<property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
+	<property name="bd.dir"        location="${lib.dir}/black-diamonds/" />
     <property name="junit.version" value="4.12" />
     <property name="checkstyle.version" value="8.8" />
 
@@ -32,6 +33,7 @@
 		<pathelement location="${truffle.build}/truffle-debug.jar" />
     	<pathelement location="${truffle.build}/truffle-tck.jar" />
     	<pathelement location="${lib.dir}/json/build/minimal-json.jar" />
+    	<pathelement location="${bd.dir}/build/classes" />
     </path>
 	
     <target name="clean" description="Remove build directories and generated code">
@@ -76,6 +78,7 @@
         <exec executable="../../mx/mx" dir="${truffle.dir}">
             <arg value="clean"/>
         </exec>
+    	<ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
     </target>
     
     <target name="check-core-lib-available">
@@ -103,6 +106,15 @@
         	<arg value="build"/>
         	<arg value="--no-native"/>
         </exec>
+    </target>
+	
+	<target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
+        <ant dir="${bd.dir}" useNativeBasedir="true" target="compile-nodeps" inheritAll="false">
+        	<property name="lib.dir" value="${lib.dir}" />
+        	<property name="sdk.build"  value="${sdk.build}" />
+            <property name="truffle.dir" value="${truffle.build}" />
+        	<property name="truffle.build" value="${truffle.build}" />
+        </ant>
     </target>
 	
 	<target name="minimal-json-lib" depends="core-lib">		

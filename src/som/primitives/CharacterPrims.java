@@ -7,34 +7,33 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitives.Specializer;
-import som.primitives.arrays.NewPrim;
 import som.vm.Universe;
 import som.vm.constants.Classes;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.StringAccess;
 
 public class CharacterPrims {
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character class", selector = "new:",
-      specializer = NewCharPrim.IsCharacterClass.class, eagerSpecializable = false)
+  @Primitive(className = "Character class", primitive = "new:",
+      specializer = NewCharPrim.IsCharacterClass.class)
   // No specialization to avoid clash with new: from Arrays
   public abstract static class NewCharPrim extends BinaryExpressionNode {
-
-    public NewCharPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
 
     @Specialization
     public final Character doCreate(final DynamicObject clazz, final long value) {
       return (char) value;
     }
 
-    public static class IsCharacterClass extends Specializer<NewPrim> {
-      public IsCharacterClass(final Primitive prim, final NodeFactory<NewPrim> fact, final Universe vm) { super(prim, fact, vm); }
+    public static class IsCharacterClass extends Specializer<Universe, ExpressionNode, SSymbol> {
+      public IsCharacterClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+        super(prim, fact);
+      }
 
       @Override
       public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
@@ -58,7 +57,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "asInteger", eagerSpecializable = false)
+  @Primitive(className = "Character", primitive = "asInteger")
   public abstract static class AsIntegerCharPrim extends UnaryExpressionNode {
     public AsIntegerCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -80,7 +79,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "isDigit")
+  @Primitive(className = "Character", primitive = "isDigit", selector = "isDigit")
   public abstract static class IsDigitCharPrim extends UnaryExpressionNode {
     public IsDigitCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -102,7 +101,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "asDigit")
+  @Primitive(className = "Character", primitive = "asDigit", selector = "asDigit")
   public abstract static class AsDigitCharPrim extends UnaryExpressionNode {
     public AsDigitCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -124,7 +123,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "isLetter")
+  @Primitive(className = "Character", primitive = "isLetter", selector = "isLetter")
   public abstract static class IsLetterCharPrim extends UnaryExpressionNode {
     public IsLetterCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -146,7 +145,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "isAlphaNumeric")
+  @Primitive(className = "Character", primitive = "isAlphaNumeric", selector = "isAlphaNumeric")
   public abstract static class IsAlphaNumericCharPrim extends UnaryExpressionNode {
     public IsAlphaNumericCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -168,7 +167,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "asUppercase")
+  @Primitive(className = "Character", primitive = "asUppercase", selector = "asUppercase")
   public abstract static class AsUppercaseCharPrim extends UnaryExpressionNode {
     public AsUppercaseCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -190,7 +189,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "isUppercase")
+  @Primitive(className = "Character", primitive = "isUppercase", selector = "isUppercase")
   public abstract static class IsUppercaseCharPrim extends UnaryExpressionNode {
     public IsUppercaseCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -212,7 +211,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "asLowercase")
+  @Primitive(className = "Character", primitive = "asLowercase", selector = "asLowercase")
   public abstract static class AsLowercaseCharPrim extends UnaryExpressionNode {
     public AsLowercaseCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -234,7 +233,7 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "isLowercase")
+  @Primitive(className = "Character", primitive = "isLowercase", selector = "isLowercase")
   public abstract static class IsLowercaseCharPrim extends UnaryExpressionNode {
     public IsLowercaseCharPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
@@ -256,12 +255,8 @@ public class CharacterPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(klass = "Character", selector = "compareWith:", eagerSpecializable = false)
+  @Primitive(className = "Character", primitive = "compareWith:")
   public abstract static class CompareCharsPrim extends BinaryExpressionNode {
-    public CompareCharsPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final long doCharacter(final char receiver, final char param) {
       return Character.compare(receiver, param);

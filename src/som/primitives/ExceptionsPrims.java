@@ -5,13 +5,14 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.SomException;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 
 public abstract class ExceptionsPrims {
   @GenerateNodeFactory
-  @Primitive(klass = "Exception", selector = "signal", eagerSpecializable = false)
+  @Primitive(className = "Exception", primitive = "signal")
   public abstract static class SignalPrim extends UnaryExpressionNode {
     public SignalPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);

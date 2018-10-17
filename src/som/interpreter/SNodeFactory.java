@@ -2,6 +2,10 @@ package som.interpreter;
 
 import java.util.List;
 
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -31,12 +35,8 @@ import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.nary.ExpressionWithReceiver;
 import som.interpreter.nodes.nary.ExpressionWithTagsNode;
-import som.vm.ObjectMemory;
+import som.vm.Symbols;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 
@@ -52,9 +52,8 @@ public final class SNodeFactory {
     return FieldReadNodeGen.create(fieldIndex, source, self);
   }
 
-  public static GlobalNode createGlobalRead(final String name,
-      final ObjectMemory memory, final SourceSection source) {
-    return createGlobalRead(memory.symbolFor(name), source);
+  public static GlobalNode createGlobalRead(final String name, final SourceSection source) {
+    return createGlobalRead(Symbols.symbolFor(name), source);
   }
   public static GlobalNode createGlobalRead(final SSymbol name, final SourceSection source) {
     return new UninitializedGlobalReadNode(name, source);

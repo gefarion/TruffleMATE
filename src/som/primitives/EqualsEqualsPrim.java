@@ -7,8 +7,8 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
 import som.vmobjects.MockJavaObject;
@@ -19,13 +19,8 @@ import som.vmobjects.SSymbol;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Object", selector = "==")
+@Primitive(className = "Object", primitive = "==", selector = "==")
 public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
-
-  public EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;

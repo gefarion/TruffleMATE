@@ -9,13 +9,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -24,15 +23,14 @@ import som.vmobjects.SBlock;
 
 
 @GenerateNodeFactory
-@Primitive(klass = "Array", selector = "do:",
+@Primitive(className = "Array", primitive = "do:", selector = "do:",
            receiverType = SArray.class, disabled = true)
 @ImportStatic(ArrayType.class)
 public abstract class DoPrim extends BinaryExpressionNode {
   @Child private BlockDispatchNode block;
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  public DoPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
+  public DoPrim() {
     block = BlockDispatchNodeGen.create();
   }
 
